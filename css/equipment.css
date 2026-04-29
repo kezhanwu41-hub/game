@@ -1,0 +1,149 @@
+/* equipment.css — 武器庫 / 鐵匠鋪 / 裝備掛載 UI */
+
+/* ── 共用按鈕 ── */
+.btn-tiny {
+  padding: 6px 14px; font-size: 12px; border-radius: 6px;
+  background: linear-gradient(135deg, #c9a84c, #7a6030);
+  color: #1a1a1a; border: none; cursor: pointer; font-weight: 600;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+.btn-tiny:hover:not(.disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201,168,76,0.4); }
+.btn-tiny.disabled, .btn-tiny:disabled { opacity: 0.4; cursor: not-allowed; background: #555; color: #aaa; }
+.btn-mini {
+  padding: 3px 8px; font-size: 10px; border-radius: 4px;
+  background: rgba(201,168,76,0.2); color: #c9a84c;
+  border: 1px solid rgba(201,168,76,0.4); cursor: pointer;
+}
+.btn-mini:hover { background: rgba(201,168,76,0.35); }
+
+/* ── Gacha 池切換 ── */
+.gacha-pool-tabs {
+  display: flex; gap: 8px; justify-content: center; margin: 16px 0;
+}
+.gacha-pool-tab {
+  flex: 0 1 220px; padding: 10px 14px; font-size: 13px;
+  background: rgba(255,255,255,0.05); color: #ccc; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px; cursor: pointer; transition: all 0.2s;
+}
+.gacha-pool-tab.active {
+  background: linear-gradient(135deg, #c9a84c, #7a6030);
+  color: #1a1a1a; border-color: #c9a84c; font-weight: 700;
+  box-shadow: 0 0 14px rgba(201,168,76,0.4);
+}
+
+/* ── 保底進度 ── */
+.gacha-pity-row { display: flex; gap: 10px; justify-content: center; margin: 8px 0 16px; }
+.pity-pill {
+  padding: 4px 12px; border-radius: 20px;
+  background: rgba(66,165,245,0.15); color: #42a5f5;
+  border: 1px solid rgba(66,165,245,0.4); font-size: 12px;
+}
+.pity-pill.legend { background: rgba(255,179,0,0.15); color: #ffb300; border-color: rgba(255,179,0,0.4); }
+
+/* ── Gacha 結果項目（更新版）── */
+.gacha-result-item .item-card {
+  width: 100px; min-height: 120px; padding: 10px;
+  border-radius: 8px; background: rgba(0,0,0,0.5);
+  border: 2px solid rgba(255,255,255,0.1);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  animation: itemPop 0.3s ease;
+}
+@keyframes itemPop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+.gacha-result-item .item-card.legend { box-shadow: 0 0 20px #ffb300; animation: itemPop 0.3s ease, legendGlow 1.5s ease infinite alternate; }
+.gacha-result-item .item-card.ssr    { box-shadow: 0 0 12px #ab47bc; }
+@keyframes legendGlow { from { box-shadow: 0 0 18px #ffb300; } to { box-shadow: 0 0 32px #ffd34d; } }
+.item-rarity-stars { font-size: 14px; letter-spacing: 1px; }
+.item-icon { font-size: 36px; margin: 6px 0; }
+.item-name { font-size: 12px; text-align: center; }
+.item-pity { font-size: 9px; color: #ffb300; margin-top: 4px; }
+.item-frag { font-size: 9px; color: #ab47bc; margin-top: 2px; }
+
+/* ── Armory 武器庫 ── */
+.armory-inner { padding: 30px 5%; max-width: 1400px; margin: 0 auto; height: 100%; box-sizing: border-box; overflow-y: auto; }
+.armory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.armory-title { font-family: 'Noto Serif TC', serif; font-size: 32px; color: var(--gold, #c9a84c); }
+.armory-tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.armory-tab {
+  padding: 8px 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+  color: #ccc; border-radius: 6px; cursor: pointer; font-size: 13px;
+}
+.armory-tab.active { background: linear-gradient(135deg, #c9a84c, #7a6030); color: #1a1a1a; border-color: #c9a84c; font-weight: 700; }
+.armory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.armory-item, .equip-pickable {
+  background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px;
+  padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.armory-item:hover, .equip-pickable:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.4); cursor: pointer; }
+.armory-item-icon { font-size: 36px; }
+.armory-item-name { font-weight: 700; font-size: 14px; }
+.armory-item-stats { font-size: 11px; color: #ddd; }
+.armory-item-meta { font-size: 11px; color: #999; }
+.armory-item-desc { font-size: 11px; color: #aaa; text-align: center; min-height: 32px; line-height: 1.4; }
+.armory-item-actions { display: flex; gap: 6px; }
+.armory-item-frag-count { font-size: 12px; color: #ab47bc; }
+.armory-empty { text-align: center; padding: 60px 20px; color: #888; font-size: 14px; }
+
+/* ── Smithy 鐵匠鋪 ── */
+.smithy-inner { padding: 30px 5%; max-width: 1100px; margin: 0 auto; height: 100%; box-sizing: border-box; overflow-y: auto; }
+.smithy-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.smithy-title { font-family: 'Noto Serif TC', serif; font-size: 32px; color: #ff9800; }
+.smithy-materials { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.mat-pill { padding: 6px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; font-size: 13px; }
+.mat-pill.jade { background: rgba(201,168,76,0.15); color: #c9a84c; border-color: rgba(201,168,76,0.5); }
+.smithy-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.smithy-tab {
+  padding: 8px 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+  color: #ccc; border-radius: 6px; cursor: pointer; font-size: 13px;
+}
+.smithy-tab.active { background: linear-gradient(135deg, #ff9800, #c66800); color: #fff; border-color: #ff9800; font-weight: 700; }
+.smithy-content { display: flex; flex-direction: column; gap: 8px; }
+.smithy-row {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px;
+  padding: 12px 16px;
+}
+.smithy-row-icon { font-size: 28px; }
+.smithy-row-info { flex: 1; }
+.smithy-row-name { font-weight: 700; font-size: 14px; }
+.smithy-row-lv { font-size: 11px; color: #c9a84c; margin-left: 8px; }
+.smithy-row-cost { font-size: 11px; color: #999; margin-top: 4px; }
+.smithy-empty { text-align: center; padding: 60px 20px; color: #888; }
+
+/* ── 部署階段裝備槽 ── */
+.deploy-card-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; }
+.deploy-card-name { font-size: 12px; font-weight: 600; }
+.deploy-eq-row { display: flex; gap: 4px; font-size: 14px; }
+.eq-slot {
+  width: 22px; height: 22px; line-height: 22px; text-align: center;
+  background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid rgba(255,255,255,0.15);
+  font-size: 13px;
+}
+.eq-slot.empty { color: #555; }
+
+/* ── 戰鬥畫面武將卡上的裝備標 ── */
+.battle-eq-bar { display: flex; gap: 2px; justify-content: center; margin-top: 2px; font-size: 10px; }
+.battle-eq-bar .eq { padding: 1px 3px; border-radius: 3px; background: rgba(0,0,0,0.5); }
+
+/* ── 裝備掛載 modal ── */
+.equip-modal { max-width: 640px; max-height: 80vh; overflow-y: auto; padding: 18px; }
+.equip-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Noto Serif TC', serif; font-size: 18px; color: #c9a84c;
+  border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 14px;
+}
+.equip-modal-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;
+}
+
+/* ── 戰後素材獎勵 ── */
+.reward-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+.reward-pill {
+  padding: 6px 12px; border-radius: 16px;
+  background: rgba(76,175,80,0.15); color: #4caf50; border: 1px solid rgba(76,175,80,0.4);
+  font-size: 13px;
+}
+.reward-pill.jade { background: rgba(201,168,76,0.15); color: #c9a84c; border-color: rgba(201,168,76,0.4); }
+
+/* ── 大廳按鈕陰影特效（讓玩家有點擊回饋）── */
+.btn-challenge:active { transform: translateY(1px); }

@@ -1,0 +1,22 @@
+{
+  "name": "heroes-formation",
+  "version": "2.0.0",
+  "description": "羣雄列陣 v2：TCG + RPG 武將對戰，含武器庫 / 鐵匠鋪 / 雙池保底抽卡 / 專武共鳴",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["tcg", "card-game", "rpg", "socket.io", "history"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
+  }
+}
