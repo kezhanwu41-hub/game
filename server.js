@@ -10,14 +10,19 @@ const io = new Server(server, { cors: { origin: '*' } });
 // Serve static files from the current directory
 app.use(express.static(__dirname));
 
-// Route for the main page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
 // Matchmaking and Room State
 let waitingQueue = [];
 const rooms = {};
+
+// Health check (used by hub to detect online mode)
+app.get('/health', (req, res) => {
+  res.json({ ok: true, rooms: Object.keys(rooms).length, waiting: waitingQueue.length, ts: Date.now() });
+});
+
+// Game routes
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/bingfa', (req, res) => res.sendFile(path.join(__dirname, 'bingfa.html')));
+app.get('/huaxia', (req, res) => res.sendFile(path.join(__dirname, 'huaxia.html')));
 
 function generateRoomId() {
   return Math.random().toString(36).substr(2, 6);

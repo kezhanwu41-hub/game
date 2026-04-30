@@ -16,8 +16,9 @@
     color:#e8d8ff; min-height:100vh; overflow-x:hidden;
   }
   /* ==== 通用 ==== */
-  .screen { display:none; min-height:100vh; padding: 24px; }
+  .screen { display:none; min-height:calc(100vh - 70px); padding: 24px; }
   .screen.active { display:block; animation: fadeIn 0.4s ease; }
+  #screen-lobby.active { display:flex !important; flex-direction:column; align-items:center; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
   .top-bar {
@@ -52,7 +53,7 @@
   }
 
   /* ==== LOBBY ==== */
-  #screen-lobby { display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top:6vh; }
+  #screen-lobby { justify-content:center; padding-top:6vh; }
   .lobby-seal {
     width: 96px; height: 96px;
     background: linear-gradient(145deg, #5b3a8a, #2e1d50);
