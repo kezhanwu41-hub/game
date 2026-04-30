@@ -1,93 +1,154 @@
-# 羣雄列陣 v2 — 五行策略 + 武器庫 RPG
+# 羣雄遊戲館 — 兩款卡牌遊戲，一個入口
 
-整合 **TCG 策略** 與 **RPG 養成**：30+ 歷史武將、五行相生相剋、雙陣法戰術、武器庫鍛造、即時 P2P 對戰。
+打開 `index.html` 就是大廳，內含兩個遊戲室：
 
-## 啟動方式
+| 遊戲室 | 路徑 | 玩法 | 特色 |
+| --- | --- | --- | --- |
+| 第一遊戲室「兵法推演」 | `bingfa.html` | BP 禁選 + 五行雙陣 | 純競技、AI 軍師輔佐、Three.js 3D 戰場 |
+| 第二遊戲室「華夏風雲錄」 | `huaxia.html` | 君王戰 TCG/RPG | 武器庫、抽卡、鐵匠鋪、武器分職限定、P2P 對戰 |
+
+兩款遊戲共用 8 大職位定義（`js/data/equipment.js` 的 `JOBS`），武器透過 `jobs[]` 限定可裝備的職位。
+
+---
+
+## 啟動
+
+### 純前端（最簡單）
+
+```bash
+# 直接打開
+start index.html
+```
+
+### 帶 P2P 對戰伺服器（推薦）
 
 ```bash
 npm install
-npm start
+npm start    # http://localhost:7892
 ```
 
-開瀏覽器到 `http://localhost:7892`。
+---
 
-## v2 新增系統
+## 第一遊戲室 — 兵法推演
 
-### 武器庫（武器 / 防具 / 坐騎）
-- 三類裝備分槽：每位武將最多 1 武器 + 1 防具 + 1 坐騎
-- **君王神器**：傳國玉璽等 `artifact` 裝備僅君王可掛，HP 致命時觸發 50% 反擊（每場 1 次）
-- **耐久度**：每次攻擊 / 成功格擋 -1，歸零自動損壞
-- **專武共鳴**：歷史專武對應武將時解鎖額外加成（青龍偃月刀×關羽、方天畫戟×呂布等）
+純競技 BP / 雙陣對戰，無養成數值。
 
-### 抽卡（雙池 + 雙保底）
-- **武器池**：武器 + 坐騎
-- **防具池**：防具
-- **每 10 抽** 必出 SR 以上
-- **每 80 抽** 必出當期傳說
-- **十連 9 折**（1440 vs 單抽 160×10）
-- 重複的 SSR/LEGEND 自動轉為「碎片」，5 碎合成同件裝備
+1. **BP 五階段**：禁、選、禁、選、禁、選 — 共 6 禁、8 選；雙方各派 1 主公 + 1 軍師 + 6 特殊職位
+2. **8 大職位**：主公、軍師、臣相、大司馬、大司農、大將軍、行軍總管、破陣先鋒
+3. **五行雙陣**：每回合佈下「第一陣」+「第二陣」，10 種戰術（金木水火土各 2）
+4. **雙陣結算**：先算我方雙陣內部相生（回 10）/ 相剋（自損 30）/ 相同（傷敵 15），再算敵我交鋒
+5. **職位戰術加成**：
+   - 大將軍：全軍 +5% 攻 + 征伐 +5 傷
+   - 破陣先鋒：金陣優先結算、相同五行敵額外 -5 血
+   - 行軍總管：被剋時木陣減傷 10
+   - 大司農：每 3 回合回 5 血
+   - 大司馬：揭露敵方一陣
+   - 臣相：30% 機率化解雙陣相剋反噬
+6. **羈絆系統**：12 組已實作（桃園三結義、三顧茅廬…），可擴充至 50 組
+7. **段位積分**：`localStorage.bingfa_points`（見習 / 謀將 / 宗師 / 王者）
+8. **AI 軍師**：BP 階段建議禁選，戰報生成史詩旁白
 
-### 鐵匠鋪
-- **戰後素材**：依戰損比例獎勵 隕鐵 / 皮革 / 馬鈴銀 / 強化石
-- **升級系統**：每件裝備可升至 Lv.10，對應素材 + 強化石 + 玉帛
-- **碎片合成**：5 個同件碎片 → 1 件 SSR/LEGEND 裝備
+## 第二遊戲室 — 華夏風雲錄
 
-### PVE / PVP 平衡
-- **PVE**：玩家培養的等級全套生效
-- **PVP**：自動切換為「標準競技模板」，等級當 0、耐久不消耗，雙方公平起跑
+TCG × RPG，君王 5 HP 直擊戰。
+
+- **戰場**：陣前區（Active）+ 後營區（Bench）
+- **回合**：抽牌 / 準備 / 主要 / 戰鬥 / 結束
+- **武器庫**：weapon / armor / mount + 君王神器（kingOnly artifact）
+- **職業限定武器** ⭐ 新功能：每件武器有 `jobs[]` 陣列，只有對應職位的武將才能裝備
+  - 例：青龍偃月刀 → `general / vanguard`
+  - 例：傳國玉璽 → `king`（kingOnly）
+  - 例：羽扇 → `strategist`
+  - 例：糧倉鉤 → `minister`
+- **耐久度**：每次攻擊 / 格擋 -1，歸零自動損壞
+- **專武共鳴**：歷史專武對應武將時 +25%
+- **抽卡**：雙池（武器 / 防具）+ 雙保底（10 抽 SR、80 抽 LEGEND）+ 十連 9 折
+- **鐵匠鋪**：戰後素材獎勵 + 升級至 Lv.10 + 5 碎合成
+- **PVE / PVP 平衡**：PVP 自動切換為「等級 0、不消耗耐久」競技模板
+- **P2P 對戰**：Socket.IO 房間碼
+
+---
+
+## 部署選項
+
+### 選項 1：Google Apps Script（GAS Web App）
+
+把網站包成 GAS Web App，得到 `https://script.google.com/macros/s/.../exec` 域名。
+
+詳見 [`gas/README.md`](gas/README.md)。
+
+### 選項 2：GitHub Pages（純靜態）
+
+兵法推演 + 華夏風雲錄的單機部分皆可運作；P2P 對戰功能會降級為 AI 補位。
+
+```
+git remote add origin https://github.com/<USER>/<REPO>.git
+git push -u origin main
+# Settings → Pages → Source: main / root
+```
+
+### 選項 3：Render Web Service（推薦，含 P2P）
+
+完整支援 Socket.IO 對戰：
+
+- Build: `npm install`
+- Start: `npm start`
+
+`network.js` 已寫好自動切換：本機跑 `localhost:7892`，部署後用同源 URL。
+
+---
 
 ## 檔案結構
 
 ```
 heroes-formation-v2/
-├── index.html              # UI（含大廳 / Gacha / Armory / Smithy / Battle）
+├── index.html              # 🏛️ 遊戲大廳（選擇遊戲室）
+├── bingfa.html             # ⚔️ 兵法推演（第一遊戲室）
+├── huaxia.html             # 👑 華夏風雲錄（第二遊戲室）
 ├── server.js               # Express + Socket.IO 對戰伺服器
+├── package.json
 ├── css/
-│   ├── style.css
-│   ├── gacha.css
-│   └── equipment.css       # ★ 新：武器庫 / 鐵匠鋪 / 裝備槽 UI
+│   ├── style.css, gacha.css, equipment.css, splash.css
 ├── js/
 │   ├── data/
-│   │   ├── generals.js     # 30+ 武將
-│   │   ├── advisors.js
-│   │   ├── bonds.js
-│   │   ├── cards.js
-│   │   ├── campaign.js
-│   │   ├── equipment.js    # ★ 新：武器/防具/坐騎/神器資料
-│   │   ├── materials.js    # ★ 新：素材定義 + 戰損獎勵
-│   │   └── inventory.js    # ★ 重寫：玉帛/裝備/碎片/素材/將魂統一倉儲
+│   │   ├── generals.js, advisors.js, bonds.js, cards.js, campaign.js
+│   │   ├── equipment.js    # ⭐ 含 8 大職業 + 武器 jobs[] 限定
+│   │   ├── materials.js, inventory.js
+│   │   └── bingfa-heroes.js  # ⭐ 兵法推演武將池（按職位）
 │   ├── engine/
-│   │   ├── gameState.js
-│   │   ├── combat.js
-│   │   ├── ai.js
-│   │   ├── network.js
-│   │   ├── gachaEngine.js  # ★ 重寫：雙池 + 10/80 保底 + 十連
-│   │   ├── equipmentEngine.js  # ★ 新：掛載 / 耐久 / 共鳴 / 神器反擊
-│   │   ├── smithy.js       # ★ 新：升級 + 碎片合成 + 戰後結算
-│   │   └── balance.js      # ★ 新：PVE/PVP 數值切換
-│   └── main.js             # 整合控制器（已修 3 個 bug）
-└── img/                    # 武將肖像
+│   │   ├── gameState.js, combat.js, ai.js, network.js
+│   │   ├── gachaEngine.js, equipmentEngine.js
+│   │   ├── smithy.js, balance.js, splash.js
+│   │   └── bingfa-engine.js  # ⭐ BP / 雙陣結算引擎
+│   ├── main.js               # 華夏風雲錄主控
+│   └── bingfa-main.js        # ⭐ 兵法推演主控
+├── gas/                      # ⭐ Google Apps Script 部署
+│   ├── Code.gs
+│   ├── appsscript.json
+│   └── README.md
+└── img/
 ```
 
-## 已修復 bug
+---
 
-1. `main.js` 中 `resolveBattleTurn` 重複定義（呼叫到不存在的 `checkGameOver`/`finishGame`）
-2. `index.html` 寫死 `http://localhost:7892/socket.io/socket.io.js`，改用 CDN 自動切換
-3. `startCampaignLevel` 跳到不存在的 `screen-pick`，已改為統一的 `screen-draft`
+## 共用機制
 
-## 部署
+兩款遊戲共用：
 
-把 `heroes-formation-v2/` 推到 GitHub，然後：
-- **推薦**：Render Web Service → Build `npm install` ／ Start `npm start`
-- 不要用 GitHub Pages（無法跑 Socket.IO 後端）
+- **8 大職位**：`GameData.JOBS` / `BingFaData.JOBS`
+- **五行系統**：金木水火土相生相剋
+- **localStorage**：玉帛、裝備庫、段位積分
 
-`network.js` 已寫好自動切換：本機跑 `localhost:7892`，部署後自動用同源 URL。
+兵法推演純競技、無裝備系統；華夏風雲錄則把武器透過 `jobs[]` 對應到 8 大職位。
 
-## 已知範圍 / 後續
+---
 
-- 30+ 件武器中目前實作 6 件代表作的特效（青龍、方天、丈八、紫薇、楊家槍、玉璽等）
-- 其餘專武走通用加成；想要哪幾件先寫特效再告訴我
-- AI 尚未針對裝備做選擇（單機 AI 暫不掛裝備，PVP 全靠玩家）
+## 已知範圍
+
+- 兵法推演：12 組羈絆已實作（剩 38 組待擴）
+- 華夏風雲錄：30+ 件武器中 6 件特效已實作
+- AI 對手裝備邏輯：暫不掛裝備（PVE 全玩家自由配）
 
 ## 授權
+
 ISC

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>華夏風雲錄 — 君王戰 TCG/RPG</title>
+<meta name="description" content="TCG策略×RPG養成，君王戰、武器庫、鐵匠鋪、雙池抽卡、五行相剋">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/gacha.css">
+<link rel="stylesheet" href="css/equipment.css">
+<link rel="stylesheet" href="css/splash.css">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+<canvas id="particle-canvas"></canvas>
+
+<!-- ══ SPLASH / OPENING ANIMATION ═══════════════════════════════ -->
+<div id="splash" class="splash">
+  <canvas id="splash-canvas" class="splash-canvas"></canvas>
+  <div class="splash-ink-layer"></div>
+  <div class="splash-content">
+    <div class="splash-seal">
+      <div class="splash-seal-inner">羣</div>
+    </div>
+    <div class="splash-title">
+      <span class="splash-char" style="--d:0">羣</span>
+      <span class="splash-char" style="--d:1">雄</span>
+      <span class="splash-char" style="--d:2">列</span>
+      <span class="splash-char" style="--d:3">陣</span>
+    </div>
+    <div class="splash-sub">五行 ‧ 列陣 ‧ 千古</div>
+    <div class="splash-five">
+      <span class="elem-badge wood">木</span>
+      <span class="elem-badge fire">火</span>
+      <span class="elem-badge earth">土</span>
+      <span class="elem-badge metal">金</span>
+      <span class="elem-badge water">水</span>
+    </div>
+    <button class="splash-enter" id="splash-enter">入 場</button>
+    <div class="splash-tip">點擊任意處或按 [入場] 進入</div>
+  </div>
+</div>
+
+<!-- ══ LOBBY ════════════════════════════════════════════════════ -->
+<section class="screen active" id="screen-lobby">
+  <div class="lobby-inner">
+    <div class="lobby-title-area">
+      <div class="lobby-ink-title">羣雄列陣</div>
+      <div class="lobby-subtitle">五行策略 · 前後排場地 · 歷史武將對決</div>
+      <div class="five-elements-strip">
+        <span class="elem-badge wood">木</span>
+        <span class="elem-badge fire">火</span>
+        <span class="elem-badge earth">土</span>
+        <span class="elem-badge metal">金</span>
+        <span class="elem-badge water">水</span>
+      </div>
+    </div>
+    <div class="lobby-card-grid">
+      <div class="lobby-card-type">
+        <div class="lct-icon">⚔️</div>
+        <div class="lct-name">將牌</div>
+        <div class="lct-desc">30位歷史武將<br>各具五行屬性</div>
+      </div>
+      <div class="lobby-card-type">
+        <div class="lct-icon">💊</div>
+        <div class="lct-name">療牌</div>
+        <div class="lct-desc">回復支援<br>放置後排</div>
+      </div>
+      <div class="lobby-card-type">
+        <div class="lct-icon">🪤</div>
+        <div class="lct-name">陷阱</div>
+        <div class="lct-desc">伏牌等待<br>條件觸發</div>
+      </div>
+    </div>
+    <div class="lobby-controls">
+      <div class="diff-row">
+        <button class="diff-btn" id="diff-easy"   onclick="Game.setDifficulty('easy')">初學</button>
+        <button class="diff-btn active" id="diff-medium" onclick="Game.setDifficulty('medium')">謀將</button>
+        <button class="diff-btn" id="diff-hard"   onclick="Game.setDifficulty('hard')">鬼謀</button>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-primary" id="btn-start-game" onclick="Game.startGame()">單機征戰</button>
+        <button class="btn-primary" id="btn-start-multiplayer" onclick="Game.startMultiplayer()" style="background: linear-gradient(135deg, #4a90d9, #1c4b82); color:white;">真人連線</button>
+      </div>
+      <button class="btn-challenge" onclick="Game.startCampaign()">千古幻陣 (挑戰模式)</button>
+      <button class="btn-challenge" style="margin-top: 10px; background: linear-gradient(135deg, #7a6030, #c9a84c); color:black; font-weight:bold;" onclick="Game.showGacha()">🏮 點將召喚 (Gacha)</button>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="btn-challenge" style="flex:1; background: linear-gradient(135deg, #5b3a8a, #2e1d50); color:#fff;" onclick="Game.showArmory()">🗡️ 武器庫</button>
+        <button class="btn-challenge" style="flex:1; background: linear-gradient(135deg, #6b3d20, #2d1a0c); color:#fff;" onclick="Game.showSmithy()">🔨 鐵匠鋪</button>
+      </div>
+      <button class="btn-challenge" style="margin-top: 10px; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2);" onclick="document.getElementById('modal-tutorial').style.display='flex'">📖 遊戲玩法指南</button>
+      <button class="btn-challenge" style="margin-top: 10px; background: linear-gradient(135deg,#37474f,#1a2226); border-color:#546e7a; color:#cfd8dc;" onclick="window.location.href='index.html'">🏛️ 返回遊戲大廳</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ GACHA SCREEN ════════════════════════════════════════════ -->
+<section class="screen" id="screen-gacha">
+  <div class="gacha-inner">
+    <div class="gacha-currency">
+      <span>玉帛: </span>
+      <span id="gacha-jade-count">0</span>
+    </div>
+
+    <div class="gacha-pool-tabs">
+      <button class="gacha-pool-tab active" id="gtab-weapon" onclick="Game.switchGachaPool('weapon')">⚔️ 武器池（武器/坐騎）</button>
+      <button class="gacha-pool-tab" id="gtab-armor" onclick="Game.switchGachaPool('armor')">🛡️ 防具池</button>
+    </div>
+
+    <div class="gacha-banner-card">
+      <div class="gacha-banner-info">
+        <div class="gacha-banner-title" id="gacha-banner-title">神兵降世：武聖降臨</div>
+        <div class="gacha-banner-featured" id="gacha-banner-featured">【機率提升】5★ 🐉 青龍偃月刀</div>
+      </div>
+    </div>
+
+    <div class="gacha-pity-row">
+      <div class="pity-pill" id="pity-sr">SR 保底：0/10</div>
+      <div class="pity-pill legend" id="pity-legend">傳說保底：0/80</div>
+    </div>
+
+    <div class="gacha-actions">
+      <button class="btn-gacha" onclick="Game.performSummon(1)">單次召喚 (160)</button>
+      <button class="btn-gacha ten" onclick="Game.performSummon(10)">十連召喚 (1440)</button>
+    </div>
+
+    <button class="btn-secondary" style="margin-top: 20px;" onclick="Game.returnLobby()">返回大廳</button>
+  </div>
+</section>
+
+<!-- ══ ARMORY SCREEN（武器庫）════════════════════════════════════ -->
+<section class="screen" id="screen-armory">
+  <div class="armory-inner">
+    <div class="armory-header">
+      <div class="armory-title">🗡️ 武器庫</div>
+      <button class="btn-secondary" onclick="Game.returnLobby()">返回大廳</button>
+    </div>
+    <div class="armory-tabs">
+      <button class="armory-tab active" data-armory-tab="weapon" onclick="Game.filterArmory('weapon')">武器</button>
+      <button class="armory-tab" data-armory-tab="armor" onclick="Game.filterArmory('armor')">防具</button>
+      <button class="armory-tab" data-armory-tab="mount" onclick="Game.filterArmory('mount')">坐騎</button>
+      <button class="armory-tab" data-armory-tab="fragment" onclick="Game.filterArmory('fragment')">碎片</button>
+    </div>
+    <div class="armory-grid" id="armory-grid"></div>
+    <div class="armory-empty" id="armory-empty" style="display:none;">尚無此類裝備，請至點將召喚抽取</div>
+  </div>
+</section>
+
+<!-- ══ SMITHY SCREEN（鐵匠鋪）═══════════════════════════════════ -->
+<section class="screen" id="screen-smithy">
+  <div class="smithy-inner">
+    <div class="smithy-header">
+      <div class="smithy-title">🔨 鐵匠鋪</div>
+      <button class="btn-secondary" onclick="Game.returnLobby()">返回大廳</button>
+    </div>
+    <div class="smithy-materials" id="smithy-materials"></div>
+    <div class="smithy-tabs">
+      <button class="smithy-tab active" data-smithy-tab="upgrade" onclick="Game.switchSmithyTab('upgrade')">升級裝備</button>
+      <button class="smithy-tab" data-smithy-tab="merge" onclick="Game.switchSmithyTab('merge')">碎片合成</button>
+    </div>
+    <div class="smithy-content" id="smithy-content"></div>
+  </div>
+</section>
+
+<!-- ══ CEMETERY MODAL（墓地 / 棄牌堆）═══════════════════════════ -->
+<div class="modal-overlay" id="modal-cemetery" style="display:none;" onclick="if(event.target===this)Game.hideCemetery()">
+  <div class="modal-content cemetery-modal">
+    <div class="cemetery-header">
+      <span id="cemetery-title">墓地</span>
+      <button onclick="Game.hideCemetery()" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    <div class="cemetery-grid" id="cemetery-grid"></div>
+  </div>
+</div>
+
+<!-- ══ EQUIP MODAL（裝備掛載）═════════════════════════════════ -->
+<div class="modal-overlay" id="modal-equip" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-content equip-modal">
+    <div class="equip-modal-header">
+      <span id="equip-modal-target">為武將裝備</span>
+      <button onclick="document.getElementById('modal-equip').style.display='none'" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    <div class="equip-modal-grid" id="equip-modal-grid"></div>
+  </div>
+</div>
+
+<!-- ══ SUMMON RESULT MODAL ════════════════════════════════════ -->
+<div id="modal-summon" class="gacha-result-overlay" style="display:none;">
+  <div class="gacha-result-title">召喚獲得</div>
+  <div id="summon-results" class="gacha-result-list"></div>
+  <button class="btn-primary" style="margin-top:50px; padding:12px 60px;" onclick="Game.hideSummonResults()">確認並返回</button>
+</div>
+
+<!-- ══ TUTORIAL MODAL ═════════════════════════════════════════ -->
+<div id="modal-tutorial" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto; text-align: left;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; margin-bottom:15px;">
+      <h2 style="margin:0; color:var(--gold);">📖 遊戲玩法指南</h2>
+      <button onclick="document.getElementById('modal-tutorial').style.display='none'" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+    </div>
+    <div style="line-height: 1.6; color: var(--text);">
+      <h3 style="color:var(--blue); margin-top:0;">🌟 核心概念</h3>
+      <p>《羣雄列陣》是一款結合五行相剋與歷史名將的策略卡牌對戰遊戲。每場對局分為四個階段：<strong>禁用 (Ban)、選拔 (Pick)、佈陣 (Deploy)、戰鬥 (Battle)</strong>。</p>
+      <h3 style="color:var(--blue);">1️⃣ 禁用與選拔 (Ban & Pick)</h3>
+      <p>
+        ✔️ <strong>禁用 (Ban)：</strong> 雙方輪流從牌庫剔除 3 名可能造成威脅的英雄。<br>
+        ✔️ <strong>選拔 (Pick)：</strong> 輪流從剩餘的傳奇英傑中挑選 5 名加入您的陣容。
+      </p>
+      <h3 style="color:var(--blue);">2️⃣ 策略佈陣 (Deploy)</h3>
+      <p>
+        將獲選的英雄佈署於陣型上：<br>
+        - <strong>前排：</strong> 負責承受攻擊，通常安排步兵或騎兵等擁有高體力防禦兵種。<br>
+        - <strong>後排：</strong> 受前排保護的火力輸出，適合弓箭手、策士與純輔助。<br>
+        <span style="color:var(--text-muted); font-size:12px;">* 注意：若某一陣位前排陣亡，後排將直接暴露於敵軍利刃之下。</span>
+      </p>
+      <h3 style="color:var(--blue);">3️⃣ 五行生剋機制</h3>
+      <p>
+        🔥 火 剋 <span style="color:#f1c40f">金</span> 剋 🌲 木 剋 🪨 土 剋 💧 水 剋 🔥 火<br>
+        善用屬性剋制攻擊將造成破壞性的額外傷害。同時，每回合累積 <strong>士氣</strong> 還能觸發英傑毀天滅地的【專屬覺醒技能】！
+      </p>
+      <h3 style="color:var(--blue);">4️⃣ 雙陣法與多樣模式</h3>
+      <p>
+        單機闖關請至<strong>千古幻陣</strong>，面對歷代王侯將相的鐵血考驗！想挑戰最高難度則可選擇<strong>真人連線</strong>對弈。<br>
+      </p>
+    </div>
+    <button class="btn-primary" style="margin-top:20px; width:100%;" onclick="document.getElementById('modal-tutorial').style.display='none'">準備迎戰</button>
+  </div>
+</div>
+
+<!-- ══ CAMPAIGN SCREEN ═════════════════════════════════════════ -->
+<section class="screen" id="screen-campaign">
+  <div class="campaign-inner">
+    <div class="campaign-sidebar">
+      <div class="campaign-title-area">
+        <div class="campaign-title">千古幻陣</div>
+        <div class="campaign-desc">突破歷史名將的虛構試煉</div>
+      </div>
+      <div class="campaign-list" id="campaign-list">
+        <!-- Rendered by JS -->
+      </div>
+      <button class="btn-secondary" style="margin-top: 16px;" onclick="Game.returnLobby()">返回大廳</button>
+    </div>
+    <div class="campaign-detail" id="campaign-detail">
+      <!-- Rendered by JS -->
+      <div class="c-detail-card" style="opacity: 0.5;">
+        <div class="c-detail-header">
+          <div class="c-detail-title" style="font-size: 24px; color: var(--text-muted);">請選擇關卡</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ UNIFIED DRAFT (BAN + PICK) SCREEN ════════════════════════ -->
+<section class="screen" id="screen-draft">
+  <div class="phase-header">
+    <div class="phase-title" id="draft-phase-title">第 1 階段：【主公】禁用武將</div>
+    <div class="phase-timer-wrap">
+      <div class="phase-timer" id="draft-timer">30</div>
+      <div class="phase-timer-bar"><div class="phase-timer-fill" id="draft-timer-bar"></div></div>
+    </div>
+    <div class="phase-side" id="draft-side-indicator">輪到：我方</div>
+  </div>
+
+  <div class="draft-layout">
+    <!-- ── 我方禁用 + 職位槽 ── -->
+    <div class="draft-panel left">
+      <div class="draft-panel-title">⚔️ 我方陣容</div>
+      <div class="role-slots" id="player-role-slots">
+        <div class="role-slot" id="p-role-lord"      ><div class="role-label">主公</div><div class="role-content">空</div></div>
+        <div class="role-slot" id="p-role-advisor"   ><div class="role-label">軍師</div><div class="role-content">空</div></div>
+        <div class="role-slot" id="p-role-minister"  ><div class="role-label">臣相</div><div class="role-content">空</div></div>
+        <div class="role-slot" id="p-role-marshal"   ><div class="role-label">大司馬</div><div class="role-content">空</div></div>
+        <div class="role-slot" id="p-role-agri"      ><div class="role-label">大司農</div><div class="role-content">空</div></div>
+        <div class="role-slot" id="p-role-chief"     ><div class="role-label">大將軍</div><div class="role-content">空</div></div>
+        <div class="role-slot" id="p-role-marching"  ><div class="role-label">行軍總管</div><div class="role-content">空</div></div>
+        <div class="role-slot" id="p-role-vanguard"  ><div class="role-label">破陣先鋒</div><div class="role-content">空</div></div>
+      </div>
+      <div class="draft-panel-title" style="margin-top:8px; font-size:11px;">我方禁用</div>
+      <div class="ban-card-grid" id="player-ban-grid"></div>
+    </div>
+
+    <!-- ── 中央卡牌選擇區 ── -->
+    <div class="draft-center">
+      <div class="draft-filter-row">
+        <button class="filter-btn active" onclick="Game.filterDraft('all','draft')">全部</button>
+        <button class="filter-btn" onclick="Game.filterDraft('三國','draft')">三國</button>
+        <button class="filter-btn" onclick="Game.filterDraft('漢','draft')">漢</button>
+        <button class="filter-btn" onclick="Game.filterDraft('秦','draft')">秦</button>
+        <button class="filter-btn" onclick="Game.filterDraft('唐','draft')">唐</button>
+        <button class="filter-btn" onclick="Game.filterDraft('宋','draft')">宋</button>
+        <button class="filter-btn" onclick="Game.filterDraft('明','draft')">明</button>
+        <input class="search-input" type="text" placeholder="搜尋武將..." oninput="Game.searchDraft(this.value,'draft')">
+      </div>
+      <div class="gen-grid" id="draft-card-grid"></div>
+      <div class="draft-hint" id="draft-hint-text">請等待...</div>
+    </div>
+
+    <!-- ── 敵方職位槽 + 禁用 ── -->
+    <div class="draft-panel right">
+      <div class="draft-panel-title">🔴 敵方陣容</div>
+      <div class="role-slots" id="enemy-role-slots">
+        <div class="role-slot enemy" id="e-role-lord"      ><div class="role-label">主公</div><div class="role-content">空</div></div>
+        <div class="role-slot enemy" id="e-role-advisor"   ><div class="role-label">軍師</div><div class="role-content">空</div></div>
+        <div class="role-slot enemy" id="e-role-minister"  ><div class="role-label">臣相</div><div class="role-content">空</div></div>
+        <div class="role-slot enemy" id="e-role-marshal"   ><div class="role-label">大司馬</div><div class="role-content">空</div></div>
+        <div class="role-slot enemy" id="e-role-agri"      ><div class="role-label">大司農</div><div class="role-content">空</div></div>
+        <div class="role-slot enemy" id="e-role-chief"     ><div class="role-label">大將軍</div><div class="role-content">空</div></div>
+        <div class="role-slot enemy" id="e-role-marching"  ><div class="role-label">行軍總管</div><div class="role-content">空</div></div>
+        <div class="role-slot enemy" id="e-role-vanguard"  ><div class="role-label">破陣先鋒</div><div class="role-content">空</div></div>
+      </div>
+      <div class="draft-panel-title" style="margin-top:8px; font-size:11px;">敵方禁用</div>
+      <div class="ban-card-grid" id="enemy-ban-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ DEPLOY PHASE ═════════════════════════════════════════════ -->
+<section class="screen" id="screen-deploy">
+  <div class="phase-header">
+    <div class="phase-title">第三階段：部署陣型</div>
+    <div class="phase-timer-wrap">
+      <div class="phase-timer" id="deploy-timer">60</div>
+      <div class="phase-timer-bar"><div class="phase-timer-fill" id="deploy-timer-bar"></div></div>
+    </div>
+    <div class="phase-side">拖曳卡牌到場地</div>
+  </div>
+  <div class="deploy-layout">
+    <!-- Field preview -->
+    <div class="deploy-field-preview">
+      <div class="field-label">我方場地</div>
+      <div class="field-rows">
+        <div class="field-row-label">後排</div>
+        <div class="field-row back-row" id="deploy-back-row">
+          <div class="field-cell" id="deploy-back-0" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'back',0)">
+            <div class="field-cell-label">後 1</div>
+            <div class="field-cell-content" id="deploy-back-0-content"></div>
+            <div class="field-cell-hint">療牌/陷阱/待命將</div>
+          </div>
+          <div class="field-cell" id="deploy-back-1" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'back',1)">
+            <div class="field-cell-label">後 2</div>
+            <div class="field-cell-content" id="deploy-back-1-content"></div>
+            <div class="field-cell-hint">療牌/陷阱/待命將</div>
+          </div>
+        </div>
+        <div class="field-row-label front-label">前排（武將）</div>
+        <div class="field-row front-row" id="deploy-front-row">
+          <div class="field-cell front" id="deploy-front-0" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'front',0)">
+            <div class="field-cell-label">前 左</div>
+            <div class="field-cell-content" id="deploy-front-0-content"></div>
+            <div class="field-cell-hint">武將</div>
+          </div>
+          <div class="field-cell front" id="deploy-front-1" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'front',1)">
+            <div class="field-cell-label">前 中</div>
+            <div class="field-cell-content" id="deploy-front-1-content"></div>
+            <div class="field-cell-hint">武將</div>
+          </div>
+          <div class="field-cell front" id="deploy-front-2" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'front',2)">
+            <div class="field-cell-label">前 右</div>
+            <div class="field-cell-content" id="deploy-front-2-content"></div>
+            <div class="field-cell-hint">武將</div>
+          </div>
+        </div>
+        <div class="field-divider">── 對決線 ──</div>
+      </div>
+      <div class="elem-legend">
+        <span class="elem-badge wood sm">木克土</span>
+        <span class="elem-badge fire sm">火克金</span>
+        <span class="elem-badge earth sm">土克水</span>
+        <span class="elem-badge metal sm">金克木</span>
+        <span class="elem-badge water sm">水克火</span>
+      </div>
+    </div>
+    <!-- Hand cards -->
+    <div class="deploy-hand">
+      <div class="deploy-hand-title">你的5張牌（拖到左側場地）</div>
+      <div class="deploy-hand-cards" id="deploy-hand-cards"></div>
+      <div class="deploy-actions">
+        <button class="btn-secondary" onclick="Game.autoDeployPlayer()">⚡ 自動部署</button>
+        <button class="btn-primary" id="btn-confirm-deploy" onclick="Game.confirmDeploy()">確認出戰！</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ BATTLE ════════════════════════════════════════════════════ -->
+<section class="screen" id="screen-battle">
+  <div class="battle-layout">
+    <!-- ── ENEMY FIELD ── -->
+    <div class="battle-field enemy-field">
+      <div class="field-side-label enemy">🔴 敵方</div>
+      <!-- Enemy back row -->
+      <div class="battle-row back-row" id="enemy-back-row">
+        <div class="battle-cell back" id="enemy-back-cell-0"></div>
+        <div class="battle-cell back" id="enemy-back-cell-1"></div>
+      </div>
+      <!-- Enemy front row -->
+      <div class="battle-row front-row" id="enemy-front-row">
+        <div class="battle-cell front" id="enemy-front-cell-0" onclick="Game.selectTarget('front',0)"></div>
+        <div class="battle-cell front" id="enemy-front-cell-1" onclick="Game.selectTarget('front',1)"></div>
+        <div class="battle-cell front" id="enemy-front-cell-2" onclick="Game.selectTarget('front',2)"></div>
+      </div>
+    </div>
+
+    <!-- ── FIELD DIVIDER ── -->
+    <div class="battle-divider">
+      <div class="divider-center">
+        <div class="morale-strip">
+          <div class="morale-bar player-morale">
+            <div class="morale-fill" id="player-morale-fill"></div>
+          </div>
+          <div class="morale-labels">
+            <span id="player-morale-val">50</span>
+            <span class="morale-icon">⚔️</span>
+            <span id="enemy-morale-val">50</span>
+          </div>
+          <div class="morale-bar enemy-morale">
+            <div class="morale-fill enemy" id="enemy-morale-fill"></div>
+          </div>
+        </div>
+        <div class="turn-display">
+          <span>回合 </span><span id="battle-turn-num">1</span>
+        </div>
+        <div class="phase-indicator">
+          <div class="phase-step" id="phase-draw">抽牌</div>
+          <div class="phase-step" id="phase-standby">準備</div>
+          <div class="phase-step active" id="phase-main">主要</div>
+          <div class="phase-step" id="phase-battle">戰鬥</div>
+          <div class="phase-step" id="phase-end">結束</div>
+        </div>
+        <div class="cemetery-buttons">
+          <button class="cem-btn" onclick="Game.showCemetery('player')">🪦 我方墓地 <span id="cem-count-player">0</span></button>
+          <button class="cem-btn enemy" onclick="Game.showCemetery('enemy')">🪦 敵方墓地 <span id="cem-count-enemy">0</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PLAYER FIELD ── -->
+    <div class="battle-field player-field">
+      <!-- Player front row -->
+      <div class="battle-row front-row" id="player-front-row">
+        <div class="battle-cell front" id="player-front-cell-0" onclick="Game.selectAttacker('front',0)"></div>
+        <div class="battle-cell front" id="player-front-cell-1" onclick="Game.selectAttacker('front',1)"></div>
+        <div class="battle-cell front" id="player-front-cell-2" onclick="Game.selectAttacker('front',2)"></div>
+      </div>
+      <!-- Player back row -->
+      <div class="battle-row back-row" id="player-back-row">
+        <div class="battle-cell back" id="player-back-cell-0" onclick="Game.clickBackCard('player',0)"></div>
+        <div class="battle-cell back" id="player-back-cell-1" onclick="Game.clickBackCard('player',1)"></div>
+      </div>
+      <div class="field-side-label player">🔵 我方</div>
+    </div>
+
+    <!-- ── COMMAND PANEL ── -->
+    <div class="command-panel">
+      <div class="cmd-selection-info">
+        <span id="cmd-attacker-label">選擇攻擊武將</span>
+        <span class="cmd-arrow">→</span>
+        <span id="cmd-target-label">選擇目標</span>
+      </div>
+      <div class="cmd-timer-row">
+        <span>指令：</span>
+        <span class="cmd-timer-num" id="cmd-timer">20</span>
+        <div class="cmd-timer-bar"><div class="cmd-timer-fill" id="cmd-timer-bar"></div></div>
+        <span class="cmd-auto-hint">逾時自動【固守】</span>
+      </div>
+      <div class="cmd-phase-container">
+        <div class="cmd-phase-title" style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">第一陣</div>
+        <div class="cmd-btns" id="cmd1-btns">
+          <button class="cmd-btn" id="cmd1-zhengfa" onclick="Game.playerChooseCmd(1, 'zhengfa')"><div class="cmd-name">⚔️ 征伐</div></button>
+          <button class="cmd-btn" id="cmd1-yuhui"   onclick="Game.playerChooseCmd(1, 'yuhui')"><div class="cmd-name">🌿 迂迴</div></button>
+          <button class="cmd-btn" id="cmd1-kuidi"   onclick="Game.playerChooseCmd(1, 'kuidi')"><div class="cmd-name">💧 潰堤</div></button>
+          <button class="cmd-btn" id="cmd1-huogong" onclick="Game.playerChooseCmd(1, 'huogong')"><div class="cmd-name">🔥 火攻</div></button>
+          <button class="cmd-btn" id="cmd1-jianbi"  onclick="Game.playerChooseCmd(1, 'jianbi')"><div class="cmd-name">⛰️ 堅壁</div></button>
+        </div>
+        <div class="cmd-phase-title" style="font-size:11px;color:var(--text-muted);margin:8px 0 4px;">第二陣</div>
+        <div class="cmd-btns" id="cmd2-btns">
+          <button class="cmd-btn" id="cmd2-jinglei" onclick="Game.playerChooseCmd(2, 'jinglei')"><div class="cmd-name">⚡ 驚雷</div></button>
+          <button class="cmd-btn" id="cmd2-manyan"  onclick="Game.playerChooseCmd(2, 'manyan')"><div class="cmd-name">🌿 蔓衍</div></button>
+          <button class="cmd-btn" id="cmd2-xuanwo"  onclick="Game.playerChooseCmd(2, 'xuanwo')"><div class="cmd-name">🌀 漩渦</div></button>
+          <button class="cmd-btn" id="cmd2-fentian" onclick="Game.playerChooseCmd(2, 'fentian')"><div class="cmd-name">🔥 焚天</div></button>
+          <button class="cmd-btn" id="cmd2-dilie"   onclick="Game.playerChooseCmd(2, 'dilie')"><div class="cmd-name">⛰️ 地裂</div></button>
+        </div>
+      </div>
+      <div class="element-reminder">
+        <span class="elem-badge wood sm">木→土+40%</span>
+        <span class="elem-badge fire sm">火→金+40%</span>
+        <span class="elem-badge earth sm">土→水+40%</span>
+        <span class="elem-badge metal sm">金→木+40%</span>
+        <span class="elem-badge water sm">水→火+40%</span>
+      </div>
+      <!-- Battle log -->
+      <div class="battle-log" id="battle-log"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ RESULTS ═══════════════════════════════════════════════════ -->
+<section class="screen" id="screen-results">
+  <div class="results-inner">
+    <div class="results-banner" id="results-banner">
+      <div class="results-title" id="results-title">勝利</div>
+      <div class="results-reason" id="results-reason"></div>
+    </div>
+    <div class="results-stats" id="results-stats"></div>
+    <div class="results-actions">
+      <button class="btn-primary" onclick="Game.returnLobby()">返回大廳</button>
+      <button class="btn-secondary" onclick="Game.startGame()">再戰一局</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
+
+<!-- Scripts: data first, then engines, then orchestration -->
+<script src="js/data/generals.js"></script>
+<script src="js/data/bonds.js"></script>
+<script src="js/data/cards.js"></script>
+<script src="js/data/campaign.js"></script>
+<script src="js/data/equipment.js"></script>
+<script src="js/data/materials.js"></script>
+<script src="js/data/inventory.js"></script>
+<script src="js/engine/network.js"></script>
+<script src="js/engine/gachaEngine.js"></script>
+<script src="js/engine/equipmentEngine.js"></script>
+<script src="js/engine/smithy.js"></script>
+<script src="js/engine/balance.js"></script>
+<script src="js/engine/ai.js"></script>
+<script src="js/engine/gameState.js"></script>
+<script src="js/engine/combat.js"></script>
+<script src="js/engine/splash.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

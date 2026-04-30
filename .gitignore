@@ -13,3 +13,5 @@ Thumbs.db
 desktop.ini
 dist/
 build/
+# Stale duplicate of v2 contents
+game/
