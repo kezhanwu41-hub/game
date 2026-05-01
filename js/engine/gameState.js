@@ -83,7 +83,13 @@ window.GameState = (function() {
   }
 
   function getBPStage() { return state ? state.bpStage : 0; }
-  function setBPStage(idx) { if (state) state.bpStage = idx; }
+  function setBPStage(idx) {
+    if (!state) return;
+    state.bpStage = idx;
+    // Keep phase in sync so onCardClick phase-check works
+    const key = 'BP_STAGE_' + idx;
+    if (PHASES[key]) state.phase = PHASES[key];
+  }
   function getCurrentRole() { return ROLES[state ? state.bpStage : 0]; }
   function isFinalBPStage() { return state && state.bpStage === 7; }
 
@@ -185,8 +191,9 @@ window.GameState = (function() {
   }
 
   return {
-    PHASES, init, getState, getPhase, setPhase,
+    PHASES, ROLES, init, getState, getPhase, setPhase,
     addBan, addPick, placeCard, removeCardFromField, getPlacedCardIds,
+    getBPStage, setBPStage, getCurrentRole, isFinalBPStage,
     initBattle, addLog, getActiveGeneral, getAllFrontAlive, getBackCards,
     cleanupField, moveBackToFront, checkWinCondition, updateCmdStreak
   };

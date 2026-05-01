@@ -22,13 +22,13 @@ window.CampaignEngine = (function() {
       id: 'lvl4', name: '火之試煉：霸王降世',
       desc: '西楚霸王勢不可擋，破釜沉舟。敵人屬性：火',
       enemyBuffs: { hp: 1.4, atk: 1.4 },
-      enemyPicks: ['xiang_yu', 'pofuchencheng', 'lu_bu', 'heal_hupo', 'trap_lijian']
+      enemyPicks: ['xiang_yu', 'lu_bu', 'han_xin', 'heal_hupo', 'trap_lijian']
     },
     {
       id: 'lvl5', name: '土之試煉：千古始皇',
       desc: '大秦鐵甲，萬世不拔之基。敵人屬性：土',
       enemyBuffs: { hp: 1.6, atk: 1.5 },
-      enemyPicks: ['bai_qi', 'meng_tian', 'zhang_jiao_01', 'heal_zhiya', 'trap_lianhuo'] // If zhang_jiao_01 doesn't exist, we fallback
+      enemyPicks: ['bai_qi', 'meng_tian', 'xu_da', 'heal_zhiya', 'trap_lianhuo']
     }
   ];
 

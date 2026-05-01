@@ -103,15 +103,18 @@ window.AIEngine = (function() {
 
   // ── 場地部署策略 ──────────────────────────────────────────────
   function deployField(enemyPicks, playerField, difficulty) {
-    // enemyPicks: array of card ids
-    // Deploy: strongest 3 generals in front by power, heal/trap to back
+    // enemyPicks may be array of ids OR pick-objects {id,...}
+    const getCardSafe = (p) => {
+      const id = (p && typeof p === 'object') ? p.id : p;
+      return id ? (GameData.getGeneral(id) || GameData.getCardById(id)) : null;
+    };
     const generals = enemyPicks
-      .map(id => GameData.getGeneral(id) || GameData.getCardById(id))
+      .map(getCardSafe)
       .filter(c => c && c.cardType === 'general')
       .sort((a, b) => (b.atk + b.def) - (a.atk + a.def));
 
     const others = enemyPicks
-      .map(id => GameData.getCardById(id))
+      .map(getCardSafe)
       .filter(c => c && c.cardType !== 'general');
 
     // Front: top 3 generals
