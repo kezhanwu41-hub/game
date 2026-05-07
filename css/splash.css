@@ -227,3 +227,89 @@ button:active::after {
 .gen-card:hover:not(.banned), .heal-card:hover, .trap-card:hover {
   transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
+
+/* ═════════ CINEMATIC OVERLAY（全三頁通用）═════════ */
+
+/* 信箱遮幅黑條 */
+.cin-lb-top, .cin-lb-bot {
+  position: absolute; left: 0; right: 0; height: 60px;
+  background: #000; z-index: 20; pointer-events: none;
+}
+.cin-lb-top { top: 0; transform: translateY(-60px); animation: cinLbIn 0.5s ease 0.25s forwards; }
+.cin-lb-bot { bottom: 0; transform: translateY(60px); animation: cinLbIn 0.5s ease 0.25s forwards; }
+@keyframes cinLbIn { to { transform: translateY(0); } }
+.cin-lb-top.retract { animation: cinLbTopOut 0.5s ease forwards !important; }
+.cin-lb-bot.retract { animation: cinLbBotOut 0.5s ease forwards !important; }
+@keyframes cinLbTopOut { to { transform: translateY(-60px); } }
+@keyframes cinLbBotOut { to { transform: translateY(60px); } }
+
+/* 白色閃光 */
+.cin-flash {
+  position: absolute; inset: 0; background: #fff;
+  z-index: 25; pointer-events: none;
+  animation: cinFlashOut 0.7s ease forwards;
+}
+@keyframes cinFlashOut { 0% { opacity: 1; } 100% { opacity: 0; pointer-events: none; } }
+
+/* 掃描線（膠片感） */
+.cin-scanlines {
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+  );
+}
+
+/* 暈影 */
+.cin-vignette {
+  position: absolute; inset: 0; z-index: 7; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 38%, rgba(0,0,0,0.65) 100%);
+}
+
+/* 進度條（藏在底部黑條裡）*/
+.cin-progress {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px; z-index: 22;
+  pointer-events: none;
+  background: rgba(255,255,255,0.08);
+}
+.cin-progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #c9a84c 0%, #ef5350 100%);
+  box-shadow: 0 0 8px rgba(201,168,76,0.9);
+  transition: width 0.08s linear;
+}
+
+/* 按鈕鎖定態 */
+.cin-locked {
+  pointer-events: none !important;
+  opacity: 0 !important;
+  animation: none !important;
+  box-shadow: none !important;
+  cursor: default !important;
+}
+
+/* 按鈕解鎖動畫 */
+@keyframes cinBtnUnlock {
+  0%   { opacity: 0; transform: scale(0.88) translateY(12px); filter: blur(4px); }
+  60%  { opacity: 1; transform: scale(1.04) translateY(-2px); filter: blur(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.cin-unlocked {
+  animation: cinBtnUnlock 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards,
+             glowPulse 2.4s ease 0.6s infinite !important;
+}
+
+/* 解鎖後「點擊進入」提示（浮在底部信箱條上方）*/
+.cin-ready-tip {
+  position: absolute; bottom: 68px; left: 0; right: 0;
+  text-align: center; font-family: 'Noto Serif TC', serif;
+  font-size: 12px; letter-spacing: 6px; color: rgba(255,255,255,0.55);
+  z-index: 30; pointer-events: none; opacity: 0;
+}
+.cin-ready-tip.show {
+  animation: fadeUp 0.6s ease forwards, cinTipPulse 2s ease 0.6s infinite;
+}
+@keyframes cinTipPulse {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 1; color: rgba(201,168,76,0.9); }
+}
