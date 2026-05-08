@@ -4,491 +4,384 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>兵法推演 — 八位禁選 ‧ 五行雙陣</title>
-<meta name="description" content="BP 五階段禁選對決，8 大職位、五行雙陣博弈、AI 軍師覆盤。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-/* ── Variables ── */
-:root {
-  --purple: #9c6dd6;
-  --gold: #c9a84c;
-  --dark: #0a0612;
-  --dark2: #1a0f2e;
-  --text: #e8d8ff;
+/* ── Reset & Variables ─────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --purple:#9c6dd6;--gold:#c9a84c;--dark:#07041a;--dark2:#12093a;
+  --text:#e8d8ff;--red:#ef5350;--green:#66bb6a;--blue:#42a5f5;
+}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Noto Serif TC',serif;
+  background:radial-gradient(ellipse at 50% 30%,#1a0f2e 0%,#07041a 80%);
+  color:var(--text);min-height:100vh;
+}
+button{font-family:'Noto Serif TC',serif;cursor:pointer;}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.2);}
+::-webkit-scrollbar-thumb{background:rgba(156,109,214,0.4);border-radius:3px;}
+
+/* ── Animations ────────────────────────────────────────── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes glow{0%,100%{box-shadow:0 0 12px rgba(156,109,214,.3)}50%{box-shadow:0 0 28px rgba(156,109,214,.8)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes ripple{from{opacity:1;transform:scale(0)}to{opacity:0;transform:scale(2)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes stampIn{
+  0%{transform:translateY(-200px) rotate(-25deg) scale(2.2);opacity:0}
+  60%{transform:translateY(10px) rotate(2deg) scale(1.08);opacity:1}
+  80%{transform:translateY(-4px) rotate(-1deg) scale(.97)}
+  100%{transform:translateY(0) rotate(0) scale(1);opacity:1}
+}
+@keyframes charDrop{
+  0%{opacity:0;transform:translateY(-60px) scale(1.4);filter:blur(10px)}
+  60%{opacity:1;transform:translateY(8px) scale(.95);filter:blur(0)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Top bar ───────────────────────────────────────────── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;height:56px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+  background:linear-gradient(180deg,rgba(18,9,58,0.97),rgba(7,4,26,0.92));
+  border-bottom:1px solid rgba(156,109,214,0.4);backdrop-filter:blur(8px);
+}
+.tb-title{font-size:17px;font-weight:900;letter-spacing:6px;color:#e8d0ff;}
+.tb-btn{
+  font-size:13px;letter-spacing:2px;font-weight:700;
+  background:linear-gradient(135deg,#9c6dd6,#5b3a8a);
+  color:#fff;border:1.5px solid #c9a4ff;border-radius:6px;
+  padding:6px 14px;transition:all .15s;
+}
+.tb-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(156,109,214,.5);}
+.tb-btn.ghost{background:transparent;color:var(--gold);border-color:rgba(201,168,76,.5);}
 
-body {
-  font-family: 'Noto Serif TC', serif;
-  background: radial-gradient(ellipse at 50% 30%, var(--dark2) 0%, var(--dark) 80%);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+/* ── Screen base ───────────────────────────────────────── */
+.screen{display:none;min-height:calc(100vh - 56px);margin-top:56px;padding:20px;}
+.screen.active{display:block;animation:fadeIn .35s ease;}
+#screen-lobby.active{display:flex;flex-direction:column;align-items:center;}
 
-/* ── Top bar ── */
-.topbar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  height: 58px;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 18px;
-  background: linear-gradient(180deg, rgba(26,15,46,0.97), rgba(10,6,18,0.9));
-  border-bottom: 1px solid rgba(201,168,76,0.4);
-  backdrop-filter: blur(8px);
+/* ── Common Buttons ────────────────────────────────────── */
+.btn{
+  font-family:'Noto Serif TC',serif;
+  background:linear-gradient(135deg,#9c6dd6,#5b3a8a);
+  color:#fff;border:1.5px solid #c9a4ff;border-radius:6px;
+  padding:9px 22px;font-weight:700;letter-spacing:3px;
+  transition:all .15s;position:relative;overflow:hidden;
 }
-.tb-title {
-  font-size: 18px; font-weight: 900; letter-spacing: 6px;
-  color: #ffe8a8;
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(156,109,214,.5);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn.gold{background:linear-gradient(135deg,#c9a84c,#7a6030);color:#1a1208;border-color:#ffe8a8;}
+.btn.gold:hover:not(:disabled){box-shadow:0 6px 20px rgba(201,168,76,.5);}
+.btn.ghost{background:transparent;border-color:rgba(156,109,214,.5);color:var(--purple);}
+.btn::after{
+  content:'';position:absolute;inset:0;background:rgba(255,255,255,.2);
+  border-radius:inherit;opacity:0;transform:scale(0);pointer-events:none;
 }
-.tb-btn {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 13px; letter-spacing: 2px; font-weight: 700;
-  background: linear-gradient(135deg, #c9a84c, #7a6030);
-  color: #1a1208; border: 1.5px solid #ffe8a8;
-  border-radius: 6px; padding: 6px 14px; cursor: pointer;
-  transition: all 0.15s ease;
-}
-.tb-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201,168,76,0.4); }
+.btn:active::after{animation:ripple .4s ease-out;}
 
-/* ── Screen base ── */
-.screen {
-  display: none;
-  min-height: calc(100vh - 58px);
-  margin-top: 58px;
-  padding: 20px;
+/* ═══════════ LOBBY ═════════════════════════════════════ */
+#screen-lobby{padding-top:4vh;}
+.lobby-seal{
+  width:96px;height:96px;
+  background:linear-gradient(145deg,#5b3a8a,#2e1d50);
+  border-radius:10px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 36px rgba(156,109,214,.6),inset 0 0 14px rgba(0,0,0,.4);
+  position:relative;animation:float 3s ease-in-out infinite;
 }
-.screen.active { display: block; animation: fadeIn 0.35s ease; }
-#screen-lobby.active { display: flex; flex-direction: column; align-items: center; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.lobby-seal::before,.lobby-seal::after{content:'';position:absolute;inset:6px;border:2px solid rgba(200,180,255,.5);border-radius:5px;}
+.lobby-seal::after{inset:12px;border-width:1px;}
+.lobby-seal-ch{font-size:48px;color:#e8d0ff;font-weight:900;line-height:1;}
+.lobby-title{font-size:clamp(38px,6vw,68px);font-weight:900;letter-spacing:12px;color:#e8d0ff;text-shadow:0 0 20px rgba(156,109,214,.6);margin-bottom:6px;}
+.lobby-sub{font-size:14px;letter-spacing:8px;color:rgba(201,168,76,.9);margin-bottom:24px;}
+.mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:840px;width:100%;margin-bottom:20px;}
+@media(max-width:700px){.mode-grid{grid-template-columns:1fr;}}
+.mode-card{
+  background:linear-gradient(160deg,rgba(91,58,138,.35),rgba(10,6,24,.85));
+  border:2px solid rgba(156,109,214,.3);border-radius:12px;padding:22px 18px;
+  cursor:pointer;transition:all .25s;text-align:center;
+}
+.mode-card:hover{transform:translateY(-4px);border-color:var(--purple);box-shadow:0 10px 28px rgba(156,109,214,.3);}
+.mode-icon{font-size:38px;margin-bottom:10px;}
+.mode-name{font-size:18px;font-weight:900;letter-spacing:4px;color:#e8d0ff;margin-bottom:6px;}
+.mode-desc{font-size:12px;line-height:1.7;color:rgba(232,216,255,.7);}
+.lobby-stats{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;justify-content:center;}
+.stat-chip{
+  background:rgba(0,0,0,.4);padding:5px 14px;border-radius:14px;
+  border:1px solid rgba(156,109,214,.3);font-size:12px;letter-spacing:2px;
+  color:rgba(201,168,76,.9);
+}
+.lobby-back-btn{
+  margin-top:4px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);
+  border-radius:8px;padding:8px 20px;font-size:13px;letter-spacing:3px;
+  transition:all .15s;
+}
+.lobby-back-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
 
-/* ── Common button ── */
-.btn {
-  font-family: 'Noto Serif TC', serif;
-  background: linear-gradient(135deg, #c9a84c, #7a6030);
-  color: #1a1208; border: 1.5px solid #ffe8a8;
-  border-radius: 6px; padding: 9px 20px;
-  font-weight: 700; letter-spacing: 2px; cursor: pointer;
-  transition: all 0.15s ease;
-}
-.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(201,168,76,0.4); }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-purple {
-  background: linear-gradient(135deg, #9c6dd6, #5b3a8a);
-  color: #fff; border-color: #c9a4ff;
-}
-.btn-ghost {
-  background: transparent; color: var(--gold);
-  border: 1.5px solid rgba(201,168,76,0.5);
-}
+/* ═══════════ BP DRAFT ══════════════════════════════════ */
+#screen-bp{padding:14px;}
+.bp-wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
 
-/* ══════════════════ LOBBY ══════════════════ */
-#screen-lobby { padding-top: 5vh; }
-.lobby-seal {
-  width: 90px; height: 90px;
-  background: linear-gradient(145deg, #5b3a8a, #2e1d50);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 28px rgba(156,109,214,0.5), inset 0 0 10px rgba(0,0,0,0.4);
-  margin-bottom: 16px; position: relative;
+.bp-status-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(0,0,0,.5);border:1px solid rgba(156,109,214,.35);
+  border-radius:8px;padding:10px 16px;
 }
-.lobby-seal::before, .lobby-seal::after {
-  content: ''; position: absolute; inset: 6px;
-  border: 2px solid rgba(255,235,205,0.5); border-radius: 4px;
+.bp-turn-badge{
+  font-size:13px;font-weight:700;letter-spacing:3px;padding:5px 14px;
+  border-radius:6px;transition:all .3s;
 }
-.lobby-seal::after { inset: 12px; border-width: 1px; }
-.lobby-seal-inner { font-size: 44px; color: #ffe8cc; font-weight: 900; }
-.lobby-title {
-  font-size: clamp(38px, 7vw, 72px); font-weight: 900; letter-spacing: 14px;
-  color: #ffe8cc;
-  text-shadow: 0 0 18px rgba(156,109,214,0.6), 0 4px 12px rgba(0,0,0,0.7);
-  margin-bottom: 8px;
-}
-.lobby-sub {
-  font-size: 15px; letter-spacing: 8px; color: rgba(201,168,76,0.85);
-  margin-bottom: 28px;
-}
-.mode-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-  max-width: 860px; width: 100%; margin-bottom: 22px;
-}
-@media (max-width: 760px) { .mode-grid { grid-template-columns: 1fr; } }
-.mode-card {
-  background: linear-gradient(160deg, rgba(91,58,138,0.4), rgba(15,8,4,0.85));
-  border: 2px solid rgba(201,168,76,0.35); border-radius: 12px; padding: 22px;
-  cursor: pointer; transition: all 0.25s ease; text-align: center;
-}
-.mode-card:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 10px 28px rgba(201,168,76,0.25); }
-.mode-icon { font-size: 40px; margin-bottom: 10px; }
-.mode-name { font-size: 20px; font-weight: 900; letter-spacing: 4px; color: #ffe8cc; margin-bottom: 6px; }
-.mode-desc { font-size: 13px; line-height: 1.6; color: rgba(232,216,255,0.75); }
-.lobby-stat-row {
-  display: flex; gap: 12px; margin-top: 4px;
-  color: rgba(201,168,76,0.85); font-size: 13px; letter-spacing: 2px;
-}
-.lobby-stat-row span {
-  background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 12px;
-  border: 1px solid rgba(201,168,76,0.3);
-}
+.bp-turn-badge.mine{background:rgba(66,165,245,.2);color:#42a5f5;border:1px solid rgba(66,165,245,.5);}
+.bp-turn-badge.enemy{background:rgba(239,83,80,.2);color:#ef5350;border:1px solid rgba(239,83,80,.5);}
+.bp-step-text{font-size:14px;letter-spacing:3px;color:var(--gold);}
+.bp-timer{font-size:24px;font-weight:900;color:#ffe8a8;letter-spacing:4px;min-width:50px;text-align:right;}
+.bp-timer.warn{color:#ef5350;animation:pulse .6s infinite;}
 
-/* ══════════════════ BP DRAFT ══════════════════ */
-#screen-bp { padding: 16px; }
-.bp-wrap { max-width: 1200px; margin: 0 auto; }
-
-/* Phase bar — 14 pips */
-.bp-phase-bar {
-  display: flex; gap: 4px;
-  background: rgba(0,0,0,0.5); padding: 6px 8px;
-  border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
-  margin-bottom: 12px;
+/* Phase pip bar */
+.bp-pips{display:flex;gap:3px;}
+.bp-pip{
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;border-radius:4px;
+  background:rgba(255,255,255,.05);color:#666;transition:all .25s;
 }
-.bp-pip {
-  flex: 1; height: 24px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700;
-  background: rgba(255,255,255,0.04);
-  color: #888; border-radius: 4px;
-  transition: all 0.25s ease; cursor: default;
-}
-.bp-pip.active {
-  background: linear-gradient(135deg, var(--gold), #7a6030);
-  color: #1a1a1a;
-  box-shadow: 0 0 10px rgba(201,168,76,0.5);
-}
-.bp-pip.done { background: rgba(76,175,80,0.2); color: #81c784; }
-
-/* Step info bar */
-.bp-step-info {
-  background: rgba(156,109,214,0.1);
-  border: 1px solid rgba(156,109,214,0.4);
-  padding: 10px 16px; border-radius: 8px;
-  margin-bottom: 12px; text-align: center;
-  font-size: 15px; letter-spacing: 4px;
-}
-.bp-step-info strong { color: #c9a4ff; }
+.bp-pip.active{background:linear-gradient(135deg,#9c6dd6,#5b3a8a);color:#fff;box-shadow:0 0 8px rgba(156,109,214,.6);}
+.bp-pip.done{background:rgba(76,175,80,.2);color:#81c784;}
+.bp-pip.ban-done{background:rgba(239,83,80,.15);color:#ef9393;}
 
 /* 3-column layout */
-.bp-layout {
-  display: grid;
-  grid-template-columns: 220px 1fr 220px;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-@media (max-width: 900px) {
-  .bp-layout { grid-template-columns: 1fr; }
-}
+.bp-columns{display:grid;grid-template-columns:210px 1fr 210px;gap:10px;}
+@media(max-width:900px){.bp-columns{grid-template-columns:1fr;}}
 
 /* Side panels */
-.bp-side-panel {
-  background: rgba(10,6,18,0.7);
-  border: 1px solid rgba(201,168,76,0.3);
-  border-radius: 8px; padding: 10px;
+.bp-panel{
+  background:rgba(7,4,26,.7);border:1px solid rgba(156,109,214,.3);
+  border-radius:8px;padding:10px;
 }
-.bp-side-panel h3 {
-  font-size: 13px; letter-spacing: 3px;
-  color: var(--gold); margin-bottom: 8px;
-  border-bottom: 1px solid rgba(201,168,76,0.2);
-  padding-bottom: 6px;
+.bp-panel h3{font-size:12px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(201,168,76,.2);}
+.bp-slots{display:flex;flex-direction:column;gap:5px;}
+.bp-slot{
+  background:rgba(0,0,0,.4);border:1.5px dashed rgba(156,109,214,.3);
+  border-radius:6px;padding:6px 9px;min-height:48px;
+  display:flex;flex-direction:column;justify-content:center;transition:all .25s;
 }
-.bp-slots { display: flex; flex-direction: column; gap: 5px; }
-.bp-slot {
-  background: rgba(0,0,0,0.4);
-  border: 1.5px dashed rgba(201,168,76,0.3);
-  border-radius: 6px; padding: 6px 8px;
-  min-height: 52px;
-  display: flex; flex-direction: column; justify-content: center;
-  transition: all 0.2s ease;
-}
-.bp-slot.filled { border-style: solid; background: rgba(30,15,55,0.7); }
-.bp-slot-job { font-size: 10px; letter-spacing: 2px; color: rgba(201,168,76,0.7); }
-.bp-slot-name { font-size: 13px; font-weight: 700; color: #ffe8cc; margin-top: 2px; }
-.bp-slot-elem { font-size: 10px; margin-top: 2px; }
-.bp-slot-empty { font-size: 11px; opacity: 0.35; margin-top: 2px; }
-.ban-line { font-size: 10px; color: rgba(239,83,80,0.7); margin-top: 6px; padding-top: 4px; border-top: 1px dashed rgba(239,83,80,0.3); }
-.bond-line { font-size: 11px; letter-spacing: 1px; margin-top: 6px; color: rgba(201,168,76,0.7); }
+.bp-slot.filled{border-style:solid;background:rgba(20,10,40,.7);}
+.bp-slot.filled.ban{background:rgba(50,10,10,.5);border-color:rgba(239,83,80,.5)!important;}
+.bp-slot-role{font-size:10px;letter-spacing:2px;color:rgba(201,168,76,.7);}
+.bp-slot-name{font-size:13px;font-weight:700;color:#e8d0ff;margin-top:2px;}
+.bp-slot-elem{font-size:10px;margin-top:2px;}
+.bp-slot-empty{font-size:11px;opacity:.3;margin-top:2px;}
+.bp-bans{margin-top:8px;padding-top:6px;border-top:1px dashed rgba(239,83,80,.3);}
+.bp-ban-label{font-size:10px;color:rgba(239,83,80,.7);}
+.bp-bond-line{font-size:11px;letter-spacing:1px;margin-top:6px;color:rgba(201,168,76,.7);}
 
 /* Pool center */
-.bp-center { display: flex; flex-direction: column; gap: 10px; }
-.pool-controls {
-  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+.bp-center{display:flex;flex-direction:column;gap:8px;}
+.pool-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.pool-label{font-size:12px;letter-spacing:2px;color:var(--gold);margin-right:4px;}
+.filter-chip{
+  font-size:11px;letter-spacing:1px;padding:3px 10px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(156,109,214,.3);
+  border-radius:12px;color:var(--text);transition:all .15s;
 }
-.filter-elem-btn, .filter-job-btn {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 11px; letter-spacing: 1px; padding: 4px 10px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(201,168,76,0.3);
-  border-radius: 12px; cursor: pointer; color: var(--text);
-  transition: all 0.15s ease;
+.filter-chip:hover{border-color:var(--purple);color:#fff;}
+.filter-chip.active{background:rgba(156,109,214,.25);border-color:var(--purple);color:#c9a4ff;}
+.bp-pool-wrap{
+  background:rgba(7,4,26,.6);border:1px solid rgba(156,109,214,.2);
+  border-radius:8px;padding:10px;max-height:420px;overflow-y:auto;
 }
-.filter-elem-btn.active, .filter-job-btn.active {
-  background: rgba(201,168,76,0.2); border-color: var(--gold); color: #ffe8a8;
+.bp-pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:7px;}
+.hero-card{
+  background:linear-gradient(160deg,rgba(91,58,138,.4),rgba(15,8,30,.8));
+  border:1.5px solid rgba(156,109,214,.45);border-radius:7px;padding:8px;
+  transition:all .2s;position:relative;overflow:hidden;user-select:none;
 }
-#pool-title {
-  font-size: 13px; letter-spacing: 3px; color: var(--gold);
+.hero-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--hc,rgba(156,109,214,.15)),transparent 60%);
+  pointer-events:none;
 }
-.bp-pool-wrap {
-  background: rgba(10,6,18,0.6);
-  border: 1px solid rgba(201,168,76,0.25);
-  border-radius: 8px; padding: 10px;
-  max-height: 480px; overflow-y: auto;
+.hero-card.pickable{cursor:pointer;}
+.hero-card.pickable:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(156,109,214,.4);}
+.hero-card.greyed{opacity:.45;cursor:default;}
+.hc-portrait{width:100%;height:52px;display:flex;align-items:center;justify-content:center;margin-bottom:5px;}
+.hc-portrait img{width:44px;height:44px;border-radius:4px;object-fit:cover;}
+.hc-role{font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:2px;}
+.hc-name{font-size:13px;font-weight:900;color:#e8d0ff;margin-bottom:2px;}
+.hc-elem{font-size:10px;margin-bottom:3px;}
+.hc-desc{font-size:9px;color:rgba(232,216,255,.55);line-height:1.4;min-height:26px;margin-bottom:4px;}
+.hc-pbar{height:3px;background:rgba(0,0,0,.4);border-radius:2px;margin-bottom:2px;overflow:hidden;}
+.hc-pfill{height:100%;border-radius:2px;transition:width .3s;}
+.hc-pow{font-size:9px;color:rgba(201,168,76,.7);text-align:right;}
+
+/* Advice bar */
+.bp-advice{
+  background:linear-gradient(135deg,rgba(66,165,245,.1),rgba(28,75,130,.06));
+  border:1px solid rgba(66,165,245,.3);border-radius:8px;
+  padding:9px 14px;font-size:12px;color:rgba(187,222,251,.9);
 }
-.bp-pool {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 8px;
+.bp-advice strong{color:#42a5f5;letter-spacing:2px;}
+
+/* ═══════════ BATTLE ════════════════════════════════════ */
+#screen-battle{padding:14px;}
+.battle-wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+
+.hp-row{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;
+  background:rgba(0,0,0,.5);border:1px solid rgba(156,109,214,.3);
+  border-radius:8px;padding:10px 14px;
+}
+.hp-side{display:flex;flex-direction:column;gap:4px;}
+.hp-name{font-size:13px;letter-spacing:2px;font-weight:700;}
+.hp-side.enemy .hp-name{color:#ef5350;}
+.hp-side.player .hp-name{color:#66bb6a;}
+.hp-bar-wrap{height:10px;background:rgba(0,0,0,.5);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,.1);}
+.hp-bar{height:100%;transition:width .5s ease;border-radius:5px;}
+.hp-side.enemy .hp-bar{background:linear-gradient(90deg,#ef5350,#ffa726);}
+.hp-side.player .hp-bar{background:linear-gradient(90deg,#66bb6a,#26c6da);}
+.hp-text{font-size:11px;color:rgba(255,255,255,.55);text-align:right;}
+.hp-side.enemy .hp-text{text-align:left;}
+.round-badge{text-align:center;font-size:14px;font-weight:700;letter-spacing:4px;color:var(--gold);white-space:nowrap;}
+
+.battle-canvas{
+  width:100%;height:200px;border-radius:10px;display:block;
+  border:1px solid rgba(156,109,214,.35);background:#07041a;
 }
 
-/* Hero cards */
-.hero-card {
-  background: linear-gradient(160deg, rgba(91,58,138,0.45), rgba(20,10,35,0.8));
-  border: 1.5px solid var(--gold);
-  border-radius: 7px; padding: 9px 8px;
-  transition: all 0.2s ease; position: relative; overflow: hidden;
-  user-select: none;
-}
-.hero-card::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, var(--elem-col, rgba(156,109,214,0.15)), transparent 60%);
-  opacity: 0.4; pointer-events: none;
-}
-.hero-card:hover:not(.not-mine) {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(201,168,76,0.35);
-}
-.hero-card.not-mine { opacity: 0.5; cursor: default; }
-.hc-job { font-size: 10px; letter-spacing: 2px; color: var(--gold); margin-bottom: 3px; }
-.hc-name { font-size: 14px; font-weight: 900; color: #ffe8cc; margin-bottom: 3px; }
-.hc-elem { font-size: 11px; margin-bottom: 4px; }
-.hc-desc { font-size: 10px; color: rgba(232,216,255,0.6); line-height: 1.4; margin-bottom: 5px; min-height: 28px; }
-.hc-power-bar {
-  height: 3px; background: rgba(0,0,0,0.5);
-  border-radius: 2px; margin-bottom: 3px; overflow: hidden;
-}
-.hc-power-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
-.hc-power-label { font-size: 10px; color: rgba(201,168,76,0.7); text-align: right; }
-
-/* Timer and advice */
-.bp-bottom { display: flex; flex-direction: column; gap: 8px; }
-.bp-timer {
-  text-align: center; font-size: 28px; font-weight: 900;
-  color: #ffe8a8; letter-spacing: 6px;
-}
-.bp-timer.warn { color: #ef5350; animation: pulse 0.6s infinite; }
-@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.08); } }
-.ai-advice {
-  background: linear-gradient(135deg, rgba(66,165,245,0.12), rgba(28,75,130,0.08));
-  border: 1px solid rgba(66,165,245,0.35);
-  border-radius: 8px; padding: 10px 14px;
-  font-size: 13px; color: rgba(187,222,251,0.9);
-}
-.ai-advice strong { color: #42a5f5; letter-spacing: 2px; }
-
-/* ══════════════════ BATTLE ══════════════════ */
-#screen-battle { padding: 16px; }
-.battle-wrap { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-
-.hp-row {
-  display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px;
-  align-items: center;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(201,168,76,0.3);
-  border-radius: 8px; padding: 10px 14px;
-}
-.hp-side { display: flex; flex-direction: column; gap: 4px; }
-.hp-side-name { font-size: 13px; letter-spacing: 2px; font-weight: 700; }
-.hp-side.enemy .hp-side-name { color: #ef5350; }
-.hp-side.player .hp-side-name { color: #66bb6a; }
-.hp-bar-wrap { height: 10px; background: rgba(0,0,0,0.5); border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-.hp-bar-fill { height: 100%; transition: width 0.4s ease; border-radius: 5px; }
-.hp-side.enemy .hp-bar-fill { background: linear-gradient(90deg, #ef5350, #ffa726); }
-.hp-side.player .hp-bar-fill { background: linear-gradient(90deg, #66bb6a, #26c6da); }
-.hp-bar-text { font-size: 11px; color: rgba(255,255,255,0.6); text-align: right; }
-.round-label { text-align: center; font-size: 14px; font-weight: 700; letter-spacing: 4px; color: var(--gold); white-space: nowrap; }
-
-/* Canvas */
-.battle-canvas {
-  width: 100%; height: 220px;
-  border-radius: 10px;
-  border: 1px solid rgba(201,168,76,0.35);
-  background: var(--dark);
-  display: block;
+.enemy-reveal{
+  background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.35);
+  border-radius:6px;padding:8px 14px;font-size:13px;
+  color:rgba(255,182,182,.9);min-height:34px;letter-spacing:2px;
 }
 
-/* Enemy reveal */
-.enemy-reveal {
-  background: rgba(239,83,80,0.1);
-  border: 1px solid rgba(239,83,80,0.4);
-  border-radius: 6px; padding: 8px 14px;
-  font-size: 13px; color: rgba(255,182,182,0.9);
-  min-height: 34px; letter-spacing: 2px;
+.tactic-zones{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:600px){.tactic-zones{grid-template-columns:1fr;}}
+.tactic-zone{background:rgba(0,0,0,.4);border:1px solid rgba(156,109,214,.3);border-radius:8px;padding:12px;}
+.tactic-zone h4{font-size:12px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
+.tactic-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;}
+.tactic-btn{
+  padding:8px 2px;text-align:center;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(156,109,214,.25);
+  border-radius:6px;cursor:pointer;transition:all .15s;
+}
+.tactic-btn:hover{border-color:#c9a4ff;transform:translateY(-2px);}
+.tactic-btn.selected{
+  background:linear-gradient(135deg,#9c6dd6,#5b3a8a);border-color:#c9a4ff;
+  box-shadow:0 0 10px rgba(156,109,214,.5);
+}
+.tactic-btn.selected .t-name{color:#fff!important;}
+.tactic-btn.selected .t-elem{color:rgba(255,255,255,.7)!important;}
+.t-name{font-size:11px;font-weight:700;line-height:1.3;}
+.t-elem{font-size:9px;opacity:.7;margin-top:2px;}
+
+.confirm-row{text-align:center;}
+.battle-log{
+  background:rgba(0,0,0,.5);border:1px solid rgba(156,109,214,.3);
+  border-radius:8px;padding:12px;max-height:220px;overflow-y:auto;
+}
+.battle-log h4{font-size:12px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
+.log-ln{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.05);font-size:12px;line-height:1.7;}
+.log-ln.our{color:#81c784;}
+.log-ln.enemy{color:#ef5350;}
+.log-ln.epic{color:#ffe8a8;font-weight:700;letter-spacing:2px;}
+.log-ln.system{color:rgba(255,255,255,.45);font-style:italic;}
+
+/* ═══════════ RESULT ════════════════════════════════════ */
+#screen-result.active{display:flex;align-items:flex-start;justify-content:center;padding-top:36px;}
+.result-card{
+  max-width:560px;width:100%;
+  background:linear-gradient(160deg,rgba(91,58,138,.4),rgba(7,4,26,.95));
+  border:2px solid rgba(156,109,214,.5);border-radius:14px;padding:36px;text-align:center;
+}
+.result-title{font-size:56px;font-weight:900;letter-spacing:14px;margin-bottom:14px;}
+.result-title.win{color:#ffe8a8;text-shadow:0 0 24px rgba(255,232,168,.6);}
+.result-title.lose{color:#ef5350;text-shadow:0 0 24px rgba(239,83,80,.6);}
+.result-title.draw{color:#90a4ae;}
+.result-narr{
+  background:rgba(0,0,0,.4);border-radius:8px;padding:14px;
+  font-size:13px;line-height:2;letter-spacing:1px;color:var(--text);
+  text-align:left;margin:16px 0;
+}
+.result-chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0;}
+.result-chip{
+  background:rgba(156,109,214,.15);border:1px solid rgba(156,109,214,.45);
+  padding:4px 14px;border-radius:12px;color:var(--purple);font-size:12px;
+}
+.result-actions{display:flex;gap:10px;justify-content:center;margin-top:14px;}
+
+/* ═══════════ MODAL ══════════════════════════════════════ */
+.modal-mask{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+  align-items:center;justify-content:center;z-index:1000;padding:20px;
+}
+.modal-mask.show{display:flex;animation:fadeIn .3s ease;}
+.modal-box{
+  max-width:500px;width:100%;
+  background:linear-gradient(160deg,rgba(91,58,138,.6),rgba(7,4,26,.98));
+  border:2px solid rgba(156,109,214,.5);border-radius:12px;padding:26px;
+}
+.modal-box h2{text-align:center;color:#e8d0ff;letter-spacing:4px;margin-bottom:14px;font-size:20px;}
+.modal-box p{font-size:13px;line-height:2;color:var(--text);margin-bottom:5px;}
+.modal-box p strong{color:var(--gold);}
+
+/* ═══════════ TOAST ══════════════════════════════════════ */
+#bf-toast{
+  position:fixed;bottom:76px;left:50%;transform:translateX(-50%);
+  background:rgba(12,6,32,.96);border:1px solid rgba(156,109,214,.6);
+  color:#e8d0ff;font-size:13px;letter-spacing:3px;
+  padding:10px 22px;border-radius:8px;z-index:6000;
+  pointer-events:none;opacity:0;transition:opacity .35s ease;
+  white-space:nowrap;
 }
 
-/* Tactic zones */
-.tactic-zones {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-}
-@media (max-width: 640px) { .tactic-zones { grid-template-columns: 1fr; } }
-.tactic-zone {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(201,168,76,0.3);
-  border-radius: 8px; padding: 12px;
-}
-.tactic-zone h4 { font-size: 13px; letter-spacing: 3px; color: var(--gold); margin-bottom: 8px; }
-.tactic-grid {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
-}
-.tactic-btn {
-  padding: 9px 4px; text-align: center;
-  background: rgba(255,255,255,0.04);
-  border: 1.5px solid rgba(201,168,76,0.25);
-  border-radius: 6px; cursor: pointer;
-  font-family: 'Noto Serif TC', serif;
-  transition: all 0.15s ease;
-}
-.tactic-btn:hover { transform: translateY(-2px); border-color: #ffe8a8; }
-.tactic-btn.selected {
-  background: linear-gradient(135deg, var(--gold), #7a6030);
-  border-color: #ffe8a8;
-  box-shadow: 0 0 10px rgba(201,168,76,0.5);
-}
-.tactic-btn.selected .tactic-name { color: #1a1208 !important; }
-.tactic-btn.selected .tactic-elem { color: rgba(26,18,8,0.75); }
-.tactic-name { font-size: 12px; font-weight: 700; line-height: 1.3; }
-.tactic-elem { font-size: 10px; opacity: 0.7; margin-top: 2px; }
-
-.confirm-row { text-align: center; }
-
-/* Battle log */
-.battle-log {
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(201,168,76,0.3);
-  border-radius: 8px; padding: 12px;
-  max-height: 250px; overflow-y: auto;
-}
-.battle-log h4 { font-size: 13px; letter-spacing: 3px; color: var(--gold); margin-bottom: 8px; }
-.log-line { padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); font-size: 13px; line-height: 1.7; }
-.log-line.our { color: #81c784; }
-.log-line.enemy { color: #ef5350; }
-.log-line.epic { color: #ffe8a8; font-weight: 700; letter-spacing: 2px; }
-.log-line.system { color: rgba(255,255,255,0.5); font-style: italic; }
-
-/* ══════════════════ RESULT ══════════════════ */
-#screen-result { display: flex; align-items: flex-start; justify-content: center; padding-top: 40px; }
-#screen-result.active { display: flex; }
-.result-card {
-  max-width: 580px; width: 100%;
-  background: linear-gradient(160deg, rgba(91,58,138,0.45), rgba(15,8,4,0.9));
-  border: 2px solid rgba(201,168,76,0.5);
-  border-radius: 14px; padding: 40px; text-align: center;
-}
-.result-title {
-  font-size: 52px; font-weight: 900; letter-spacing: 14px; margin-bottom: 16px;
-}
-.result-title.win { color: #ffe8a8; text-shadow: 0 0 24px rgba(255,232,168,0.6); }
-.result-title.lose { color: #ef5350; text-shadow: 0 0 24px rgba(239,83,80,0.6); }
-.result-title.draw { color: #90a4ae; }
-.result-narration {
-  background: rgba(0,0,0,0.4); border-radius: 8px; padding: 16px;
-  font-size: 14px; line-height: 2; letter-spacing: 1px; color: var(--text);
-  text-align: left; margin: 18px 0;
-}
-.result-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
-.result-pill {
-  background: rgba(201,168,76,0.15);
-  border: 1px solid rgba(201,168,76,0.5);
-  padding: 5px 14px; border-radius: 14px;
-  color: var(--gold); font-size: 13px;
-}
-.result-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
-
-/* ══════════════════ HELP MODAL ══════════════════ */
-.modal-mask {
-  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82);
-  align-items: center; justify-content: center; z-index: 1000; padding: 20px;
-}
-.modal-mask.show { display: flex; animation: fadeIn 0.3s ease; }
-.modal-card {
-  max-width: 520px; width: 100%;
-  background: linear-gradient(160deg, rgba(91,58,138,0.65), rgba(15,8,4,0.97));
-  border: 2px solid rgba(201,168,76,0.5);
-  border-radius: 12px; padding: 28px;
-}
-.modal-card h2 { text-align: center; color: #ffe8a8; letter-spacing: 4px; margin-bottom: 14px; font-size: 20px; }
-.modal-card p { font-size: 14px; line-height: 2; color: var(--text); margin-bottom: 6px; }
-.modal-card p strong { color: var(--gold); }
-
-/* ══ 兵法推演 SPLASH ══════════════════════════════════════ */
-#bf-splash {
-  position:fixed; inset:0; z-index:9999;
-  display:flex; align-items:center; justify-content:center;
-  overflow:hidden; cursor:pointer;
+/* ═══════════ BINGFA SPLASH ══════════════════════════════ */
+#bf-splash{
+  position:fixed;inset:0;z-index:9999;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
   background:radial-gradient(ellipse at 50% 40%,#1a0f2e 0%,#050310 85%);
-  animation:bfFadeIn .5s ease;
+  animation:bfIn .5s ease;cursor:pointer;
 }
-#bf-splash.out { animation:bfFadeOut 1s ease forwards; pointer-events:none; }
-@keyframes bfFadeIn  { from{opacity:0} to{opacity:1} }
-@keyframes bfFadeOut { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.06)} }
-
-#bf-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-
-.bfs-content {
-  position:relative; z-index:2;
-  display:flex; flex-direction:column; align-items:center; gap:16px;
-  text-align:center; padding:24px;
-  user-select:none;
+#bf-splash.out{animation:bfOut 1s ease forwards;pointer-events:none;}
+@keyframes bfIn{from{opacity:0}to{opacity:1}}
+@keyframes bfOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
+#bf-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.bfs-content{
+  position:relative;z-index:2;display:flex;flex-direction:column;
+  align-items:center;gap:14px;text-align:center;padding:24px;user-select:none;
 }
-
-/* 紫印章 */
-.bfs-seal {
-  width:100px; height:100px;
-  background:linear-gradient(145deg,#5b3a8a,#2e1d50);
-  border-radius:8px;
-  box-shadow:0 0 40px rgba(156,109,214,.7),inset 0 0 16px rgba(0,0,0,.4);
-  display:flex; align-items:center; justify-content:center; position:relative;
-  animation:sealStamp 1.2s cubic-bezier(.5,-.4,.3,1.4) .1s both;
+.bfs-seal{
+  width:100px;height:100px;background:linear-gradient(145deg,#5b3a8a,#2e1d50);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 44px rgba(156,109,214,.75),inset 0 0 16px rgba(0,0,0,.4);
+  position:relative;animation:stampIn 1.2s cubic-bezier(.5,-.4,.3,1.4) .1s both;
 }
-.bfs-seal::before,.bfs-seal::after { content:'';position:absolute;inset:6px;border:2px solid rgba(200,180,255,.5);border-radius:4px; }
-.bfs-seal::after { inset:12px;border-width:1px; }
-.bfs-seal-char { font-size:52px;color:#e8d0ff;font-weight:900;line-height:1; }
-@keyframes sealStamp {
-  0%  { transform:translateY(-220px) rotate(-25deg) scale(2.2);opacity:0; }
-  60% { transform:translateY(10px) rotate(2deg) scale(1.08);opacity:1; }
-  80% { transform:translateY(-4px) rotate(-1deg) scale(.97); }
-  100%{ transform:translateY(0) rotate(0) scale(1);opacity:1; }
+.bfs-seal::before,.bfs-seal::after{content:'';position:absolute;inset:6px;border:2px solid rgba(200,180,255,.5);border-radius:4px;}
+.bfs-seal::after{inset:12px;border-width:1px;}
+.bfs-seal-ch{font-size:52px;color:#e8d0ff;font-weight:900;line-height:1;}
+.bfs-title{
+  font-size:clamp(48px,9vw,108px);font-weight:900;color:#e8d0ff;
+  letter-spacing:14px;text-shadow:0 0 20px rgba(156,109,214,.7),0 4px 14px rgba(0,0,0,.8);
+  display:flex;gap:4px;
 }
-
-/* 主標 */
-.bfs-title {
-  font-size:clamp(48px,9vw,108px); font-weight:900; color:#e8d0ff;
-  letter-spacing:14px;
-  text-shadow:0 0 20px rgba(156,109,214,.7),0 4px 14px rgba(0,0,0,.8);
-  display:flex; gap:4px;
-}
-.bfs-char {
-  display:inline-block; opacity:0;
-  animation:charDrop2 .8s cubic-bezier(.4,0,.2,1) forwards;
+.bfs-ch{
+  display:inline-block;opacity:0;
+  animation:charDrop .8s cubic-bezier(.4,0,.2,1) forwards;
   animation-delay:calc(1.1s + var(--d)*.18s);
 }
-@keyframes charDrop2 {
-  0%  { opacity:0;transform:translateY(-70px) scale(1.5);filter:blur(12px); }
-  60% { opacity:1;transform:translateY(8px) scale(.94);filter:blur(0); }
-  100%{ opacity:1;transform:translateY(0) scale(1); }
-}
-
-/* 副標 */
-.bfs-sub { font-size:15px;letter-spacing:10px;color:rgba(201,168,76,.9);opacity:0;animation:bfFUp .7s ease 2.2s forwards; }
-
-/* 8 職位徽章列 */
-.bfs-jobs {
-  display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
-  opacity:0; animation:bfFUp .7s ease 2.5s forwards;
-}
-.bfs-job {
-  background:rgba(91,58,138,.4);
-  border:1px solid rgba(156,109,214,.5);
-  padding:6px 12px; border-radius:20px; font-size:12px; letter-spacing:2px;
-  color:#c9a4ff;
-  animation:jobPop 4s ease infinite;
+.bfs-sub{font-size:14px;letter-spacing:10px;color:rgba(201,168,76,.9);opacity:0;animation:fadeUp .7s ease 2.2s forwards;}
+.bfs-jobs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp .7s ease 2.5s forwards;}
+.bfs-job{
+  background:rgba(91,58,138,.4);border:1px solid rgba(156,109,214,.5);
+  padding:5px 12px;border-radius:20px;font-size:11px;letter-spacing:2px;color:#c9a4ff;
+  animation:float 4s ease infinite;
 }
 .bfs-job:nth-child(2){animation-delay:-.5s}
 .bfs-job:nth-child(3){animation-delay:-1s}
@@ -497,135 +390,1112 @@ body {
 .bfs-job:nth-child(6){animation-delay:-2.5s}
 .bfs-job:nth-child(7){animation-delay:-3s}
 .bfs-job:nth-child(8){animation-delay:-3.5s}
-@keyframes jobPop {
-  0%,100%{transform:translateY(0);box-shadow:0 0 6px rgba(156,109,214,.3);}
-  50%{transform:translateY(-4px);box-shadow:0 0 16px rgba(156,109,214,.7);}
-}
-
-/* 兵法按鈕 */
-.bfs-enter {
-  margin-top:6px; font-size:22px; letter-spacing:12px;
-  padding:15px 60px 15px 68px;
+.bfs-enter{
+  margin-top:6px;font-size:21px;letter-spacing:12px;padding:14px 58px 14px 66px;
   background:linear-gradient(135deg,#9c6dd6,#5b3a8a);
-  color:#fff; border:2px solid #c9a4ff;
-  border-radius:4px; font-weight:700;
-  opacity:0; animation:bfFUp .7s ease 3.0s forwards,bfGlow 2.4s ease 3.8s infinite;
+  color:#fff;border:2px solid #c9a4ff;border-radius:4px;font-weight:700;
+  opacity:0;animation:fadeUp .7s ease 3.0s forwards,glow 2.4s ease 3.8s infinite;
   transition:transform .15s ease;
 }
-.bfs-enter:hover { transform:translateY(-3px) scale(1.04); }
-.bfs-enter:active { transform:translateY(1px); }
-@keyframes bfGlow {
-  0%,100%{box-shadow:0 6px 22px rgba(0,0,0,.5),0 0 12px rgba(156,109,214,.3);}
-  50%{box-shadow:0 6px 30px rgba(0,0,0,.5),0 0 36px rgba(156,109,214,.8);}
-}
+.bfs-enter:hover{transform:translateY(-3px) scale(1.04);}
+.bfs-tip{font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.3);opacity:0;animation:fadeUp .7s ease 3.3s forwards;}
 
-.bfs-tip { font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.3);opacity:0;animation:bfFUp .7s ease 3.3s forwards; }
-@keyframes bfFUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-
-/* ═══ CINEMATIC OVERLAY ═══ */
+/* Cinematic overlay */
 .cin-lb-top,.cin-lb-bot{position:absolute;left:0;right:0;height:60px;background:#000;z-index:20;pointer-events:none;}
-.cin-lb-top{top:0;transform:translateY(-60px);animation:cinLbIn .5s ease .25s forwards;}
-.cin-lb-bot{bottom:0;transform:translateY(60px);animation:cinLbIn .5s ease .25s forwards;}
-@keyframes cinLbIn{to{transform:translateY(0);}}
-.cin-lb-top.retract{animation:cinLbTopOut .5s ease forwards!important;}
-.cin-lb-bot.retract{animation:cinLbBotOut .5s ease forwards!important;}
-@keyframes cinLbTopOut{to{transform:translateY(-60px);}}
-@keyframes cinLbBotOut{to{transform:translateY(60px);}}
-.cin-flash{position:absolute;inset:0;background:#fff;z-index:25;pointer-events:none;animation:cinFlashOut .7s ease forwards;}
-@keyframes cinFlashOut{0%{opacity:1;}100%{opacity:0;}}
+.cin-lb-top{top:0;transform:translateY(-60px);animation:cinIn .5s ease .25s forwards;}
+.cin-lb-bot{bottom:0;transform:translateY(60px);animation:cinIn .5s ease .25s forwards;}
+@keyframes cinIn{to{transform:translateY(0)}}
+.cin-lb-top.retract{animation:cinTopOut .5s ease forwards!important;}
+.cin-lb-bot.retract{animation:cinBotOut .5s ease forwards!important;}
+@keyframes cinTopOut{to{transform:translateY(-60px)}}
+@keyframes cinBotOut{to{transform:translateY(60px)}}
+.cin-flash{position:absolute;inset:0;background:#fff;z-index:25;pointer-events:none;animation:cinFlash .7s ease forwards;}
+@keyframes cinFlash{0%{opacity:1}100%{opacity:0}}
 .cin-scanlines{position:absolute;inset:0;z-index:6;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);}
 .cin-vignette{position:absolute;inset:0;z-index:7;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 38%,rgba(0,0,0,.65) 100%);}
-.cin-progress{position:absolute;bottom:0;left:0;right:0;height:3px;z-index:22;pointer-events:none;background:rgba(255,255,255,.08);}
-.cin-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#9c6dd6,#c9a4ff);box-shadow:0 0 8px rgba(156,109,214,.9);transition:width .08s linear;}
-.cin-locked{pointer-events:none!important;opacity:0!important;animation:none!important;box-shadow:none!important;cursor:default!important;}
-@keyframes cinBtnUnlock{0%{opacity:0;transform:scale(.88) translateY(12px);filter:blur(4px);}60%{opacity:1;transform:scale(1.04) translateY(-2px);filter:blur(0);}100%{opacity:1;transform:scale(1) translateY(0);}}
-.cin-unlocked{animation:cinBtnUnlock .55s cubic-bezier(.34,1.56,.64,1) forwards,bfGlow 2.4s ease .6s infinite!important;}
-.cin-ready-tip{position:absolute;bottom:68px;left:0;right:0;text-align:center;font-family:'Noto Serif TC',serif;font-size:12px;letter-spacing:6px;color:rgba(255,255,255,.55);z-index:30;pointer-events:none;opacity:0;}
-.cin-ready-tip.show{animation:bfFUp .6s ease forwards,cinTipPulse 2s ease .6s infinite;}
-@keyframes cinTipPulse{0%,100%{opacity:.45;}50%{opacity:1;color:rgba(156,109,214,.9);}}
+.cin-prog{position:absolute;bottom:0;left:0;right:0;height:3px;z-index:22;pointer-events:none;background:rgba(255,255,255,.08);}
+.cin-prog-fill{height:100%;width:0%;background:linear-gradient(90deg,#9c6dd6,#c9a4ff);box-shadow:0 0 8px rgba(156,109,214,.9);transition:width .08s linear;}
+.cin-locked{pointer-events:none!important;opacity:0!important;animation:none!important;cursor:default!important;}
+@keyframes cinUnlock{0%{opacity:0;transform:scale(.88) translateY(12px);filter:blur(4px)}60%{opacity:1;transform:scale(1.04) translateY(-2px);filter:blur(0)}100%{opacity:1;transform:scale(1) translateY(0)}}
+.cin-unlocked{animation:cinUnlock .55s cubic-bezier(.34,1.56,.64,1) forwards,glow 2.4s ease .6s infinite!important;}
+.cin-tip{position:absolute;bottom:68px;left:0;right:0;text-align:center;font-family:'Noto Serif TC',serif;font-size:12px;letter-spacing:6px;color:rgba(255,255,255,.55);z-index:30;pointer-events:none;opacity:0;}
+.cin-tip.show{animation:fadeUp .6s ease forwards,cinTipPulse 2s ease .6s infinite;}
+@keyframes cinTipPulse{0%,100%{opacity:.4}50%{opacity:1;color:rgba(156,109,214,.9)}}
 </style>
 </head>
 <body>
 
-<!-- ══ BINGFA SPLASH ════════════════════════════════════════════ -->
+<!-- ══ SPLASH ═══════════════════════════════════════════ -->
 <div id="bf-splash">
   <canvas id="bf-canvas"></canvas>
   <div class="bfs-content">
-    <div class="bfs-seal"><div class="bfs-seal-char">兵</div></div>
+    <div class="bfs-seal"><div class="bfs-seal-ch">兵</div></div>
     <div class="bfs-title">
-      <span class="bfs-char" style="--d:0">兵</span>
-      <span class="bfs-char" style="--d:1">法</span>
-      <span class="bfs-char" style="--d:2">推</span>
-      <span class="bfs-char" style="--d:3">演</span>
+      <span class="bfs-ch" style="--d:0">兵</span>
+      <span class="bfs-ch" style="--d:1">法</span>
+      <span class="bfs-ch" style="--d:2">推</span>
+      <span class="bfs-ch" style="--d:3">演</span>
     </div>
     <div class="bfs-sub">禁選 ‧ 雙陣 ‧ 五行博弈</div>
     <div class="bfs-jobs">
-      <span class="bfs-job">👑 主公</span>
-      <span class="bfs-job">🪶 軍師</span>
-      <span class="bfs-job">📜 臣相</span>
-      <span class="bfs-job">🛡️ 大司馬</span>
-      <span class="bfs-job">🌾 大司農</span>
-      <span class="bfs-job">⚔️ 大將軍</span>
-      <span class="bfs-job">🏹 行軍總管</span>
-      <span class="bfs-job">🔱 破陣先鋒</span>
+      <span class="bfs-job">👑 主公</span><span class="bfs-job">🪶 軍師</span>
+      <span class="bfs-job">📜 臣相</span><span class="bfs-job">🛡️ 大司馬</span>
+      <span class="bfs-job">🌾 大司農</span><span class="bfs-job">⚔️ 大將軍</span>
+      <span class="bfs-job">🏹 行軍總管</span><span class="bfs-job">🔱 破陣先鋒</span>
     </div>
     <button class="bfs-enter" id="bfs-enter">出 師 征 戰</button>
     <div class="bfs-tip">點 擊 任 意 處 進 入</div>
   </div>
 </div>
 
-<script>
-/* ──────────────────────── CINEMATIC SPLASH (兵法推演 · 紫色) ──────────────────────── */
-(function(){
-  const TOTAL_MS=9500;
+<!-- ══ TOP BAR ══════════════════════════════════════════ -->
+<div class="topbar">
+  <button class="tb-btn" onclick="BF.goHome()">🏛️ 大廳</button>
+  <div class="tb-title" id="top-title">兵 法 推 演</div>
+  <button class="tb-btn ghost" onclick="BF.showHelp()">📖 規則</button>
+</div>
 
-  function injectCin(splash){
-    const flash=document.createElement('div'); flash.className='cin-flash'; splash.appendChild(flash);
-    const lbT=document.createElement('div'); lbT.id='cin-lb-top'; lbT.className='cin-lb-top'; splash.appendChild(lbT);
+<!-- ══ LOBBY ════════════════════════════════════════════ -->
+<section class="screen active" id="screen-lobby">
+  <div class="lobby-seal"><div class="lobby-seal-ch">兵</div></div>
+  <h1 class="lobby-title">兵法推演</h1>
+  <div class="lobby-sub">禁選 ‧ 雙陣 ‧ 推演千古</div>
+  <div class="mode-grid">
+    <div class="mode-card" onclick="BF.startGame('ai')">
+      <div class="mode-icon">🤖</div>
+      <div class="mode-name">AI 推演</div>
+      <div class="mode-desc">與水鏡先生對推，學習禁選與五行雙陣戰術，不計積分</div>
+    </div>
+    <div class="mode-card" onclick="BF.startGame('rank')">
+      <div class="mode-icon">🏆</div>
+      <div class="mode-name">排位天梯</div>
+      <div class="mode-desc">純競技段位積分，無養成數值，技巧定勝負</div>
+    </div>
+    <div class="mode-card" onclick="BF.startGame('ai')">
+      <div class="mode-icon">🌐</div>
+      <div class="mode-name">全球匹配</div>
+      <div class="mode-desc">10秒配對，找不到對手由 AI 精英補位（開發中）</div>
+    </div>
+  </div>
+  <div class="lobby-stats">
+    <span class="stat-chip" id="stat-rank">段位：見習</span>
+    <span class="stat-chip" id="stat-pts">積分：1000</span>
+    <span class="stat-chip" id="stat-wr">勝率：50%</span>
+  </div>
+  <button class="lobby-back-btn" onclick="BF.goHome()">🏛️ 返回遊戲大廳</button>
+</section>
+
+<!-- ══ BP DRAFT ══════════════════════════════════════════ -->
+<section class="screen" id="screen-bp">
+  <div class="bp-wrap">
+    <div class="bp-status-bar">
+      <div id="bp-turn-badge" class="bp-turn-badge mine">🟢 我方回合</div>
+      <div class="bp-pips" id="bp-pips"></div>
+      <div class="bp-step-text" id="bp-step-text">禁選階段</div>
+      <div class="bp-timer" id="bp-timer">30</div>
+    </div>
+    <div class="bp-columns">
+      <div class="bp-panel">
+        <h3>⚔️ 敵方陣容</h3>
+        <div class="bp-slots" id="enemy-slots"></div>
+        <div class="bp-bans"><div class="bp-ban-label" id="enemy-bans">禁用：—</div></div>
+        <div class="bp-bond-line" id="enemy-bond">羈絆：—</div>
+      </div>
+      <div class="bp-center">
+        <div class="pool-top">
+          <span class="pool-label" id="pool-label">候選武將</span>
+          <button class="filter-chip" data-elem="木" onclick="BF.toggleElem('木')">木</button>
+          <button class="filter-chip" data-elem="火" onclick="BF.toggleElem('火')">火</button>
+          <button class="filter-chip" data-elem="土" onclick="BF.toggleElem('土')">土</button>
+          <button class="filter-chip" data-elem="金" onclick="BF.toggleElem('金')">金</button>
+          <button class="filter-chip" data-elem="水" onclick="BF.toggleElem('水')">水</button>
+        </div>
+        <div class="bp-pool-wrap">
+          <div class="bp-pool" id="bp-pool"></div>
+        </div>
+        <div class="bp-advice"><strong>水鏡建議：</strong><span id="advice-text">等待分析…</span></div>
+      </div>
+      <div class="bp-panel">
+        <h3>📋 我方陣容</h3>
+        <div class="bp-slots" id="player-slots"></div>
+        <div class="bp-bans"><div class="bp-ban-label" id="player-bans">禁用：—</div></div>
+        <div class="bp-bond-line" id="player-bond">羈絆：—</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ BATTLE ════════════════════════════════════════════ -->
+<section class="screen" id="screen-battle">
+  <div class="battle-wrap">
+    <div class="hp-row">
+      <div class="hp-side enemy">
+        <div class="hp-name" id="enemy-king">敵方主公</div>
+        <div class="hp-bar-wrap"><div class="hp-bar" id="enemy-bar" style="width:100%"></div></div>
+        <div class="hp-text"><span id="enemy-hp">100</span>/100</div>
+      </div>
+      <div class="round-badge" id="round-label">第 1 回合</div>
+      <div class="hp-side player" style="text-align:right">
+        <div class="hp-name" id="player-king">我方主公</div>
+        <div class="hp-bar-wrap"><div class="hp-bar" id="player-bar" style="width:100%"></div></div>
+        <div class="hp-text"><span id="player-hp">100</span>/100</div>
+      </div>
+    </div>
+    <canvas id="battle-canvas" class="battle-canvas"></canvas>
+    <div class="enemy-reveal" id="enemy-reveal">等待敵方出陣…</div>
+    <div class="tactic-zones">
+      <div class="tactic-zone">
+        <h4>🎯 第一陣（先發兵法）</h4>
+        <div class="tactic-grid" id="tgrid-1"></div>
+      </div>
+      <div class="tactic-zone">
+        <h4>🎯 第二陣（後援兵法）</h4>
+        <div class="tactic-grid" id="tgrid-2"></div>
+      </div>
+    </div>
+    <div class="confirm-row">
+      <button class="btn" id="confirm-btn" onclick="BF.confirmTactics()" disabled>確認雙陣 ‧ 開戰</button>
+    </div>
+    <div class="battle-log">
+      <h4>📜 戰報</h4>
+      <div id="battle-log"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ RESULT ════════════════════════════════════════════ -->
+<section class="screen" id="screen-result">
+  <div class="result-card">
+    <div class="result-title win" id="result-title">勝</div>
+    <div class="result-narr" id="result-narr">史詩旁白載入中…</div>
+    <div class="result-chips">
+      <span class="result-chip" id="result-rounds">回合：—</span>
+      <span class="result-chip" id="result-mode">AI推演</span>
+      <span class="result-chip" id="result-bond">羈絆：—</span>
+    </div>
+    <div class="result-actions">
+      <button class="btn ghost" onclick="BF.toLobby()">返回大廳</button>
+      <button class="btn" onclick="BF.startGame(window._lastMode||'ai')">再戰一場</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HELP MODAL ════════════════════════════════════════ -->
+<div class="modal-mask" id="modal-help">
+  <div class="modal-box">
+    <h2>兵法推演 玩法指南</h2>
+    <p><strong>1. BP 14步流程</strong>：敵方先禁 → 雙方輪流禁/選，共6禁8選。</p>
+    <p><strong>2. 8大職位</strong>：主公（HP基礎）、軍師（雙陣+10%）、臣相（化解相剋）、大司馬（探敵）、大司農（回血）、大將軍（+5%攻）、行軍總管（減傷）、破陣先鋒（金陣+8）。</p>
+    <p><strong>3. 雙陣博弈</strong>：每回合各選「第一陣」＋「第二陣」，10種五行兵法（金木水火土各2）。</p>
+    <p><strong>4. 雙陣結算</strong>：先算我方雙陣內部（相生回血/同行傷敵/相剋自損），再算敵我陣對陣。</p>
+    <p><strong>5. 五行相剋</strong>：木剋土 → 土剋水 → 水剋火 → 火剋金 → 金剋木。</p>
+    <p><strong>6. 羈絆加成</strong>：特定武將組合可觸發羈絆，獲得額外屬性加成。</p>
+    <p><strong>7. 勝利條件</strong>：敵主公兵力歸零即勝。</p>
+    <button class="btn gold" style="width:100%;margin-top:16px;letter-spacing:6px;" onclick="BF.hideHelp()">明 白 了</button>
+  </div>
+</div>
+
+<div id="bf-toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   DATA — 50 Heroes · 25 Bonds · 10 Tactics
+   ════════════════════════════════════════════════════════ */
+const ELEM_COL = { 木:'#81c784', 火:'#ef5350', 土:'#ffca28', 金:'#b0bec5', 水:'#42a5f5' };
+const ELEM_GLOW = { 木:'rgba(129,199,132,', 火:'rgba(239,83,80,', 土:'rgba(255,202,40,', 金:'rgba(176,190,197,', 水:'rgba(66,165,245,' };
+const ROLE_ICON = { king:'👑', strategist:'🪶', chancellor:'📜', marshal:'🛡️', minister:'🌾', general:'⚔️', commandant:'🏹', vanguard:'🔱' };
+const ROLE_NAME = { king:'主公', strategist:'軍師', chancellor:'臣相', marshal:'大司馬', minister:'大司農', general:'大將軍', commandant:'行軍總管', vanguard:'破陣先鋒' };
+
+const HEROES = [
+  // 主公 (6)
+  {id:'h_liubei',   name:'劉備',   role:'king',       elem:'土',faction:'蜀',pow:88,desc:'仁德之主，臣相效果+10%'},
+  {id:'h_caocao',   name:'曹操',   role:'king',       elem:'水',faction:'魏',pow:92,desc:'魏武揮鞭，全軍+3攻'},
+  {id:'h_li_shimin',name:'李世民', role:'king',       elem:'金',faction:'唐',pow:90,desc:'天策上將，破陣+5傷'},
+  {id:'h_qin',      name:'秦始皇', role:'king',       elem:'土',faction:'秦',pow:95,desc:'王道霸業，主公HP+10'},
+  {id:'h_liubang',  name:'劉邦',   role:'king',       elem:'土',faction:'漢',pow:82,desc:'布衣天子，全軍士氣+5'},
+  {id:'h_zhu_yz',   name:'朱元璋', role:'king',       elem:'火',faction:'明',pow:88,desc:'洪武大帝，主公反擊+10傷'},
+  // 軍師 (6)
+  {id:'h_zhuge',    name:'諸葛亮', role:'strategist', elem:'木',faction:'蜀',pow:90,desc:'臥龍出山，雙陣加成+10%'},
+  {id:'h_sima',     name:'司馬懿', role:'strategist', elem:'土',faction:'魏',pow:88,desc:'冢虎，每回合揭露1戰術'},
+  {id:'h_zhou_yu',  name:'周瑜',   role:'strategist', elem:'火',faction:'吳',pow:85,desc:'美周郎，火陣+15傷'},
+  {id:'h_liu_bw',   name:'劉伯溫', role:'strategist', elem:'水',faction:'明',pow:84,desc:'神機軍師，被剋反噬-30%'},
+  {id:'h_fan_li',   name:'范蠡',   role:'strategist', elem:'水',faction:'越',pow:80,desc:'商聖，水陣回血+8'},
+  {id:'h_chen_ping',name:'陳平',   role:'strategist', elem:'土',faction:'漢',pow:78,desc:'六出奇計，敵第一陣效果-20%'},
+  // 臣相 (5)
+  {id:'h_xun_yu',   name:'荀彧',   role:'chancellor', elem:'土',faction:'魏',pow:78,desc:'王佐之才，化解相剋+10%'},
+  {id:'h_wei_zheng',name:'魏徵',   role:'chancellor', elem:'金',faction:'唐',pow:76,desc:'諫官，每回合回血+3'},
+  {id:'h_li_si',    name:'李斯',   role:'chancellor', elem:'金',faction:'秦',pow:75,desc:'法家相，主公受擊-10%'},
+  {id:'h_zhang_l',  name:'張良',   role:'chancellor', elem:'木',faction:'漢',pow:80,desc:'運籌帷幄，每3回合抽1戰術'},
+  {id:'h_guan_z',   name:'管仲',   role:'chancellor', elem:'金',faction:'齊',pow:82,desc:'霸主之師，全軍攻擊+6'},
+  // 大司馬 (7)
+  {id:'h_guan_yu',  name:'關羽',   role:'marshal',    elem:'金',faction:'蜀',pow:90,desc:'武聖，揭露敵雙陣其中之一'},
+  {id:'h_xh_dun',   name:'夏侯惇', role:'marshal',    elem:'金',faction:'魏',pow:82,desc:'拔矢啖睛，反擊+10傷'},
+  {id:'h_yu_chi',   name:'尉遲恭', role:'marshal',    elem:'土',faction:'唐',pow:80,desc:'門神，先手防禦+15%'},
+  {id:'h_xu_da',    name:'徐達',   role:'marshal',    elem:'土',faction:'明',pow:78,desc:'中山王，金陣+10傷'},
+  {id:'h_wei_qing', name:'衛青',   role:'marshal',    elem:'水',faction:'漢',pow:84,desc:'長平侯，水陣+12傷'},
+  {id:'h_ma_chao',  name:'馬超',   role:'marshal',    elem:'火',faction:'蜀',pow:86,desc:'錦馬超，突襲+10傷'},
+  {id:'h_han_xin',  name:'韓信',   role:'marshal',    elem:'木',faction:'漢',pow:88,desc:'兵仙，用兵多多益善，勝率加成'},
+  // 大司農 (6)
+  {id:'h_xiao_he',  name:'蕭何',   role:'minister',   elem:'土',faction:'漢',pow:75,desc:'每3回合全軍回5血'},
+  {id:'h_zhang_jj', name:'張居正', role:'minister',   elem:'木',faction:'明',pow:74,desc:'一條鞭法，每2回合補1戰術'},
+  {id:'h_guo_jia',  name:'郭嘉',   role:'minister',   elem:'火',faction:'魏',pow:72,desc:'鬼才，補給點+20%'},
+  {id:'h_fang_xl',  name:'房玄齡', role:'minister',   elem:'土',faction:'唐',pow:70,desc:'貞觀文相，前3回合穩定+5血'},
+  {id:'h_fan_zy',   name:'范仲淹', role:'minister',   elem:'木',faction:'宋',pow:76,desc:'先天下之憂，每回合木陣回血+5'},
+  {id:'h_bao_zh',   name:'包拯',   role:'minister',   elem:'金',faction:'宋',pow:73,desc:'黑臉包公，減少被剋傷害10%'},
+  // 大將軍 (7)
+  {id:'h_zhang_fei',name:'張飛',   role:'general',    elem:'木',faction:'蜀',pow:88,desc:'萬人敵，征伐+10傷'},
+  {id:'h_xiang_yu', name:'項羽',   role:'general',    elem:'火',faction:'楚',pow:96,desc:'霸王，全軍+5%攻'},
+  {id:'h_zhang_liao',name:'張遼',  role:'general',    elem:'金',faction:'魏',pow:85,desc:'威震逍遙津，破甲+12'},
+  {id:'h_yue_fei',  name:'岳飛',   role:'general',    elem:'木',faction:'宋',pow:90,desc:'精忠報國，主公附近+8防'},
+  {id:'h_bai_qi',   name:'白起',   role:'general',    elem:'金',faction:'秦',pow:94,desc:'殺神，每回合額外-8傷'},
+  {id:'h_han_szh',  name:'韓世忠', role:'general',    elem:'火',faction:'宋',pow:84,desc:'梁山泊英雄，火陣+10傷'},
+  {id:'h_qi_jg',    name:'戚繼光', role:'general',    elem:'金',faction:'明',pow:86,desc:'戚家軍，步兵抵禦+10%'},
+  // 行軍總管 (6)
+  {id:'h_zhao_yun', name:'趙雲',   role:'commandant', elem:'金',faction:'蜀',pow:86,desc:'七進七出，被剋木陣減傷10'},
+  {id:'h_li_jing',  name:'李靖',   role:'commandant', elem:'水',faction:'唐',pow:84,desc:'藥師，敵雙陣相同時-3傷'},
+  {id:'h_xu_huang', name:'徐晃',   role:'commandant', elem:'土',faction:'魏',pow:78,desc:'治軍嚴明，被剋減傷15'},
+  {id:'h_lu_meng',  name:'呂蒙',   role:'commandant', elem:'水',faction:'吳',pow:76,desc:'白衣渡江，後援優先'},
+  {id:'h_sun_wu',   name:'孫武',   role:'commandant', elem:'水',faction:'吳',pow:90,desc:'兵聖，水陣不被剋制'},
+  {id:'h_di_qing',  name:'狄青',   role:'commandant', elem:'金',faction:'宋',pow:80,desc:'面塗銅面，恐嚇敵軍-5攻'},
+  // 破陣先鋒 (7)
+  {id:'h_lvbu',     name:'呂布',   role:'vanguard',   elem:'火',faction:'漢',pow:98,desc:'人中呂布，金陣優先且+5傷'},
+  {id:'h_chang_yc', name:'常遇春', role:'vanguard',   elem:'金',faction:'明',pow:88,desc:'先鋒之神，同五行-5血'},
+  {id:'h_huo_qb',   name:'霍去病', role:'vanguard',   elem:'金',faction:'漢',pow:90,desc:'冠軍侯，首回合+15傷'},
+  {id:'h_yang_zx',  name:'楊再興', role:'vanguard',   elem:'木',faction:'宋',pow:82,desc:'小商河，反擊+5%'},
+  {id:'h_xue_rg',   name:'薛仁貴', role:'vanguard',   elem:'火',faction:'唐',pow:86,desc:'三箭定天山，火陣先攻'},
+  {id:'h_qin_qiong',name:'秦瓊',   role:'vanguard',   elem:'金',faction:'唐',pow:84,desc:'馬踏黃河，金陣+8傷'},
+  {id:'h_ran_min',  name:'冉閔',   role:'vanguard',   elem:'金',faction:'後趙',pow:92,desc:'殺胡令，金陣爆發+12傷'},
+];
+
+const HEROES_IDX = HEROES.reduce((m,h)=>{ m[h.id]=h; return m; }, {});
+
+const TACTICS = [
+  {id:'t_jin1',  name:'白虎陣',  elem:'金',desc:'鋒銳破甲：對相剋目標+10傷'},
+  {id:'t_jin2',  name:'金戈鐵馬',elem:'金',desc:'攻擊+8，破陣優先結算'},
+  {id:'t_mu1',   name:'青龍陣',  elem:'木',desc:'生機循環：被剋時減傷10'},
+  {id:'t_mu2',   name:'森羅萬象',elem:'木',desc:'回血+6，相生時額外+4'},
+  {id:'t_shui1', name:'玄武陣',  elem:'水',desc:'柔克剛：被剋時反噬-15%'},
+  {id:'t_shui2', name:'萬流歸宗',elem:'水',desc:'攻擊+5，每3回合迷惑敵1次'},
+  {id:'t_huo1',  name:'朱雀陣',  elem:'火',desc:'烈焰焚城：相生時+15傷'},
+  {id:'t_huo2',  name:'燎原之勢',elem:'火',desc:'連擊：第二陣同火時+10傷'},
+  {id:'t_tu1',   name:'勾陳陣',  elem:'土',desc:'穩如泰山：受傷-8'},
+  {id:'t_tu2',   name:'厚德載物',elem:'土',desc:'防禦+10，主公附近+5血'},
+];
+
+const BONDS = [
+  {ids:['h_liubei','h_zhuge'],          name:'三顧茅廬',    bonus:{atk:8,def:5}},
+  {ids:['h_liubei','h_guan_yu','h_zhang_fei'], name:'桃園三結義', bonus:{atk:15,def:10,hp:20}},
+  {ids:['h_caocao','h_xh_dun'],         name:'宗親猛將',    bonus:{atk:6}},
+  {ids:['h_caocao','h_xun_yu'],         name:'王佐之才',    bonus:{def:8}},
+  {ids:['h_caocao','h_guo_jia'],        name:'鬼才奉孝',    bonus:{atk:10}},
+  {ids:['h_zhuge','h_zhang_fei'],       name:'臥龍燕人',    bonus:{atk:5,hp:10}},
+  {ids:['h_li_shimin','h_yu_chi'],      name:'門神戍唐',    bonus:{def:10}},
+  {ids:['h_qin','h_li_si'],             name:'法家威儀',    bonus:{atk:5,def:5}},
+  {ids:['h_xiang_yu','h_zhang_l'],      name:'楚漢相爭',    bonus:{atk:12}},
+  {ids:['h_zhou_yu','h_lu_meng'],       name:'吳國雙絕',    bonus:{atk:7,def:7}},
+  {ids:['h_yue_fei','h_yang_zx'],       name:'岳家軍',      bonus:{atk:8,hp:15}},
+  {ids:['h_li_shimin','h_li_jing'],     name:'天策軍威',    bonus:{atk:6,def:6}},
+  {ids:['h_han_xin','h_zhang_l'],       name:'漢初雙傑',    bonus:{atk:10,def:5}},
+  {ids:['h_guan_yu','h_zhao_yun'],      name:'蜀漢雙壁',    bonus:{atk:8,def:8}},
+  {ids:['h_liubang','h_xiao_he'],       name:'漢室奠基',    bonus:{hp:15,def:6}},
+  {ids:['h_liubang','h_han_xin'],       name:'高祖用兵',    bonus:{atk:12}},
+  {ids:['h_bai_qi','h_qin'],            name:'虎狼之師',    bonus:{atk:15}},
+  {ids:['h_zhu_yz','h_xu_da'],          name:'洪武功臣',    bonus:{atk:8,hp:10}},
+  {ids:['h_wei_qing','h_huo_qb'],       name:'衛霍雙璧',    bonus:{atk:14,def:4}},
+  {ids:['h_zhuge','h_liu_bw'],          name:'臥龍神機',    bonus:{atk:10,def:8}},
+  {ids:['h_lvbu','h_ma_chao'],          name:'天下無雙',    bonus:{atk:18}},
+  {ids:['h_fan_zy','h_bao_zh'],         name:'宋廷雙清',    bonus:{def:10,hp:8}},
+  {ids:['h_sun_wu','h_zhou_yu'],        name:'吳地兵法',    bonus:{atk:10,def:5}},
+  {ids:'h_qin_qiong','h_xue_rg','h_yu_chi'.split(''),name:'唐初三傑', bonus:{atk:12,def:8}},
+  {ids:['h_ran_min','h_bai_qi'],        name:'屠戮之神',    bonus:{atk:20}},
+];
+// fix bond that used split incorrectly
+BONDS[23] = {ids:['h_qin_qiong','h_xue_rg','h_yu_chi'], name:'唐初三傑', bonus:{atk:12,def:8}};
+
+function activeBonds(picks){
+  const s = new Set(picks);
+  return BONDS.filter(b => b.ids.every(id => s.has(id)));
+}
+
+/* Five-element: 木→火→土→金→水→木 (生) / 木→土→水→火→金→木 (剋) */
+const SHENG = {木:'火',火:'土',土:'金',金:'水',水:'木'};
+const KE    = {木:'土',土:'水',水:'火',火:'金',金:'木'};
+
+function relation(a,b){
+  if(a===b) return 'same';
+  if(SHENG[a]===b) return 'sheng';
+  if(SHENG[b]===a) return 'sheng_in';
+  if(KE[a]===b) return 'ke';
+  if(KE[b]===a) return 'ke_by';
+  return 'none';
+}
+
+/* ════════════════════════════════════════════════════════
+   ENGINE — BP Steps · Battle Resolution · AI
+   ════════════════════════════════════════════════════════ */
+// BP: enemy先禁 → 共14步
+const BP_STEPS = [
+  {phase:'ban',  side:'enemy',  cnt:1, jf:null},          // 0
+  {phase:'ban',  side:'player', cnt:1, jf:null},          // 1
+  {phase:'pick', side:'enemy',  cnt:1, jf:'king'},        // 2
+  {phase:'pick', side:'player', cnt:1, jf:'king'},        // 3
+  {phase:'pick', side:'enemy',  cnt:1, jf:'strategist'},  // 4
+  {phase:'pick', side:'player', cnt:1, jf:'strategist'},  // 5
+  {phase:'ban',  side:'enemy',  cnt:1, jf:null},          // 6
+  {phase:'ban',  side:'player', cnt:1, jf:null},          // 7
+  {phase:'pick', side:'enemy',  cnt:2, jf:'special'},     // 8 (2 picks)
+  {phase:'pick', side:'player', cnt:2, jf:'special'},     // 9
+  {phase:'ban',  side:'enemy',  cnt:1, jf:null},          // 10
+  {phase:'ban',  side:'player', cnt:1, jf:null},          // 11
+  {phase:'pick', side:'enemy',  cnt:4, jf:'special'},     // 12 (4 picks)
+  {phase:'pick', side:'player', cnt:4, jf:'special'},     // 13
+];
+
+function makeState(){
+  return {
+    bans:{player:[],enemy:[]},
+    picks:{player:[],enemy:[]},
+    stepIdx:0,
+    stepProg: BP_STEPS.map(()=>0), // progress per step (for multi-cnt steps)
+    phase:'bp',
+    mode:'ai',
+    round:1,
+    hp:{player:100,enemy:100},
+    maxHp:100,
+    log:[],
+    lastEnemy:null,
+    resolving:false
+  };
+}
+
+function poolFor(state, jf){
+  const used = new Set([
+    ...state.bans.player, ...state.bans.enemy,
+    ...state.picks.player, ...state.picks.enemy
+  ]);
+  let p = HEROES.filter(h => !used.has(h.id));
+  if(jf === 'special') p = p.filter(h => h.role !== 'king' && h.role !== 'strategist');
+  else if(jf && jf !== 'any') p = p.filter(h => h.role === jf);
+  return p;
+}
+
+function curStep(state){ return BP_STEPS[state.stepIdx] || null; }
+
+/* Returns {ok, error} */
+function doStep(state, side, heroId){
+  const step = curStep(state);
+  if(!step) return {ok:false, error:'BP已結束'};
+  if(step.side !== side) return {ok:false, error:'不是你方回合'};
+  const hero = HEROES_IDX[heroId];
+  if(!hero) return {ok:false, error:'找不到武將'};
+  // job filter check
+  if(step.jf === 'special' && (hero.role === 'king' || hero.role === 'strategist'))
+    return {ok:false, error:'本步需選非主公/軍師職位'};
+  if(step.jf && step.jf !== 'special' && step.jf !== 'any' && hero.role !== step.jf)
+    return {ok:false, error:`本步需選 ${ROLE_NAME[step.jf]}`};
+  // already in pool check
+  const used = new Set([...state.bans.player,...state.bans.enemy,...state.picks.player,...state.picks.enemy]);
+  if(used.has(heroId)) return {ok:false, error:'此武將已被使用'};
+
+  if(step.phase === 'ban'){
+    state.bans[side].push(heroId);
+  } else {
+    state.picks[side].push(heroId);
+  }
+  state.stepProg[state.stepIdx]++;
+  if(state.stepProg[state.stepIdx] >= step.cnt){
+    state.stepIdx++;
+  }
+  if(state.stepIdx >= BP_STEPS.length){
+    state.phase = 'battle';
+  }
+  return {ok:true};
+}
+
+/* AI: picks best hero given state */
+function aiPick(state){
+  const step = curStep(state);
+  if(!step || step.side !== 'enemy') return null;
+  const pool = poolFor(state, step.jf);
+  if(!pool.length) return null;
+  if(step.phase === 'ban'){
+    // ban highest-power hero that counters our picks
+    const ourElems = state.picks.player.map(id => HEROES_IDX[id].elem);
+    const sorted = pool.slice().sort((a,b) => {
+      let s = b.pow - a.pow;
+      if(ourElems.some(e => KE[a.elem] === e)) s += 20;
+      if(ourElems.some(e => KE[b.elem] === e)) s -= 20;
+      return s;
+    });
+    return sorted[0].id;
+  } else {
+    // pick hero that counters player's last element
+    const myElems = state.picks.player.map(id => HEROES_IDX[id].elem);
+    if(myElems.length > 0){
+      const target = KE[myElems[myElems.length-1]];
+      const match = pool.filter(h => h.elem === target);
+      if(match.length) return match.sort((a,b)=>b.pow-a.pow)[0].id;
+    }
+    return pool.sort((a,b)=>b.pow-a.pow)[0].id;
+  }
+}
+
+/* AI advice text */
+function aiAdvice(state){
+  const step = curStep(state);
+  if(!step) return '雙陣已成，請佈陣應戰。';
+  if(step.side !== 'player') return '敵方思考中…';
+  const pool = poolFor(state, step.jf);
+  if(!pool.length) return '可自由選擇。';
+  if(step.phase === 'ban'){
+    const enElems = state.picks.enemy.map(id => HEROES_IDX[id].elem);
+    const best = pool.slice().sort((a,b) => {
+      let s = b.pow - a.pow;
+      if(enElems.some(e => KE[a.elem] === e)) s += 20;
+      return s;
+    })[0];
+    return `建議禁掉「${best.name}（${best.elem}‧${best.pow}）」— 此將對敵方威脅最大。`;
+  } else {
+    const enElems = state.picks.enemy.map(id => HEROES_IDX[id].elem);
+    if(enElems.length > 0){
+      const last = enElems[enElems.length-1];
+      const tgt = KE[last];
+      const match = pool.filter(h => h.elem === tgt).sort((a,b)=>b.pow-a.pow);
+      if(match.length) return `敵方多用「${last}」，建議選「${match[0].name}（${tgt}）」形成五行壓制。`;
+    }
+    const top = pool.sort((a,b)=>b.pow-a.pow)[0];
+    return `建議選「${top.name}（${top.elem}‧${top.pow}）」穩固陣容。`;
+  }
+}
+
+/* AI tactic selection */
+function aiTactics(state){
+  const myElems = state.picks.player.map(id => HEROES_IDX[id].elem);
+  const scored = TACTICS.map(t => {
+    let s = Math.random() * 2;
+    myElems.forEach(e => {
+      if(KE[t.elem] === e) s += 3;  // counters player
+      if(KE[e] === t.elem) s -= 1;  // player counters it
+    });
+    return {t, s};
+  }).sort((a,b)=>b.s-a.s);
+  return [scored[0].t, scored[1].t];
+}
+
+/* Battle round resolution — no double-resolve guard */
+function resolveTactics(state, ourT, enemyT){
+  const log = [];
+  let ourDmg = 0, enDmg = 0;
+  const [t1, t2] = ourT;
+  const [e1, e2] = enemyT;
+  const myRoles = state.picks.player.map(id => HEROES_IDX[id].role);
+
+  // Inner dual-formation check
+  const inner = relation(t1.elem, t2.elem);
+  if(inner === 'sheng' || inner === 'sheng_in'){
+    log.push({type:'our', text:`雙陣相生（${t1.name}↔${t2.name}）：我方回血 +10`});
+    enDmg -= 10; // means less enemy damage = we heal
+  } else if(inner === 'ke' || inner === 'ke_by'){
+    const hasChancellor = myRoles.includes('chancellor');
+    if(hasChancellor && Math.random() < 0.3){
+      log.push({type:'our', text:`雙陣相剋 — 臣相化解！（${t1.name}↔${t2.name}）`});
+    } else {
+      log.push({type:'enemy', text:`雙陣相剋（${t1.name}↔${t2.name}）：自損 -${hasChancellor?20:30}`});
+      ourDmg += hasChancellor ? 20 : 30;
+    }
+  } else if(inner === 'same'){
+    log.push({type:'our', text:`雙陣同行（${t1.name}+${t2.name}）：傷敵 +15`});
+    enDmg += 15;
+  }
+
+  // Cross-check (our 1st vs enemy 1st, our 2nd vs enemy 2nd)
+  [[t1,e1,1],[t2,e2,2]].forEach(([mine, theirs, idx])=>{
+    const r = relation(mine.elem, theirs.elem);
+    if(r === 'ke'){
+      log.push({type:'our', text:`第${idx}陣 ${mine.name}(${mine.elem})剋${theirs.name}(${theirs.elem})：敵損 -30`});
+      enDmg += 30;
+    } else if(r === 'ke_by'){
+      const hasCmd = myRoles.includes('commandant');
+      const reduce = (hasCmd && mine.elem === '木') ? 10 : (hasCmd ? 8 : 0);
+      log.push({type:'enemy', text:`第${idx}陣被剋：${mine.name}(${mine.elem})←${theirs.name}(${theirs.elem})：自損 -${30-reduce}`});
+      ourDmg += 30 - reduce;
+    } else if(r === 'sheng' || r === 'sheng_in'){
+      log.push({type:'system', text:`第${idx}陣相生（${mine.name}↔${theirs.name}）：敵回 +8`});
+      enDmg -= 8;
+    } else if(r === 'same'){
+      log.push({type:'system', text:`第${idx}陣同行（${mine.name}+${theirs.name}）：互損 -15`});
+      ourDmg += 15; enDmg += 15;
+    } else {
+      log.push({type:'system', text:`第${idx}陣 ${mine.name}↔${theirs.name} 無關：互損 -10`});
+      ourDmg += 10; enDmg += 10;
+    }
+  });
+
+  // Role bonuses
+  if(myRoles.includes('general')){
+    const b = Math.round(Math.max(0,enDmg)*0.05)+5;
+    enDmg += b;
+    log.push({type:'epic', text:`⚔️ 大將軍 — 全軍+5%攻（額外傷 +${b}）`});
+  }
+  if(myRoles.includes('vanguard')){
+    if(t1.elem==='金'||t2.elem==='金'){ enDmg+=8; log.push({type:'epic',text:'🔱 破陣先鋒 — 金陣優先 +8'}); }
+    if(t1.elem===e1.elem||t2.elem===e2.elem){ enDmg+=5; log.push({type:'epic',text:'🔱 破陣先鋒 — 同行突破 +5'}); }
+  }
+  if(myRoles.includes('minister') && state.round % 3 === 0){
+    ourDmg = Math.max(0, ourDmg-5);
+    log.push({type:'epic', text:'🌾 大司農 — 每3回合回血 +5'});
+  }
+  if(myRoles.includes('marshal')){
+    const reveal = Math.random()<.5 ? e1 : e2;
+    log.push({type:'epic', text:`🛡️ 大司馬 — 探得敵方 ${reveal.name}(${reveal.elem})`});
+  }
+  if(myRoles.includes('strategist')){
+    enDmg = Math.round(enDmg * 1.08);
+    log.push({type:'our', text:'🪶 軍師 — 雙陣加成 +8%'});
+  }
+
+  return {ourDmg, enDmg, log};
+}
+
+function applyRound(state, ourT){
+  const enemyT = aiTactics(state);
+  const res = resolveTactics(state, ourT, enemyT);
+  state.hp.player = Math.max(0, state.hp.player - res.ourDmg);
+  state.hp.enemy  = Math.max(0, state.hp.enemy  - res.enDmg);
+  res.log.forEach(l => state.log.push(l));
+  state.lastEnemy = enemyT;
+  state.round++;
+  let ended = null;
+  if(state.hp.enemy<=0 && state.hp.player<=0) ended='draw';
+  else if(state.hp.enemy<=0) ended='win';
+  else if(state.hp.player<=0) ended='lose';
+  return {enemyT, ended};
+}
+
+/* ════════════════════════════════════════════════════════
+   UI CONTROLLER
+   ════════════════════════════════════════════════════════ */
+let gs = null;          // game state
+let timerIv = null;     // player countdown interval
+let aiTO = null;        // ai turn timeout
+let pickedT = [null,null]; // chosen tactics
+let battleRaf = null;   // canvas raf
+let elemFil = '';       // element filter
+
+// Helpers
+const $  = id => document.getElementById(id);
+const tx = (id,t) => { const e=$(`${id}`); if(e) e.textContent=t; };
+const ht = (id,h) => { const e=$(`${id}`); if(e) e.innerHTML=h; };
+
+function toast(msg, dur=2000){
+  const t = $('bf-toast'); if(!t) return;
+  t.textContent = msg; t.style.opacity='1';
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>{ t.style.opacity='0'; }, dur);
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=$(id); if(el) el.classList.add('active');
+}
+
+/* Portrait: deterministic SVG based on name+elem */
+function heroPortrait(hero){
+  const col = ELEM_COL[hero.elem] || '#9c6dd6';
+  const h = hero.name.charCodeAt(0) % 8; // hat variant
+  const f = hero.name.charCodeAt(Math.min(1,hero.name.length-1)) % 4; // face
+  const faces = ['😐','🧐','😤','😠'];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+    <rect width="44" height="44" rx="5" fill="#1a0f2e"/>
+    <rect x="6" y="4" width="32" height="8" rx="2" fill="${col}" opacity=".9"/>
+    <rect x="10" y="1" width="24" height="5" rx="1" fill="${col}"/>
+    <rect x="10" y="12" width="24" height="22" rx="5" fill="#f5e6c8"/>
+    <rect x="14" y="18" width="5" height="4" rx="1" fill="#3d2808"/>
+    <rect x="25" y="18" width="5" height="4" rx="1" fill="#3d2808"/>
+    <rect x="${f===0?16:f===1?15:f===2?17:16}" y="29" width="${f===3?14:12}" height="2" rx="1" fill="#3d2808"/>
+    <rect x="8" y="34" width="28" height="10" rx="3" fill="${col}" opacity=".85"/>
+    <rect x="16" y="34" width="12" height="10" fill="${col}" opacity=".5"/>
+    <text x="22" y="8" font-size="7" fill="rgba(255,255,255,.9)" text-anchor="middle" font-family="serif">${hero.name[0]}</text>
+  </svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+
+/* ── Lobby ──────────────────────────────────────────── */
+function initLobby(){
+  const pts = +localStorage.getItem('bf_pts')||1000;
+  const rank = pts>=2000?'王者':pts>=1500?'宗師':pts>=1200?'謀將':'見習';
+  tx('stat-rank','段位：'+rank);
+  tx('stat-pts','積分：'+pts);
+  const w=+localStorage.getItem('bf_wins')||0, tot=+localStorage.getItem('bf_tot')||0;
+  tx('stat-wr','勝率：'+(tot>0?Math.round(w/tot*100):50)+'%');
+}
+
+function goHome(){ window.location.href='index.html'; }
+
+function toLobby(){
+  stopTimers(); stopRaf();
+  gs = null; pickedT=[null,null]; elemFil='';
+  showScreen('screen-lobby');
+  initLobby();
+}
+
+/* ── Start / BP ──────────────────────────────────────── */
+function startGame(mode){
+  stopTimers(); stopRaf();
+  window._lastMode = mode;
+  gs = makeState();
+  gs.mode = mode || 'ai';
+  pickedT = [null,null]; elemFil = '';
+  const titles = {ai:'AI 推演',rank:'排位天梯',match:'全球匹配'};
+  tx('top-title', titles[mode]||'兵法推演');
+  showScreen('screen-bp');
+  renderBP();
+  bpLoop();
+}
+
+function renderBP(){
+  renderPips();
+  renderPanels();
+  renderPool();
+  renderBPStatus();
+}
+
+function renderPips(){
+  const el=$('bp-pips'); if(!el) return;
+  el.innerHTML='';
+  BP_STEPS.forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.className='bp-pip';
+    if(i===gs.stepIdx) d.classList.add('active');
+    else if(i<gs.stepIdx){
+      d.classList.add(s.phase==='ban'?'ban-done':'done');
+    }
+    d.textContent = s.phase==='ban'?'✕':'✓';
+    d.title = `${s.side==='player'?'我':'敵'}方${s.phase==='ban'?'禁':'選'}`;
+    el.appendChild(d);
+  });
+}
+
+function renderBPStatus(){
+  const step = curStep(gs);
+  if(!step){
+    tx('bp-step-text','BP完成！準備進入戰場…');
+    const badge=$('bp-turn-badge');
+    if(badge){badge.textContent='✅ 選角完成';badge.className='bp-turn-badge mine';}
+    return;
+  }
+  const isMine = step.side==='player';
+  const badge=$('bp-turn-badge');
+  if(badge){
+    badge.textContent = isMine?'🟢 我方回合':'🔴 敵方回合';
+    badge.className = 'bp-turn-badge '+(isMine?'mine':'enemy');
+  }
+  const tot = BP_STEPS.length;
+  const jlabel = step.jf?(`${ROLE_NAME[step.jf]||'特殊職位'}`):'任意武將';
+  tx('bp-step-text',`第${gs.stepIdx+1}/${tot}步 — ${step.phase==='ban'?'🚫 禁用':'✅ 選派'}（${jlabel}）`);
+  // advice
+  const adv = aiAdvice(gs);
+  tx('advice-text', adv);
+}
+
+function renderPanels(){
+  renderSidePanel('enemy-slots','enemy-bans','enemy-bond','enemy');
+  renderSidePanel('player-slots','player-bans','player-bond','player');
+}
+
+function renderSidePanel(slotsId, bansId, bondId, side){
+  const el=$(slotsId); if(!el) return;
+  el.innerHTML='';
+  const picks = gs.picks[side].map(id=>HEROES_IDX[id]);
+  const bans  = gs.bans[side].map(id=>HEROES_IDX[id]);
+  const king  = picks.find(p=>p.role==='king');
+  const strat = picks.find(p=>p.role==='strategist');
+  const specs  = picks.filter(p=>p.role!=='king'&&p.role!=='strategist');
+  const slots = [
+    {label:'主公',hero:king},
+    {label:'軍師',hero:strat},
+    ...Array.from({length:6},(_,i)=>({label:`特殊${i+1}`,hero:specs[i]||null}))
+  ];
+  slots.forEach(slot=>{
+    const d=document.createElement('div');
+    d.className='bp-slot';
+    if(slot.hero){
+      d.classList.add('filled');
+      const col=ELEM_COL[slot.hero.elem]||'#9c6dd6';
+      d.style.borderColor=col;
+      d.innerHTML=`<div class="bp-slot-role">${ROLE_NAME[slot.hero.role]}</div>
+        <div class="bp-slot-name">${slot.hero.name}</div>
+        <div class="bp-slot-elem" style="color:${col}">${slot.hero.elem} · ${slot.hero.faction}</div>`;
+    } else {
+      d.innerHTML=`<div class="bp-slot-role">${slot.label}</div><div class="bp-slot-empty">待選派</div>`;
+    }
+    el.appendChild(d);
+  });
+  tx(bansId,'禁用：'+(bans.length?bans.map(b=>b.name).join('、'):'—'));
+  const bonds = activeBonds(gs.picks[side]);
+  tx(bondId,'羈絆：'+(bonds.length?bonds.map(b=>b.name).join('、'):'—'));
+}
+
+function renderPool(){
+  const el=$('bp-pool'); if(!el) return;
+  el.innerHTML='';
+  const step = curStep(gs);
+  if(!step){
+    tx('pool-label','BP 完成');
+    return;
+  }
+  const isMine = step.side==='player';
+  const jlabel = step.jf?(ROLE_NAME[step.jf]||'特殊職位'):'全部';
+  tx('pool-label',`候選 — ${step.phase==='ban'?'禁用':'選派'}（${jlabel}）`);
+  let pool = poolFor(gs, step.jf);
+  if(elemFil) pool=pool.filter(h=>h.elem===elemFil);
+
+  pool.forEach(h=>{
+    const col = ELEM_COL[h.elem]||'#9c6dd6';
+    const pct = Math.min(100,Math.max(0,((h.pow-60)/40)*100));
+    const card=document.createElement('div');
+    card.className='hero-card'+(isMine?' pickable':'');
+    card.style.setProperty('--hc',col);
+    card.style.borderColor=col;
+    card.innerHTML=`
+      <div class="hc-portrait"><img src="${heroPortrait(h)}" alt="${h.name}" loading="lazy"></div>
+      <div class="hc-role">${ROLE_ICON[h.role]||''} ${ROLE_NAME[h.role]}</div>
+      <div class="hc-name">${h.name}</div>
+      <div class="hc-elem" style="color:${col}">${h.elem} · ${h.faction}</div>
+      <div class="hc-desc">${h.desc}</div>
+      <div class="hc-pbar"><div class="hc-pfill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="hc-pow">戰力 ${h.pow}</div>
+    `;
+    if(isMine){
+      card.addEventListener('click', ()=>onHeroPick(h.id));
+    } else {
+      card.classList.add('greyed');
+    }
+    el.appendChild(card);
+  });
+}
+
+/* ── BP Loop ─────────────────────────────────────────── */
+function bpLoop(){
+  stopTimers();
+  const step = curStep(gs);
+  if(!step) return;
+
+  if(step.side==='enemy'){
+    // AI delay
+    const delay = 800 + Math.random()*600;
+    aiTO = setTimeout(()=>{
+      if(!gs) return;
+      const id = aiPick(gs);
+      if(id){ doStep(gs,'enemy',id); renderBP(); }
+      if(gs.phase==='battle'){ setTimeout(toBattle,500); }
+      else { bpLoop(); }
+    }, delay);
+  } else {
+    // Player countdown 30s
+    let t=30;
+    const timerEl=$('bp-timer');
+    if(timerEl){ timerEl.textContent=t; timerEl.classList.remove('warn'); }
+    timerIv = setInterval(()=>{
+      t--;
+      if(timerEl){ timerEl.textContent=t; if(t<=5) timerEl.classList.add('warn'); }
+      if(t<=0){
+        clearInterval(timerIv); timerIv=null;
+        const s=curStep(gs);
+        if(s && s.side==='player'){
+          const pool=poolFor(gs,s.jf);
+          if(pool.length) onHeroPick(pool[Math.floor(Math.random()*pool.length)].id);
+        }
+      }
+    },1000);
+  }
+}
+
+function onHeroPick(heroId){
+  if(!gs) return;
+  const r = doStep(gs,'player',heroId);
+  if(!r.ok){ toast(r.error); return; }
+  stopTimers();
+  renderBP();
+  if(gs.phase==='battle'){ setTimeout(toBattle,500); return; }
+  bpLoop();
+}
+
+function toggleElem(v){
+  elemFil = (elemFil===v)?'':v;
+  document.querySelectorAll('.filter-chip[data-elem]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.elem===elemFil);
+  });
+  renderPool();
+}
+
+/* ── Battle ──────────────────────────────────────────── */
+function toBattle(){
+  stopTimers();
+  gs.phase='battle';
+  pickedT=[null,null];
+  // Set king names
+  const pk=gs.picks.player.find(id=>HEROES_IDX[id].role==='king');
+  const ek=gs.picks.enemy.find(id=>HEROES_IDX[id].role==='king');
+  tx('player-king', pk?HEROES_IDX[pk].name:'我方主公');
+  tx('enemy-king',  ek?HEROES_IDX[ek].name:'敵方主公');
+  showScreen('screen-battle');
+  startBattleCanvas();
+  renderBattleUI();
+}
+
+/* Rounded rect polyfill */
+function rrect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+function stopRaf(){ if(battleRaf){ cancelAnimationFrame(battleRaf); battleRaf=null; } }
+
+function startBattleCanvas(){
+  stopRaf();
+  const canvas=$('battle-canvas'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  let frame=0;
+  function resize(){ canvas.width=canvas.offsetWidth||600; canvas.height=canvas.offsetHeight||200; }
+  resize();
+  window.addEventListener('resize',resize,{passive:true});
+
+  function draw(){
+    if(!gs){ stopRaf(); return; }
+    const W=canvas.width, H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    // bg
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#0a0618'); bg.addColorStop(1,'#170d35');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    // divider
+    ctx.strokeStyle='rgba(156,109,214,0.25)'; ctx.lineWidth=1;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    const drawRow=(ids,yBase)=>{
+      const n=ids.length; if(!n) return;
+      const tw=Math.min(56,(W-40)/n); const th=38;
+      const totalW=n*tw+(n-1)*5;
+      let x=(W-totalW)/2;
+      ids.forEach((id,i)=>{
+        const h=HEROES_IDX[id]; if(!h) return;
+        const col=ELEM_COL[h.elem]||'#9c6dd6';
+        const glow=ELEM_GLOW[h.elem]||'rgba(156,109,214,';
+        const yOff=Math.sin(frame*0.03+i*0.55)*3;
+        const rx=x+i*(tw+5); const ry=yBase+yOff;
+        // glow
+        const g=ctx.createRadialGradient(rx+tw/2,ry+th/2,2,rx+tw/2,ry+th/2,tw);
+        g.addColorStop(0,glow+'0.3)'); g.addColorStop(1,glow+'0)');
+        ctx.fillStyle=g; ctx.fillRect(rx-6,ry-6,tw+12,th+12);
+        // card
+        ctx.fillStyle='rgba(25,12,48,0.88)';
+        rrect(ctx,rx,ry,tw,th,4); ctx.fill();
+        ctx.strokeStyle=col; ctx.lineWidth=1.5;
+        rrect(ctx,rx,ry,tw,th,4); ctx.stroke();
+        // elem dot
+        ctx.fillStyle=col;
+        ctx.beginPath(); ctx.arc(rx+tw-7,ry+7,3.5,0,Math.PI*2); ctx.fill();
+        // name
+        ctx.fillStyle='#ffe8cc';
+        ctx.font=`bold ${tw>48?11:9}px "Noto Serif TC",serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        const nm=h.name.length>3?h.name.slice(0,3):h.name;
+        ctx.fillText(nm,rx+tw/2,ry+th/2);
+      });
+    };
+    drawRow(gs.picks.enemy, H/2-52);
+    drawRow(gs.picks.player, H/2+14);
+    frame++;
+    battleRaf=requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function renderBattleUI(){
+  if(!gs) return;
+  tx('round-label',`第 ${gs.round} 回合`);
+  updateHpBars();
+  pickedT=[null,null];
+  const cb=$('confirm-btn'); if(cb) cb.disabled=true;
+  tx('enemy-reveal','選擇你的雙陣兵法…');
+  renderTacticGrid('tgrid-1',0);
+  renderTacticGrid('tgrid-2',1);
+  renderLog();
+}
+
+function updateHpBars(){
+  const pp=gs.hp.player/gs.maxHp*100, ep=gs.hp.enemy/gs.maxHp*100;
+  const pb=$('player-bar'), eb=$('enemy-bar');
+  if(pb) pb.style.width=Math.max(0,pp)+'%';
+  if(eb) eb.style.width=Math.max(0,ep)+'%';
+  tx('player-hp',gs.hp.player);
+  tx('enemy-hp',gs.hp.enemy);
+}
+
+function renderTacticGrid(gridId, idx){
+  const el=$(gridId); if(!el) return;
+  el.innerHTML='';
+  TACTICS.forEach(t=>{
+    const col=ELEM_COL[t.elem]||'#c9a4ff';
+    const btn=document.createElement('button');
+    btn.className='tactic-btn'+(pickedT[idx]&&pickedT[idx].id===t.id?' selected':'');
+    btn.innerHTML=`<div class="t-name" style="color:${col}">${t.name}</div><div class="t-elem">${t.elem}</div>`;
+    btn.title=t.desc;
+    btn.addEventListener('click',()=>{
+      pickedT[idx]=t;
+      renderTacticGrid(gridId,idx);
+      const cb=$('confirm-btn');
+      if(cb) cb.disabled=!(pickedT[0]&&pickedT[1]);
+    });
+    el.appendChild(btn);
+  });
+}
+
+function renderLog(){
+  const el=$('battle-log'); if(!el) return;
+  el.innerHTML='';
+  gs.log.slice(-30).reverse().forEach(line=>{
+    const d=document.createElement('div');
+    if(typeof line==='string'){ d.className='log-ln system'; d.textContent=line; }
+    else { d.className='log-ln '+(line.type||'system'); d.textContent=line.text; }
+    el.appendChild(d);
+  });
+}
+
+function confirmTactics(){
+  if(!gs||!pickedT[0]||!pickedT[1]) return;
+  if(gs.resolving) return;
+  gs.resolving=true;
+  const cb=$('confirm-btn'); if(cb) cb.disabled=true;
+
+  const res = applyRound(gs, pickedT);
+  // Show enemy tactics
+  const et=res.enemyT;
+  tx('enemy-reveal',`敵方出陣：${et[0].name}(${et[0].elem}) + ${et[1].name}(${et[1].elem})`);
+
+  setTimeout(()=>{
+    updateHpBars();
+    renderLog();
+    gs.resolving=false;
+    if(res.ended){ setTimeout(()=>endBattle(res.ended), 600); }
+    else { setTimeout(()=>renderBattleUI(), 300); }
+  }, 500);
+}
+
+/* ── End battle ──────────────────────────────────────── */
+function endBattle(result){
+  stopRaf();
+  showScreen('screen-result');
+  const t=$('result-title');
+  if(result==='win'){   t.textContent='勝'; t.className='result-title win'; }
+  else if(result==='lose'){ t.textContent='敗'; t.className='result-title lose'; }
+  else{                 t.textContent='和'; t.className='result-title draw'; }
+
+  // Narration
+  const pk=gs.picks.player.find(id=>HEROES_IDX[id].role==='king');
+  const ek=gs.picks.enemy.find(id=>HEROES_IDX[id].role==='king');
+  const ourK = pk?HEROES_IDX[pk].name:'我方主公';
+  const enK  = ek?HEROES_IDX[ek].name:'敵方主公';
+  const bonds= activeBonds(gs.picks.player);
+  const bt   = bonds.length?`「${bonds[0].name}」威震四方，`:'';
+  let narr='';
+  if(result==='win'){
+    narr=`${gs.round-1}回合鏖戰，${bt}${ourK}麾下八位英雄運籌帷幄，以五行相剋之勢擊潰${enK}。旌旗獵獵，山河盡歸吾手！`;
+  } else if(result==='lose'){
+    narr=`${gs.round-1}回合終盡，${ourK}雖有英豪相隨，然${enK}兵法縝密，雙陣相生克敵，主帥兵力歸零。雖敗猶榮，待來日捲土重來！`;
+  } else {
+    narr=`雙方主帥兵力同時歸零，烽火連綿無分勝負。此戰載入史冊，千古流傳。`;
+  }
+  tx('result-narr', narr);
+  tx('result-rounds',`回合：${gs.round-1}`);
+  tx('result-bond','羈絆：'+(bonds.length?bonds.map(b=>b.name).join('、'):'無'));
+
+  let delta=0;
+  if(gs.mode==='rank'){
+    delta=result==='win'?25:result==='lose'?-20:0;
+    const pts=(+localStorage.getItem('bf_pts')||1000)+delta;
+    localStorage.setItem('bf_pts',String(Math.max(0,pts)));
+    if(result==='win'){ const w=(+localStorage.getItem('bf_wins')||0)+1; localStorage.setItem('bf_wins',String(w)); }
+    const tot=(+localStorage.getItem('bf_tot')||0)+1; localStorage.setItem('bf_tot',String(tot));
+  }
+  tx('result-mode', gs.mode==='rank'?(delta>=0?`排位 +${delta}分`:`排位 ${delta}分`):'AI推演（不計分）');
+}
+
+/* ── Timers ──────────────────────────────────────────── */
+function stopTimers(){
+  if(timerIv){ clearInterval(timerIv); timerIv=null; }
+  if(aiTO){ clearTimeout(aiTO); aiTO=null; }
+}
+
+/* ── Help modal ──────────────────────────────────────── */
+function showHelp(){ const m=$('modal-help'); if(m) m.classList.add('show'); }
+function hideHelp(){ const m=$('modal-help'); if(m) m.classList.remove('show'); }
+
+/* ── Init ────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', initLobby);
+
+/* ── Public API ──────────────────────────────────────── */
+window.BF = {
+  startGame, toLobby, goHome,
+  confirmTactics, toggleElem,
+  showHelp, hideHelp
+};
+
+/* ════════════════════════════════════════════════════════
+   CINEMATIC SPLASH (9.5s unskippable · purple theme)
+   ════════════════════════════════════════════════════════ */
+(function(){
+  const TOTAL=9500;
+
+  function injectCin(s){
+    const flash=document.createElement('div'); flash.className='cin-flash'; s.appendChild(flash);
+    const lbT=document.createElement('div'); lbT.id='cin-lb-top'; lbT.className='cin-lb-top'; s.appendChild(lbT);
     const lbB=document.createElement('div'); lbB.id='cin-lb-bot'; lbB.className='cin-lb-bot';
-    const pw=document.createElement('div'); pw.className='cin-progress';
-    const pf=document.createElement('div'); pf.id='cin-progress-fill'; pf.className='cin-progress-fill';
-    pw.appendChild(pf); lbB.appendChild(pw); splash.appendChild(lbB);
-    const sc=document.createElement('div'); sc.className='cin-scanlines'; splash.appendChild(sc);
-    const vg=document.createElement('div'); vg.className='cin-vignette'; splash.appendChild(vg);
-    const tp=document.createElement('div'); tp.id='cin-ready-tip'; tp.className='cin-ready-tip'; tp.textContent='▶  點 擊 任 意 處 進 入'; splash.appendChild(tp);
+    const pw=document.createElement('div'); pw.className='cin-prog';
+    const pf=document.createElement('div'); pf.id='cin-pf'; pf.className='cin-prog-fill';
+    pw.appendChild(pf); lbB.appendChild(pw); s.appendChild(lbB);
+    s.appendChild(Object.assign(document.createElement('div'),{className:'cin-scanlines'}));
+    s.appendChild(Object.assign(document.createElement('div'),{className:'cin-vignette'}));
+    const tp=document.createElement('div'); tp.id='cin-tip'; tp.className='cin-tip'; tp.textContent='▶  點 擊 任 意 處 進 入'; s.appendChild(tp);
   }
 
   function initCanvas(){
-    const canvas=document.getElementById('bf-canvas');
-    if(!canvas)return{stop(){},emitShockwave(){},emitBurst(){},get cx(){return innerWidth/2;},get cy(){return innerHeight/2;}};
-    const ctx=canvas.getContext('2d');
-    let w=canvas.width=innerWidth, h=canvas.height=innerHeight;
-    let stopped=false, raf=null;
-
+    const c=document.getElementById('bf-canvas');
+    if(!c) return {stop(){},emitSW(){},emitBurst(){},get cx(){return innerWidth/2},get cy(){return innerHeight/2}};
+    const ctx=c.getContext('2d');
+    let w=c.width=innerWidth, h=c.height=innerHeight, stopped=false, raf=null;
     const drops=Array.from({length:28},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*65+25,vx:(Math.random()-.5)*.18,vy:(Math.random()-.4)*.22,a:Math.random()*.07+.02,col:Math.random()<.6?'rgba(15,8,30,':'rgba(91,58,138,'}));
     const sparks=Array.from({length:60},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.8+.4,vy:Math.random()*.65+.2,vx:(Math.random()-.5)*.1,a:Math.random()*.6+.2}));
-    const runes=Array.from({length:8},()=>({x:Math.random()*w,y:Math.random()*h,ch:['兵','陣','將','武','略','謀','伐','克'][Math.floor(Math.random()*8)],a:Math.random()*.12+.04,size:Math.random()*40+20,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3}));
-    const shockwaves=[], bursts=[];
-
-    function emitShockwave(x,y,col){shockwaves.push({x,y,r:6,maxR:Math.max(w,h)*.55,alpha:.85,col:col||'rgba(156,109,214,'});}
-    function emitBurst(x,y,col,n){n=n||24;col=col||'rgba(156,109,214,';for(let i=0;i<n;i++){const ang=Math.PI*2*i/n+(Math.random()-.5)*.4,sp=Math.random()*5+2;bursts.push({x,y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,r:Math.random()*3+1,alpha:.9,col});}}
-
+    const runes=Array.from({length:8},()=>({x:Math.random()*w,y:Math.random()*h,ch:'兵陣將武略謀伐克'[Math.floor(Math.random()*8)],a:Math.random()*.12+.04,size:Math.random()*38+18,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3}));
+    const sw=[],br=[];
+    function emitSW(x,y,col){sw.push({x,y,r:6,maxR:Math.max(w,h)*.55,alpha:.85,col:col||'rgba(156,109,214,'});}
+    function emitBurst(x,y,col,n){n=n||24;col=col||'rgba(156,109,214,';for(let i=0;i<n;i++){const a=Math.PI*2*i/n+(Math.random()-.5)*.4,sp=Math.random()*5+2;br.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:Math.random()*3+1,alpha:.9,col});}}
     function draw(){
-      if(stopped)return;
-      ctx.clearRect(0,0,w,h);
+      if(stopped)return; ctx.clearRect(0,0,w,h);
       drops.forEach(d=>{d.x+=d.vx;d.y+=d.vy;if(d.x<-d.r)d.x=w+d.r;if(d.x>w+d.r)d.x=-d.r;if(d.y<-d.r)d.y=h+d.r;if(d.y>h+d.r)d.y=-d.r;const g=ctx.createRadialGradient(d.x,d.y,0,d.x,d.y,d.r);g.addColorStop(0,d.col+d.a+')');g.addColorStop(1,d.col+'0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fill();});
       sparks.forEach(s=>{s.x+=s.vx;s.y+=s.vy;if(s.y>h+10){s.y=-10;s.x=Math.random()*w;}ctx.fillStyle=`rgba(180,150,255,${s.a})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});
       runes.forEach(r=>{r.x+=r.vx;r.y+=r.vy;if(r.x<-50)r.x=w+50;if(r.x>w+50)r.x=-50;if(r.y<-50)r.y=h+50;if(r.y>h+50)r.y=-50;ctx.save();ctx.globalAlpha=r.a;ctx.font=`900 ${r.size}px "Noto Serif TC",serif`;ctx.fillStyle='rgba(156,109,214,1)';ctx.fillText(r.ch,r.x,r.y);ctx.restore();});
-      for(let i=shockwaves.length-1;i>=0;i--){const sw=shockwaves[i];sw.r+=(sw.maxR-sw.r)*.048+2.4;sw.alpha-=.013;if(sw.alpha<=0){shockwaves.splice(i,1);continue;}ctx.strokeStyle=sw.col+sw.alpha+')';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(sw.x,sw.y,sw.r,0,Math.PI*2);ctx.stroke();ctx.strokeStyle=sw.col+(sw.alpha*.35)+')';ctx.lineWidth=7;ctx.beginPath();ctx.arc(sw.x,sw.y,sw.r*.82,0,Math.PI*2);ctx.stroke();}
-      for(let i=bursts.length-1;i>=0;i--){const b=bursts[i];b.x+=b.vx;b.y+=b.vy;b.vx*=.96;b.vy*=.96;b.alpha-=.022;if(b.alpha<=0){bursts.splice(i,1);continue;}ctx.fillStyle=b.col+b.alpha+')';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();}
+      for(let i=sw.length-1;i>=0;i--){const s=sw[i];s.r+=(s.maxR-s.r)*.048+2.4;s.alpha-=.013;if(s.alpha<=0){sw.splice(i,1);continue;}ctx.strokeStyle=s.col+s.alpha+')';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.stroke();ctx.strokeStyle=s.col+(s.alpha*.35)+')';ctx.lineWidth=7;ctx.beginPath();ctx.arc(s.x,s.y,s.r*.82,0,Math.PI*2);ctx.stroke();}
+      for(let i=br.length-1;i>=0;i--){const b=br[i];b.x+=b.vx;b.y+=b.vy;b.vx*=.96;b.vy*=.96;b.alpha-=.022;if(b.alpha<=0){br.splice(i,1);continue;}ctx.fillStyle=b.col+b.alpha+')';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();}
       raf=requestAnimationFrame(draw);
     }
-    window.addEventListener('resize',()=>{w=canvas.width=innerWidth;h=canvas.height=innerHeight;});
+    window.addEventListener('resize',()=>{w=c.width=innerWidth;h=c.height=innerHeight;});
     draw();
-    return{stop(){stopped=true;if(raf)cancelAnimationFrame(raf);},emitShockwave,emitBurst,get cx(){return w/2;},get cy(){return h/2;}};
+    return{stop(){stopped=true;if(raf)cancelAnimationFrame(raf);},emitSW,emitBurst,get cx(){return w/2},get cy(){return h/2}};
   }
 
-  function startProgress(){
-    const fill=document.getElementById('cin-progress-fill');
-    if(!fill)return;
+  function startProg(){
+    const f=document.getElementById('cin-pf'); if(!f) return;
     const t0=Date.now();
-    const iv=setInterval(()=>{const p=Math.min(100,(Date.now()-t0)/TOTAL_MS*100);fill.style.width=p+'%';if(p>=100)clearInterval(iv);},50);
+    const iv=setInterval(()=>{const p=Math.min(100,(Date.now()-t0)/TOTAL*100);f.style.width=p+'%';if(p>=100)clearInterval(iv);},50);
   }
 
   function dismiss(){
@@ -636,219 +1506,29 @@ body {
     setTimeout(()=>{s.classList.add('out');setTimeout(()=>s.remove(),1000);},220);
   }
 
-  /* ── 啟動 ── */
-  const splash=document.getElementById('bf-splash');
-  if(!splash)return;
+  const splash=document.getElementById('bf-splash'); if(!splash) return;
   injectCin(splash);
-
-  const btn=document.getElementById('bfs-enter');
-  if(btn)btn.classList.add('cin-locked');
-
+  const btn=document.getElementById('bfs-enter'); if(btn) btn.classList.add('cin-locked');
   let unlocked=false;
-  function blockAll(e){if(!unlocked){e.stopImmediatePropagation();e.preventDefault();}}
-  splash.addEventListener('click',blockAll,true);
-  splash.addEventListener('touchstart',blockAll,true);
-
-  const cv=initCanvas();
-  startProgress();
-
-  // 時間軸（紫色主題）
-  setTimeout(()=>{cv.emitShockwave(cv.cx,cv.cy,'rgba(91,58,138,');cv.emitBurst(cv.cx,cv.cy,'rgba(156,109,214,',22);},3000);
+  function block(e){if(!unlocked){e.stopImmediatePropagation();e.preventDefault();}}
+  splash.addEventListener('click',block,true);
+  splash.addEventListener('touchstart',block,true);
+  const cv=initCanvas(); startProg();
+  setTimeout(()=>{cv.emitSW(cv.cx,cv.cy,'rgba(91,58,138,');cv.emitBurst(cv.cx,cv.cy,'rgba(156,109,214,',22);},3000);
   setTimeout(()=>{cv.emitBurst(cv.cx,cv.cy-50,'rgba(192,160,255,',30);},4600);
-  setTimeout(()=>{cv.emitShockwave(cv.cx,cv.cy,'rgba(156,109,214,');cv.emitBurst(cv.cx,cv.cy,'rgba(220,190,255,',18);},6500);
-  setTimeout(()=>{cv.emitShockwave(cv.cx,cv.cy,'rgba(156,109,214,');cv.emitShockwave(cv.cx,cv.cy,'rgba(91,58,138,');cv.emitBurst(cv.cx,cv.cy,'rgba(220,190,255,',40);},8500);
-
+  setTimeout(()=>{cv.emitSW(cv.cx,cv.cy,'rgba(156,109,214,');cv.emitBurst(cv.cx,cv.cy,'rgba(220,190,255,',18);},6500);
+  setTimeout(()=>{cv.emitSW(cv.cx,cv.cy,'rgba(156,109,214,');cv.emitSW(cv.cx,cv.cy,'rgba(91,58,138,');cv.emitBurst(cv.cx,cv.cy,'rgba(220,190,255,',40);},8500);
   setTimeout(()=>{
     unlocked=true;
-    splash.removeEventListener('click',blockAll,true);
-    splash.removeEventListener('touchstart',blockAll,true);
+    splash.removeEventListener('click',block,true);
+    splash.removeEventListener('touchstart',block,true);
     if(btn){btn.classList.remove('cin-locked');btn.classList.add('cin-unlocked');}
-    const tp=document.getElementById('cin-ready-tip'); if(tp)tp.classList.add('show');
+    const tp=document.getElementById('cin-tip'); if(tp) tp.classList.add('show');
     document.addEventListener('keydown',e=>{if(['Enter',' ','Escape'].includes(e.key))dismiss();},{once:true});
     splash.addEventListener('click',()=>dismiss(),{once:true});
-  },TOTAL_MS);
-
-  if(btn)btn.addEventListener('click',e=>{e.stopPropagation();if(unlocked)dismiss();});
+  },TOTAL);
+  if(btn) btn.addEventListener('click',e=>{e.stopPropagation();if(unlocked)dismiss();});
 })();
 </script>
-
-<!-- ══ TOP BAR ══════════════════════════════════════════════════ -->
-<div class="topbar">
-  <button class="tb-btn tb-home" onclick="BingFa.goHome()">🏛️ 遊戲大廳</button>
-  <div class="tb-title" id="top-title">兵法推演</div>
-  <button class="tb-btn" onclick="BingFa.showHelp()">📖 規則</button>
-</div>
-
-<!-- ══ LOBBY ═════════════════════════════════════════════════════ -->
-<section class="screen active" id="screen-lobby">
-  <div class="lobby-seal"><div class="lobby-seal-inner">兵</div></div>
-  <h1 class="lobby-title">兵法推演</h1>
-  <div class="lobby-sub">禁選 ‧ 雙陣 ‧ 推演千古</div>
-
-  <div class="mode-grid">
-    <div class="mode-card" onclick="BingFa.startGame('ai')">
-      <div class="mode-icon">🤖</div>
-      <div class="mode-name">AI 推演</div>
-      <div class="mode-desc">與水鏡先生對推，學習禁選與五行雙陣戰術</div>
-    </div>
-    <div class="mode-card" onclick="BingFa.startGame('rank')">
-      <div class="mode-icon">🏆</div>
-      <div class="mode-name">排位天梯</div>
-      <div class="mode-desc">純競技段位積分，無養成數值干擾</div>
-    </div>
-    <div class="mode-card" onclick="BingFa.startGame('match')">
-      <div class="mode-icon">🌐</div>
-      <div class="mode-name">全球匹配</div>
-      <div class="mode-desc">10秒配對，找不到對手由 AI 補位</div>
-    </div>
-  </div>
-
-  <div class="lobby-stat-row">
-    <span id="rank-pill">段位：見習</span>
-    <span id="point-pill">積分：1000</span>
-    <span id="winrate-pill">勝率：50%</span>
-  </div>
-</section>
-
-<!-- ══ BP DRAFT ══════════════════════════════════════════════════ -->
-<section class="screen" id="screen-bp">
-  <div class="bp-wrap">
-
-    <!-- Phase bar (14 pips) -->
-    <div class="bp-phase-bar" id="bp-phase-bar"></div>
-
-    <!-- Step info -->
-    <div class="bp-step-info" id="bp-step-info">階段提示</div>
-
-    <!-- 3-column layout -->
-    <div class="bp-layout">
-
-      <!-- Enemy panel (left) -->
-      <div class="bp-side-panel">
-        <h3>⚔️ 敵方陣容</h3>
-        <div class="bp-slots" id="enemy-panel-slots"></div>
-        <div class="bond-line" id="enemy-bond-line">羈絆：—</div>
-      </div>
-
-      <!-- Pool (center) -->
-      <div class="bp-center">
-        <div class="pool-controls">
-          <span id="pool-title" style="font-size:13px;letter-spacing:3px;color:#c9a84c;margin-right:6px;">候選武將</span>
-          <button class="filter-elem-btn" data-val="木" onclick="BingFa.setElemFilter('木')">木</button>
-          <button class="filter-elem-btn" data-val="火" onclick="BingFa.setElemFilter('火')">火</button>
-          <button class="filter-elem-btn" data-val="土" onclick="BingFa.setElemFilter('土')">土</button>
-          <button class="filter-elem-btn" data-val="金" onclick="BingFa.setElemFilter('金')">金</button>
-          <button class="filter-elem-btn" data-val="水" onclick="BingFa.setElemFilter('水')">水</button>
-        </div>
-        <div class="bp-pool-wrap">
-          <div class="bp-pool" id="bp-pool"></div>
-        </div>
-      </div>
-
-      <!-- Our panel (right) -->
-      <div class="bp-side-panel">
-        <h3>📋 我方陣容</h3>
-        <div class="bp-slots" id="our-panel-slots"></div>
-        <div class="bond-line" id="our-bond-line">羈絆：—</div>
-      </div>
-
-    </div><!-- /.bp-layout -->
-
-    <!-- Timer + advice -->
-    <div class="bp-bottom">
-      <div class="bp-timer" id="bp-timer">30</div>
-      <div class="ai-advice">
-        <strong>水鏡建議：</strong> <span id="ai-advice-text">分析中…</span>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- ══ BATTLE ════════════════════════════════════════════════════ -->
-<section class="screen" id="screen-battle">
-  <div class="battle-wrap">
-
-    <!-- HP row -->
-    <div class="hp-row">
-      <div class="hp-side enemy">
-        <div class="hp-side-name" id="enemy-king-name">敵方主公</div>
-        <div class="hp-bar-wrap"><div class="hp-bar-fill" id="enemy-hp-fill" style="width:100%"></div></div>
-        <div class="hp-bar-text"><span id="enemy-hp-text">100</span>/100</div>
-      </div>
-      <div class="round-label" id="battle-round-label">第 1 回合</div>
-      <div class="hp-side player" style="text-align:right">
-        <div class="hp-side-name" id="player-king-name">我方主公</div>
-        <div class="hp-bar-wrap"><div class="hp-bar-fill" id="player-hp-fill" style="width:100%"></div></div>
-        <div class="hp-bar-text"><span id="player-hp-text">100</span>/100</div>
-      </div>
-    </div>
-
-    <!-- Canvas battlefield -->
-    <canvas id="battle-canvas" class="battle-canvas"></canvas>
-
-    <!-- Enemy tactic reveal -->
-    <div class="enemy-reveal" id="enemy-tactic-reveal"></div>
-
-    <!-- Tactic selection -->
-    <div class="tactic-zones">
-      <div class="tactic-zone">
-        <h4>🎯 第一陣（先發兵法）</h4>
-        <div class="tactic-grid" id="tactic-grid-1"></div>
-      </div>
-      <div class="tactic-zone">
-        <h4>🎯 第二陣（後援兵法）</h4>
-        <div class="tactic-grid" id="tactic-grid-2"></div>
-      </div>
-    </div>
-
-    <!-- Confirm -->
-    <div class="confirm-row">
-      <button class="btn btn-purple" id="confirm-tactics" onclick="BingFa.confirmTactics()" disabled>確認雙陣 ‧ 開戰</button>
-    </div>
-
-    <!-- Battle log -->
-    <div class="battle-log">
-      <h4>📜 戰報</h4>
-      <div id="battle-log-content"></div>
-    </div>
-
-  </div>
-</section>
-
-<!-- ══ RESULT ════════════════════════════════════════════════════ -->
-<section class="screen" id="screen-result">
-  <div class="result-card">
-    <div class="result-title win" id="result-title">勝</div>
-    <div class="result-narration" id="result-narration">史詩旁白</div>
-    <div class="result-pills">
-      <span class="result-pill" id="result-rounds">回合：—</span>
-      <span class="result-pill" id="result-rank">AI 推演</span>
-      <span class="result-pill" id="result-bond">羈絆：—</span>
-    </div>
-    <div class="result-actions">
-      <button class="btn" onclick="BingFa.toLobby()">返回大廳</button>
-      <button class="btn btn-purple" onclick="BingFa.startGame('ai')">再戰一場</button>
-    </div>
-  </div>
-</section>
-
-<!-- ══ HELP MODAL ════════════════════════════════════════════════ -->
-<div class="modal-mask" id="modal-help">
-  <div class="modal-card">
-    <h2>兵法推演 玩法</h2>
-    <p><strong>1. BP 五階段</strong>：禁、選、禁、選、禁、選輪流，敵方先禁。共 14 步。</p>
-    <p><strong>2. 雙陣博弈</strong>：每回合佈下「第一陣」+「第二陣」，10 種戰術（金木水火土各 2）。</p>
-    <p><strong>3. 雙陣結算</strong>：先算我方雙陣內部相生／剋／同，再算敵我交鋒。</p>
-    <p><strong>4. 職位戰術</strong>：大將軍全軍+5%攻；破陣先鋒金陣優先；行軍總管被剋木陣減傷 10；大司農 3 回合回 5 血。</p>
-    <p><strong>5. 五行相剋</strong>：木剋土 → 土剋水 → 水剋火 → 火剋金 → 金剋木。</p>
-    <p><strong>6. 勝利條件</strong>：敵方主公兵力歸零。</p>
-    <button class="btn" style="width:100%;margin-top:18px;" onclick="BingFa.hideHelp()">明 白</button>
-  </div>
-</div>
-
-<script src="js/data/bingfa-heroes.js"></script>
-<script src="js/engine/bingfa-engine.js"></script>
-<script src="js/bingfa-main.js"></script>
 </body>
 </html>
