@@ -12,6 +12,28 @@
 <link rel="stylesheet" href="css/equipment.css">
 <link rel="stylesheet" href="css/splash.css">
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+.hx-topbar {
+  position: sticky; top: 0; z-index: 500;
+  display: grid; grid-template-columns: auto 1fr auto;
+  align-items: center; padding: 8px 16px;
+  background: linear-gradient(180deg,rgba(20,10,4,0.95),rgba(10,6,4,0.85));
+  border-bottom: 1px solid rgba(201,168,76,0.3);
+  backdrop-filter: blur(8px);
+}
+.hx-topbar-btn {
+  font-family: 'Noto Serif TC',serif; font-size: 13px; letter-spacing: 2px;
+  background: linear-gradient(135deg,#c9a84c,#7a6030); color: #1a1208;
+  border: 1.5px solid #ffe8a8; border-radius: 6px;
+  padding: 6px 14px; cursor: pointer; font-weight: 700;
+  transition: all .15s ease;
+}
+.hx-topbar-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201,168,76,.4); }
+.hx-topbar-title {
+  text-align: center; font-family: 'Noto Serif TC',serif;
+  font-size: 16px; letter-spacing: 6px; color: rgba(245,230,200,.7); font-weight: 700;
+}
+</style>
 </head>
 <body>
 <canvas id="particle-canvas"></canvas>
@@ -43,6 +65,12 @@
     <div class="splash-tip">點 擊 任 意 處 進 入</div>
   </div>
 </div>
+
+<nav class="hx-topbar" id="hx-topbar">
+  <button class="hx-topbar-btn" onclick="window.location.href='index.html'">🏛️ 遊戲大廳</button>
+  <span class="hx-topbar-title">華夏風雲錄</span>
+  <span></span>
+</nav>
 
 <!-- ══ LOBBY ════════════════════════════════════════════════════ -->
 <section class="screen active" id="screen-lobby">

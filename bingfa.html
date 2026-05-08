@@ -7,360 +7,415 @@
 <meta name="description" content="BP 五階段禁選對決，8 大職位、五行雙陣博弈、AI 軍師覆盤。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-  * { box-sizing: border-box; margin:0; padding:0; }
-  body {
-    font-family:'Noto Serif TC', serif;
-    background: radial-gradient(ellipse at 50% 30%, #1a0f2e 0%, #0a0612 80%);
-    color:#e8d8ff; min-height:100vh; overflow-x:hidden;
-  }
-  /* ==== 通用 ==== */
-  .screen { display:none; min-height:calc(100vh - 70px); padding: 24px; }
-  .screen.active { display:block; animation: fadeIn 0.4s ease; }
-  #screen-lobby.active { display:flex !important; flex-direction:column; align-items:center; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+/* ── Variables ── */
+:root {
+  --purple: #9c6dd6;
+  --gold: #c9a84c;
+  --dark: #0a0612;
+  --dark2: #1a0f2e;
+  --text: #e8d8ff;
+}
 
-  .top-bar {
-    display:flex; justify-content:space-between; align-items:center;
-    margin-bottom: 18px;
-    padding: 10px 18px;
-    background: linear-gradient(180deg, rgba(91,58,138,0.4), rgba(46,29,80,0.2));
-    border: 1px solid rgba(201,168,76,0.4);
-    border-radius: 10px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-  }
-  .top-title { font-size: 22px; letter-spacing: 6px; color:#ffe8a8; font-weight:900; }
-  .top-actions { display:flex; gap:10px; }
-  .btn {
-    background: linear-gradient(135deg,#c9a84c,#7a6030);
-    color:#1a1208; border:none; border-radius:6px;
-    padding: 8px 18px; font-family:inherit; font-weight:700;
-    letter-spacing:2px; cursor:pointer;
-    transition: all 0.15s ease;
-    border: 1.5px solid #ffe8a8;
-  }
-  .btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 18px rgba(201,168,76,0.4); }
-  .btn:disabled { opacity:0.4; cursor:not-allowed; }
-  .btn-ghost {
-    background: transparent;
-    color: #c9a84c;
-    border: 1.5px solid rgba(201,168,76,0.5);
-  }
-  .btn-purple {
-    background: linear-gradient(135deg,#9c6dd6,#5b3a8a);
-    color:#fff; border-color:#c9a4ff;
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ==== LOBBY ==== */
-  #screen-lobby { justify-content:center; padding-top:6vh; }
-  .lobby-seal {
-    width: 96px; height: 96px;
-    background: linear-gradient(145deg, #5b3a8a, #2e1d50);
-    border-radius:8px;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow: 0 0 30px rgba(156,109,214,0.5), inset 0 0 12px rgba(0,0,0,0.4);
-    margin-bottom: 18px; position:relative;
-  }
-  .lobby-seal::before, .lobby-seal::after {
-    content:''; position:absolute; inset:6px;
-    border:2px solid rgba(255,235,205,0.55); border-radius:4px;
-  }
-  .lobby-seal::after { inset:12px; border-width:1px; }
-  .lobby-seal-inner { font-size:48px; color:#ffe8cc; font-weight:900; }
-  .lobby-title {
-    font-size: clamp(40px, 7vw, 76px); font-weight:900; letter-spacing:14px;
-    color:#ffe8cc;
-    text-shadow: 0 0 20px rgba(156,109,214,0.6), 0 4px 12px rgba(0,0,0,0.7);
-    margin-bottom: 8px;
-  }
-  .lobby-sub {
-    font-size:16px; letter-spacing:8px; color:rgba(201,168,76,0.85);
-    margin-bottom: 28px;
-  }
-  .mode-grid {
-    display:grid; grid-template-columns:repeat(3, 1fr); gap:18px;
-    max-width: 880px; width:100%;
-    margin-bottom: 24px;
-  }
-  @media (max-width: 760px) { .mode-grid { grid-template-columns: 1fr; } }
-  .mode-card {
-    background: linear-gradient(160deg, rgba(91,58,138,0.4), rgba(15,8,4,0.85));
-    border: 2px solid rgba(201,168,76,0.4);
-    border-radius: 12px; padding: 22px;
-    cursor:pointer; transition: all 0.25s ease;
-  }
-  .mode-card:hover {
-    transform:translateY(-4px); border-color:#c9a84c;
-    box-shadow:0 10px 28px rgba(201,168,76,0.25);
-  }
-  .mode-icon { font-size:42px; margin-bottom:10px; }
-  .mode-name { font-size:22px; font-weight:900; letter-spacing:4px; color:#ffe8cc; margin-bottom:4px; }
-  .mode-desc { font-size:13px; line-height:1.6; color:rgba(232,216,255,0.75); }
+body {
+  font-family: 'Noto Serif TC', serif;
+  background: radial-gradient(ellipse at 50% 30%, var(--dark2) 0%, var(--dark) 80%);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  .lobby-stat-row {
-    display:flex; gap:14px; margin-top: 6px;
-    color:rgba(201,168,76,0.85); font-size:13px; letter-spacing:2px;
-  }
-  .lobby-stat-row span { background:rgba(0,0,0,0.4); padding:4px 12px; border-radius:12px; border:1px solid rgba(201,168,76,0.3); }
+/* ── Top bar ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 18px;
+  background: linear-gradient(180deg, rgba(26,15,46,0.97), rgba(10,6,18,0.9));
+  border-bottom: 1px solid rgba(201,168,76,0.4);
+  backdrop-filter: blur(8px);
+}
+.tb-title {
+  font-size: 18px; font-weight: 900; letter-spacing: 6px;
+  color: #ffe8a8;
+}
+.tb-btn {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 13px; letter-spacing: 2px; font-weight: 700;
+  background: linear-gradient(135deg, #c9a84c, #7a6030);
+  color: #1a1208; border: 1.5px solid #ffe8a8;
+  border-radius: 6px; padding: 6px 14px; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.tb-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201,168,76,0.4); }
 
-  /* ==== BP 介面 ==== */
-  .bp-wrap { max-width: 1200px; margin:0 auto; }
-  .bp-phase-bar {
-    display:flex; gap:6px;
-    background: rgba(0,0,0,0.5); padding:6px;
-    border-radius:8px; border:1px solid rgba(201,168,76,0.3);
-    margin-bottom: 16px;
-  }
-  .bp-phase-step {
-    flex:1; padding: 8px 4px; text-align:center;
-    background: rgba(255,255,255,0.04);
-    color: #888; font-size:13px;
-    border-radius:4px;
-    transition: all 0.3s ease;
-  }
-  .bp-phase-step.active {
-    background: linear-gradient(135deg, #c9a84c, #7a6030);
-    color:#1a1a1a; font-weight:900;
-    box-shadow: 0 0 14px rgba(201,168,76,0.5);
-  }
-  .bp-phase-step.done {
-    background: rgba(76,175,80,0.2); color:#81c784;
-  }
-  .bp-info {
-    background: rgba(156,109,214,0.1);
-    border:1px solid rgba(156,109,214,0.4);
-    padding: 12px 18px; border-radius:8px;
-    margin-bottom: 16px;
-    text-align:center; font-size:15px; letter-spacing:4px;
-  }
-  .bp-info strong { color:#c9a4ff; }
+/* ── Screen base ── */
+.screen {
+  display: none;
+  min-height: calc(100vh - 58px);
+  margin-top: 58px;
+  padding: 20px;
+}
+.screen.active { display: block; animation: fadeIn 0.35s ease; }
+#screen-lobby.active { display: flex; flex-direction: column; align-items: center; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  .bp-panel-row {
-    display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:16px;
-  }
-  @media (max-width: 800px) { .bp-panel-row { grid-template-columns:1fr; } }
-  .bp-panel {
-    background: rgba(15,8,4,0.6);
-    border:1px solid rgba(201,168,76,0.3);
-    border-radius:8px; padding: 12px;
-  }
-  .bp-panel h3 {
-    font-size:14px; letter-spacing:3px;
-    color:#c9a84c; margin-bottom:10px;
-    border-bottom:1px solid rgba(201,168,76,0.2); padding-bottom:6px;
-  }
-  .bp-roster {
-    display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr));
-    gap:8px;
-  }
-  .bp-card {
-    background: linear-gradient(160deg, rgba(91,58,138,0.5), rgba(46,29,80,0.6));
-    border: 1.5px solid rgba(201,168,76,0.4);
-    border-radius: 6px; padding: 8px;
-    cursor:pointer; transition: all 0.2s ease;
-    text-align:center;
-    min-height: 96px;
-    display:flex; flex-direction:column; justify-content:center;
-  }
-  .bp-card:hover:not(.banned):not(.picked) {
-    border-color:#ffe8a8;
-    transform:translateY(-3px);
-    box-shadow:0 6px 20px rgba(201,168,76,0.4);
-  }
-  .bp-card.banned {
-    opacity:0.3; cursor:not-allowed;
-    background: rgba(80,30,30,0.5);
-    border-color:rgba(239,83,80,0.6);
-    position:relative;
-  }
-  .bp-card.banned::after {
-    content:'✕'; position:absolute; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    font-size:48px; color:rgba(239,83,80,0.8);
-    pointer-events:none;
-  }
-  .bp-card.picked {
-    border-color:#66bb6a; opacity:0.5;
-  }
-  .bp-card-job {
-    font-size:11px; letter-spacing:2px;
-    color:#c9a84c; margin-bottom:4px;
-  }
-  .bp-card-name { font-size:14px; font-weight:900; color:#ffe8cc; margin-bottom:3px; }
-  .bp-card-elem { font-size:11px; color:rgba(232,216,255,0.7); }
-  .elem-木 { color:#81c784 !important; }
-  .elem-火 { color:#ef5350 !important; }
-  .elem-土 { color:#ffca28 !important; }
-  .elem-金 { color:#b0bec5 !important; }
-  .elem-水 { color:#42a5f5 !important; }
+/* ── Common button ── */
+.btn {
+  font-family: 'Noto Serif TC', serif;
+  background: linear-gradient(135deg, #c9a84c, #7a6030);
+  color: #1a1208; border: 1.5px solid #ffe8a8;
+  border-radius: 6px; padding: 9px 20px;
+  font-weight: 700; letter-spacing: 2px; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(201,168,76,0.4); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-purple {
+  background: linear-gradient(135deg, #9c6dd6, #5b3a8a);
+  color: #fff; border-color: #c9a4ff;
+}
+.btn-ghost {
+  background: transparent; color: var(--gold);
+  border: 1.5px solid rgba(201,168,76,0.5);
+}
 
-  .bp-side {
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;
-    margin-bottom:8px;
-  }
-  .bp-slot {
-    background: rgba(0,0,0,0.4);
-    border:1.5px dashed rgba(201,168,76,0.3);
-    border-radius:6px;
-    height: 80px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    font-size:11px; color:rgba(201,168,76,0.5);
-    text-align:center; padding:4px;
-  }
-  .bp-slot.filled {
-    border-style:solid;
-    background: linear-gradient(160deg, rgba(91,58,138,0.5), rgba(46,29,80,0.6));
-    color:#ffe8cc;
-  }
-  .bp-slot.banned {
-    border-color:rgba(239,83,80,0.6);
-    background: rgba(80,30,30,0.4);
-    color:rgba(239,83,80,0.8);
-  }
-  .bp-slot-job { font-size:10px; opacity:0.7; }
-  .bp-slot-name { font-size:13px; font-weight:700; margin-top:2px; }
-  .bp-slot-elem { font-size:10px; margin-top:2px; }
+/* ══════════════════ LOBBY ══════════════════ */
+#screen-lobby { padding-top: 5vh; }
+.lobby-seal {
+  width: 90px; height: 90px;
+  background: linear-gradient(145deg, #5b3a8a, #2e1d50);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 28px rgba(156,109,214,0.5), inset 0 0 10px rgba(0,0,0,0.4);
+  margin-bottom: 16px; position: relative;
+}
+.lobby-seal::before, .lobby-seal::after {
+  content: ''; position: absolute; inset: 6px;
+  border: 2px solid rgba(255,235,205,0.5); border-radius: 4px;
+}
+.lobby-seal::after { inset: 12px; border-width: 1px; }
+.lobby-seal-inner { font-size: 44px; color: #ffe8cc; font-weight: 900; }
+.lobby-title {
+  font-size: clamp(38px, 7vw, 72px); font-weight: 900; letter-spacing: 14px;
+  color: #ffe8cc;
+  text-shadow: 0 0 18px rgba(156,109,214,0.6), 0 4px 12px rgba(0,0,0,0.7);
+  margin-bottom: 8px;
+}
+.lobby-sub {
+  font-size: 15px; letter-spacing: 8px; color: rgba(201,168,76,0.85);
+  margin-bottom: 28px;
+}
+.mode-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  max-width: 860px; width: 100%; margin-bottom: 22px;
+}
+@media (max-width: 760px) { .mode-grid { grid-template-columns: 1fr; } }
+.mode-card {
+  background: linear-gradient(160deg, rgba(91,58,138,0.4), rgba(15,8,4,0.85));
+  border: 2px solid rgba(201,168,76,0.35); border-radius: 12px; padding: 22px;
+  cursor: pointer; transition: all 0.25s ease; text-align: center;
+}
+.mode-card:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 10px 28px rgba(201,168,76,0.25); }
+.mode-icon { font-size: 40px; margin-bottom: 10px; }
+.mode-name { font-size: 20px; font-weight: 900; letter-spacing: 4px; color: #ffe8cc; margin-bottom: 6px; }
+.mode-desc { font-size: 13px; line-height: 1.6; color: rgba(232,216,255,0.75); }
+.lobby-stat-row {
+  display: flex; gap: 12px; margin-top: 4px;
+  color: rgba(201,168,76,0.85); font-size: 13px; letter-spacing: 2px;
+}
+.lobby-stat-row span {
+  background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 12px;
+  border: 1px solid rgba(201,168,76,0.3);
+}
 
-  .bp-timer {
-    text-align:center; font-size:24px; font-weight:900;
-    color:#ffe8a8; letter-spacing:6px;
-    margin: 12px 0;
-  }
-  .bp-timer.warn { color:#ef5350; animation: pulse 0.6s infinite; }
-  @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.1); } }
+/* ══════════════════ BP DRAFT ══════════════════ */
+#screen-bp { padding: 16px; }
+.bp-wrap { max-width: 1200px; margin: 0 auto; }
 
-  .ai-advice {
-    background: linear-gradient(135deg, rgba(66,165,245,0.15), rgba(28,75,130,0.1));
-    border:1px solid rgba(66,165,245,0.4);
-    border-radius:8px; padding:10px 14px;
-    margin-bottom:14px; font-size:13px;
-    color:rgba(187,222,251,0.9);
-  }
-  .ai-advice strong { color:#42a5f5; letter-spacing:2px; }
+/* Phase bar — 14 pips */
+.bp-phase-bar {
+  display: flex; gap: 4px;
+  background: rgba(0,0,0,0.5); padding: 6px 8px;
+  border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+  margin-bottom: 12px;
+}
+.bp-pip {
+  flex: 1; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.04);
+  color: #888; border-radius: 4px;
+  transition: all 0.25s ease; cursor: default;
+}
+.bp-pip.active {
+  background: linear-gradient(135deg, var(--gold), #7a6030);
+  color: #1a1a1a;
+  box-shadow: 0 0 10px rgba(201,168,76,0.5);
+}
+.bp-pip.done { background: rgba(76,175,80,0.2); color: #81c784; }
 
-  /* ==== BATTLE ==== */
-  .battle-wrap { max-width: 1300px; margin:0 auto; }
-  .three-stage {
-    width:100%; height:280px;
-    background: radial-gradient(ellipse at center, #2a1d4a 0%, #0a0612 80%);
-    border:1px solid rgba(201,168,76,0.4);
-    border-radius: 10px;
-    margin-bottom: 16px; position:relative;
-    overflow:hidden;
-  }
-  .stage-overlay {
-    position:absolute; inset:0; pointer-events:none;
-    display:flex; flex-direction:column; justify-content:space-between;
-    padding:12px;
-  }
-  .army-bar {
-    display:flex; justify-content:space-between; align-items:center;
-    background: rgba(0,0,0,0.5); padding:6px 12px; border-radius:6px;
-    border:1px solid rgba(201,168,76,0.3);
-  }
-  .army-bar.enemy { color:#ef5350; }
-  .army-bar.player { color:#66bb6a; }
-  .hp-bar { width:200px; height:14px; background:rgba(0,0,0,0.5); border-radius:7px; overflow:hidden; border:1px solid rgba(201,168,76,0.3); }
-  .hp-fill { height:100%; background:linear-gradient(90deg,#ef5350,#ffa726); transition: width 0.4s ease; }
-  .hp-fill.player { background: linear-gradient(90deg,#66bb6a,#26c6da); }
+/* Step info bar */
+.bp-step-info {
+  background: rgba(156,109,214,0.1);
+  border: 1px solid rgba(156,109,214,0.4);
+  padding: 10px 16px; border-radius: 8px;
+  margin-bottom: 12px; text-align: center;
+  font-size: 15px; letter-spacing: 4px;
+}
+.bp-step-info strong { color: #c9a4ff; }
 
-  .battle-controls {
-    display:grid; grid-template-columns: 1fr 1fr; gap:12px;
-    margin-bottom:14px;
-  }
-  @media (max-width: 800px) { .battle-controls { grid-template-columns:1fr; } }
+/* 3-column layout */
+.bp-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media (max-width: 900px) {
+  .bp-layout { grid-template-columns: 1fr; }
+}
 
-  .tactic-zone {
-    background: rgba(0,0,0,0.4);
-    border:1px solid rgba(201,168,76,0.3);
-    border-radius:8px; padding:12px;
-  }
-  .tactic-zone h4 { font-size:13px; letter-spacing:3px; color:#c9a84c; margin-bottom:8px; }
-  .tactic-grid {
-    display:grid; grid-template-columns:repeat(5, 1fr); gap:6px;
-  }
-  .tactic-btn {
-    padding: 10px 4px; text-align:center;
-    background: rgba(255,255,255,0.04);
-    border:1.5px solid rgba(201,168,76,0.3);
-    border-radius:6px; cursor:pointer;
-    font-family:inherit; color:#e8d8ff;
-    transition: all 0.15s ease;
-    font-size:12px;
-  }
-  .tactic-btn:hover { transform:translateY(-2px); border-color:#ffe8a8; }
-  .tactic-btn.selected {
-    background: linear-gradient(135deg,#c9a84c,#7a6030);
-    color:#1a1208; font-weight:900;
-    border-color:#ffe8a8;
-    box-shadow:0 0 12px rgba(201,168,76,0.5);
-  }
-  .tactic-btn-name { font-size:14px; font-weight:700; }
-  .tactic-btn-elem { font-size:11px; opacity:0.7; }
+/* Side panels */
+.bp-side-panel {
+  background: rgba(10,6,18,0.7);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 8px; padding: 10px;
+}
+.bp-side-panel h3 {
+  font-size: 13px; letter-spacing: 3px;
+  color: var(--gold); margin-bottom: 8px;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+  padding-bottom: 6px;
+}
+.bp-slots { display: flex; flex-direction: column; gap: 5px; }
+.bp-slot {
+  background: rgba(0,0,0,0.4);
+  border: 1.5px dashed rgba(201,168,76,0.3);
+  border-radius: 6px; padding: 6px 8px;
+  min-height: 52px;
+  display: flex; flex-direction: column; justify-content: center;
+  transition: all 0.2s ease;
+}
+.bp-slot.filled { border-style: solid; background: rgba(30,15,55,0.7); }
+.bp-slot-job { font-size: 10px; letter-spacing: 2px; color: rgba(201,168,76,0.7); }
+.bp-slot-name { font-size: 13px; font-weight: 700; color: #ffe8cc; margin-top: 2px; }
+.bp-slot-elem { font-size: 10px; margin-top: 2px; }
+.bp-slot-empty { font-size: 11px; opacity: 0.35; margin-top: 2px; }
+.ban-line { font-size: 10px; color: rgba(239,83,80,0.7); margin-top: 6px; padding-top: 4px; border-top: 1px dashed rgba(239,83,80,0.3); }
+.bond-line { font-size: 11px; letter-spacing: 1px; margin-top: 6px; color: rgba(201,168,76,0.7); }
 
-  .battle-log {
-    background: rgba(0,0,0,0.5);
-    border:1px solid rgba(201,168,76,0.3);
-    border-radius:8px;
-    padding:12px;
-    max-height: 300px;
-    overflow-y:auto;
-    font-size:13px; line-height:1.8;
-  }
-  .battle-log h4 { font-size:13px; letter-spacing:3px; color:#c9a84c; margin-bottom:8px; }
-  .log-line {
-    padding:4px 0;
-    border-bottom: 1px dashed rgba(255,255,255,0.05);
-  }
-  .log-line.our { color:#81c784; }
-  .log-line.enemy { color:#ef5350; }
-  .log-line.epic { color:#ffe8a8; font-weight:700; letter-spacing:2px; }
-  .log-line.system { color:rgba(255,255,255,0.5); font-style:italic; }
+/* Pool center */
+.bp-center { display: flex; flex-direction: column; gap: 10px; }
+.pool-controls {
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+}
+.filter-elem-btn, .filter-job-btn {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 11px; letter-spacing: 1px; padding: 4px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 12px; cursor: pointer; color: var(--text);
+  transition: all 0.15s ease;
+}
+.filter-elem-btn.active, .filter-job-btn.active {
+  background: rgba(201,168,76,0.2); border-color: var(--gold); color: #ffe8a8;
+}
+#pool-title {
+  font-size: 13px; letter-spacing: 3px; color: var(--gold);
+}
+.bp-pool-wrap {
+  background: rgba(10,6,18,0.6);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 8px; padding: 10px;
+  max-height: 480px; overflow-y: auto;
+}
+.bp-pool {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
 
-  /* ==== RESULT ==== */
-  .result-wrap {
-    max-width:600px; margin:60px auto; text-align:center;
-    background: linear-gradient(160deg, rgba(91,58,138,0.4), rgba(15,8,4,0.85));
-    border:2px solid rgba(201,168,76,0.5);
-    border-radius:14px; padding: 40px;
-  }
-  .result-title {
-    font-size: 48px; font-weight:900; letter-spacing:14px;
-    margin-bottom:18px;
-  }
-  .result-title.win { color:#ffe8a8; text-shadow:0 0 24px rgba(255,232,168,0.6); }
-  .result-title.lose { color:#ef5350; text-shadow:0 0 24px rgba(239,83,80,0.6); }
-  .result-text {
-    background: rgba(0,0,0,0.4); border-radius:8px;
-    padding:18px; margin: 20px 0;
-    font-size:15px; line-height:2; letter-spacing:1px;
-    color:#e8d8ff; text-align:left;
-  }
-  .result-stats {
-    display:flex; gap:14px; justify-content:center;
-    margin: 18px 0;
-  }
-  .result-pill {
-    background: rgba(201,168,76,0.15);
-    border:1px solid rgba(201,168,76,0.5);
-    padding:6px 14px; border-radius:14px;
-    color:#c9a84c; font-size:13px;
-  }
+/* Hero cards */
+.hero-card {
+  background: linear-gradient(160deg, rgba(91,58,138,0.45), rgba(20,10,35,0.8));
+  border: 1.5px solid var(--gold);
+  border-radius: 7px; padding: 9px 8px;
+  transition: all 0.2s ease; position: relative; overflow: hidden;
+  user-select: none;
+}
+.hero-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--elem-col, rgba(156,109,214,0.15)), transparent 60%);
+  opacity: 0.4; pointer-events: none;
+}
+.hero-card:hover:not(.not-mine) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(201,168,76,0.35);
+}
+.hero-card.not-mine { opacity: 0.5; cursor: default; }
+.hc-job { font-size: 10px; letter-spacing: 2px; color: var(--gold); margin-bottom: 3px; }
+.hc-name { font-size: 14px; font-weight: 900; color: #ffe8cc; margin-bottom: 3px; }
+.hc-elem { font-size: 11px; margin-bottom: 4px; }
+.hc-desc { font-size: 10px; color: rgba(232,216,255,0.6); line-height: 1.4; margin-bottom: 5px; min-height: 28px; }
+.hc-power-bar {
+  height: 3px; background: rgba(0,0,0,0.5);
+  border-radius: 2px; margin-bottom: 3px; overflow: hidden;
+}
+.hc-power-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.hc-power-label { font-size: 10px; color: rgba(201,168,76,0.7); text-align: right; }
 
-  /* ==== modal ==== */
-  .modal-mask {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8);
-    align-items:center; justify-content:center; z-index:1000;
-    padding:20px;
-  }
-  .modal-mask.show { display:flex; animation: fadeIn 0.3s ease; }
-  .modal-card {
-    max-width:500px; width:100%;
-    background: linear-gradient(160deg, rgba(91,58,138,0.6), rgba(15,8,4,0.95));
-    border:2px solid rgba(201,168,76,0.5);
-    border-radius:12px; padding: 28px;
-  }
+/* Timer and advice */
+.bp-bottom { display: flex; flex-direction: column; gap: 8px; }
+.bp-timer {
+  text-align: center; font-size: 28px; font-weight: 900;
+  color: #ffe8a8; letter-spacing: 6px;
+}
+.bp-timer.warn { color: #ef5350; animation: pulse 0.6s infinite; }
+@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.08); } }
+.ai-advice {
+  background: linear-gradient(135deg, rgba(66,165,245,0.12), rgba(28,75,130,0.08));
+  border: 1px solid rgba(66,165,245,0.35);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; color: rgba(187,222,251,0.9);
+}
+.ai-advice strong { color: #42a5f5; letter-spacing: 2px; }
+
+/* ══════════════════ BATTLE ══════════════════ */
+#screen-battle { padding: 16px; }
+.battle-wrap { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+
+.hp-row {
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px;
+  align-items: center;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 8px; padding: 10px 14px;
+}
+.hp-side { display: flex; flex-direction: column; gap: 4px; }
+.hp-side-name { font-size: 13px; letter-spacing: 2px; font-weight: 700; }
+.hp-side.enemy .hp-side-name { color: #ef5350; }
+.hp-side.player .hp-side-name { color: #66bb6a; }
+.hp-bar-wrap { height: 10px; background: rgba(0,0,0,0.5); border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+.hp-bar-fill { height: 100%; transition: width 0.4s ease; border-radius: 5px; }
+.hp-side.enemy .hp-bar-fill { background: linear-gradient(90deg, #ef5350, #ffa726); }
+.hp-side.player .hp-bar-fill { background: linear-gradient(90deg, #66bb6a, #26c6da); }
+.hp-bar-text { font-size: 11px; color: rgba(255,255,255,0.6); text-align: right; }
+.round-label { text-align: center; font-size: 14px; font-weight: 700; letter-spacing: 4px; color: var(--gold); white-space: nowrap; }
+
+/* Canvas */
+.battle-canvas {
+  width: 100%; height: 220px;
+  border-radius: 10px;
+  border: 1px solid rgba(201,168,76,0.35);
+  background: var(--dark);
+  display: block;
+}
+
+/* Enemy reveal */
+.enemy-reveal {
+  background: rgba(239,83,80,0.1);
+  border: 1px solid rgba(239,83,80,0.4);
+  border-radius: 6px; padding: 8px 14px;
+  font-size: 13px; color: rgba(255,182,182,0.9);
+  min-height: 34px; letter-spacing: 2px;
+}
+
+/* Tactic zones */
+.tactic-zones {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+@media (max-width: 640px) { .tactic-zones { grid-template-columns: 1fr; } }
+.tactic-zone {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 8px; padding: 12px;
+}
+.tactic-zone h4 { font-size: 13px; letter-spacing: 3px; color: var(--gold); margin-bottom: 8px; }
+.tactic-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
+}
+.tactic-btn {
+  padding: 9px 4px; text-align: center;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(201,168,76,0.25);
+  border-radius: 6px; cursor: pointer;
+  font-family: 'Noto Serif TC', serif;
+  transition: all 0.15s ease;
+}
+.tactic-btn:hover { transform: translateY(-2px); border-color: #ffe8a8; }
+.tactic-btn.selected {
+  background: linear-gradient(135deg, var(--gold), #7a6030);
+  border-color: #ffe8a8;
+  box-shadow: 0 0 10px rgba(201,168,76,0.5);
+}
+.tactic-btn.selected .tactic-name { color: #1a1208 !important; }
+.tactic-btn.selected .tactic-elem { color: rgba(26,18,8,0.75); }
+.tactic-name { font-size: 12px; font-weight: 700; line-height: 1.3; }
+.tactic-elem { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+
+.confirm-row { text-align: center; }
+
+/* Battle log */
+.battle-log {
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 8px; padding: 12px;
+  max-height: 250px; overflow-y: auto;
+}
+.battle-log h4 { font-size: 13px; letter-spacing: 3px; color: var(--gold); margin-bottom: 8px; }
+.log-line { padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); font-size: 13px; line-height: 1.7; }
+.log-line.our { color: #81c784; }
+.log-line.enemy { color: #ef5350; }
+.log-line.epic { color: #ffe8a8; font-weight: 700; letter-spacing: 2px; }
+.log-line.system { color: rgba(255,255,255,0.5); font-style: italic; }
+
+/* ══════════════════ RESULT ══════════════════ */
+#screen-result { display: flex; align-items: flex-start; justify-content: center; padding-top: 40px; }
+#screen-result.active { display: flex; }
+.result-card {
+  max-width: 580px; width: 100%;
+  background: linear-gradient(160deg, rgba(91,58,138,0.45), rgba(15,8,4,0.9));
+  border: 2px solid rgba(201,168,76,0.5);
+  border-radius: 14px; padding: 40px; text-align: center;
+}
+.result-title {
+  font-size: 52px; font-weight: 900; letter-spacing: 14px; margin-bottom: 16px;
+}
+.result-title.win { color: #ffe8a8; text-shadow: 0 0 24px rgba(255,232,168,0.6); }
+.result-title.lose { color: #ef5350; text-shadow: 0 0 24px rgba(239,83,80,0.6); }
+.result-title.draw { color: #90a4ae; }
+.result-narration {
+  background: rgba(0,0,0,0.4); border-radius: 8px; padding: 16px;
+  font-size: 14px; line-height: 2; letter-spacing: 1px; color: var(--text);
+  text-align: left; margin: 18px 0;
+}
+.result-pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
+.result-pill {
+  background: rgba(201,168,76,0.15);
+  border: 1px solid rgba(201,168,76,0.5);
+  padding: 5px 14px; border-radius: 14px;
+  color: var(--gold); font-size: 13px;
+}
+.result-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+
+/* ══════════════════ HELP MODAL ══════════════════ */
+.modal-mask {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82);
+  align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+}
+.modal-mask.show { display: flex; animation: fadeIn 0.3s ease; }
+.modal-card {
+  max-width: 520px; width: 100%;
+  background: linear-gradient(160deg, rgba(91,58,138,0.65), rgba(15,8,4,0.97));
+  border: 2px solid rgba(201,168,76,0.5);
+  border-radius: 12px; padding: 28px;
+}
+.modal-card h2 { text-align: center; color: #ffe8a8; letter-spacing: 4px; margin-bottom: 14px; font-size: 20px; }
+.modal-card p { font-size: 14px; line-height: 2; color: var(--text); margin-bottom: 6px; }
+.modal-card p strong { color: var(--gold); }
 
 /* ══ 兵法推演 SPLASH ══════════════════════════════════════ */
 #bf-splash {
@@ -617,16 +672,14 @@
 })();
 </script>
 
-<!-- ══ TOP BAR ════════════════════════════════════════════════ -->
-<div class="top-bar">
-  <div class="top-title" id="top-title">兵法推演</div>
-  <div class="top-actions">
-    <button class="btn btn-ghost" onclick="location.href='index.html'">🏛️ 大廳</button>
-    <button class="btn btn-ghost" onclick="location.href='huaxia.html'">👑 切換到華夏風雲錄</button>
-  </div>
+<!-- ══ TOP BAR ══════════════════════════════════════════════════ -->
+<div class="topbar">
+  <button class="tb-btn tb-home" onclick="BingFa.goHome()">🏛️ 遊戲大廳</button>
+  <div class="tb-title" id="top-title">兵法推演</div>
+  <button class="tb-btn" onclick="BingFa.showHelp()">📖 規則</button>
 </div>
 
-<!-- ══ LOBBY ═══════════════════════════════════════════════════ -->
+<!-- ══ LOBBY ═════════════════════════════════════════════════════ -->
 <section class="screen active" id="screen-lobby">
   <div class="lobby-seal"><div class="lobby-seal-inner">兵</div></div>
   <h1 class="lobby-title">兵法推演</h1>
@@ -657,58 +710,88 @@
   </div>
 </section>
 
-<!-- ══ BP DRAFT ═════════════════════════════════════════════════ -->
+<!-- ══ BP DRAFT ══════════════════════════════════════════════════ -->
 <section class="screen" id="screen-bp">
   <div class="bp-wrap">
+
+    <!-- Phase bar (14 pips) -->
     <div class="bp-phase-bar" id="bp-phase-bar"></div>
-    <div class="bp-info" id="bp-info">階段提示</div>
-    <div class="ai-advice" id="ai-advice">
-      <strong>水鏡建議：</strong> <span id="ai-advice-text">分析中…</span>
-    </div>
-    <div class="bp-timer" id="bp-timer">30</div>
 
-    <div class="bp-panel-row">
-      <div class="bp-panel">
-        <h3>📋 我方陣容（1 主公 + 1 軍師 + 6 特殊職位）</h3>
-        <div class="bp-side" id="bp-our-side"></div>
-        <div style="font-size:12px; color:rgba(201,168,76,0.7); margin-top:8px;" id="bp-our-bond">羈絆：—</div>
-      </div>
-      <div class="bp-panel">
+    <!-- Step info -->
+    <div class="bp-step-info" id="bp-step-info">階段提示</div>
+
+    <!-- 3-column layout -->
+    <div class="bp-layout">
+
+      <!-- Enemy panel (left) -->
+      <div class="bp-side-panel">
         <h3>⚔️ 敵方陣容</h3>
-        <div class="bp-side" id="bp-enemy-side"></div>
-        <div style="font-size:12px; color:rgba(239,83,80,0.7); margin-top:8px;" id="bp-enemy-bond">羈絆：—</div>
+        <div class="bp-slots" id="enemy-panel-slots"></div>
+        <div class="bond-line" id="enemy-bond-line">羈絆：—</div>
+      </div>
+
+      <!-- Pool (center) -->
+      <div class="bp-center">
+        <div class="pool-controls">
+          <span id="pool-title" style="font-size:13px;letter-spacing:3px;color:#c9a84c;margin-right:6px;">候選武將</span>
+          <button class="filter-elem-btn" data-val="木" onclick="BingFa.setElemFilter('木')">木</button>
+          <button class="filter-elem-btn" data-val="火" onclick="BingFa.setElemFilter('火')">火</button>
+          <button class="filter-elem-btn" data-val="土" onclick="BingFa.setElemFilter('土')">土</button>
+          <button class="filter-elem-btn" data-val="金" onclick="BingFa.setElemFilter('金')">金</button>
+          <button class="filter-elem-btn" data-val="水" onclick="BingFa.setElemFilter('水')">水</button>
+        </div>
+        <div class="bp-pool-wrap">
+          <div class="bp-pool" id="bp-pool"></div>
+        </div>
+      </div>
+
+      <!-- Our panel (right) -->
+      <div class="bp-side-panel">
+        <h3>📋 我方陣容</h3>
+        <div class="bp-slots" id="our-panel-slots"></div>
+        <div class="bond-line" id="our-bond-line">羈絆：—</div>
+      </div>
+
+    </div><!-- /.bp-layout -->
+
+    <!-- Timer + advice -->
+    <div class="bp-bottom">
+      <div class="bp-timer" id="bp-timer">30</div>
+      <div class="ai-advice">
+        <strong>水鏡建議：</strong> <span id="ai-advice-text">分析中…</span>
       </div>
     </div>
 
-    <div class="bp-panel">
-      <h3 id="bp-pool-title">候選武將</h3>
-      <div class="bp-roster" id="bp-roster"></div>
-    </div>
   </div>
 </section>
 
-<!-- ══ BATTLE ══════════════════════════════════════════════════ -->
+<!-- ══ BATTLE ════════════════════════════════════════════════════ -->
 <section class="screen" id="screen-battle">
   <div class="battle-wrap">
-    <div class="three-stage" id="three-stage">
-      <div class="stage-overlay">
-        <div class="army-bar enemy">
-          <span id="enemy-name">敵方主公</span>
-          <div class="hp-bar"><div class="hp-fill" id="enemy-hp" style="width:100%"></div></div>
-          <span><span id="enemy-hp-text">100</span>/100</span>
-        </div>
-        <div></div>
-        <div class="army-bar player">
-          <span id="player-name">我方主公</span>
-          <div class="hp-bar"><div class="hp-fill player" id="player-hp" style="width:100%"></div></div>
-          <span><span id="player-hp-text">100</span>/100</span>
-        </div>
+
+    <!-- HP row -->
+    <div class="hp-row">
+      <div class="hp-side enemy">
+        <div class="hp-side-name" id="enemy-king-name">敵方主公</div>
+        <div class="hp-bar-wrap"><div class="hp-bar-fill" id="enemy-hp-fill" style="width:100%"></div></div>
+        <div class="hp-bar-text"><span id="enemy-hp-text">100</span>/100</div>
+      </div>
+      <div class="round-label" id="battle-round-label">第 1 回合</div>
+      <div class="hp-side player" style="text-align:right">
+        <div class="hp-side-name" id="player-king-name">我方主公</div>
+        <div class="hp-bar-wrap"><div class="hp-bar-fill" id="player-hp-fill" style="width:100%"></div></div>
+        <div class="hp-bar-text"><span id="player-hp-text">100</span>/100</div>
       </div>
     </div>
 
-    <div class="bp-info" id="battle-round-info">第 1 回合 — 請佈下第一陣 + 第二陣</div>
+    <!-- Canvas battlefield -->
+    <canvas id="battle-canvas" class="battle-canvas"></canvas>
 
-    <div class="battle-controls">
+    <!-- Enemy tactic reveal -->
+    <div class="enemy-reveal" id="enemy-tactic-reveal"></div>
+
+    <!-- Tactic selection -->
+    <div class="tactic-zones">
       <div class="tactic-zone">
         <h4>🎯 第一陣（先發兵法）</h4>
         <div class="tactic-grid" id="tactic-grid-1"></div>
@@ -719,46 +802,48 @@
       </div>
     </div>
 
-    <div style="text-align:center; margin: 14px 0;">
+    <!-- Confirm -->
+    <div class="confirm-row">
       <button class="btn btn-purple" id="confirm-tactics" onclick="BingFa.confirmTactics()" disabled>確認雙陣 ‧ 開戰</button>
     </div>
 
+    <!-- Battle log -->
     <div class="battle-log">
-      <h4>📜 戰報（極簡條列）</h4>
+      <h4>📜 戰報</h4>
       <div id="battle-log-content"></div>
     </div>
+
   </div>
 </section>
 
-<!-- ══ RESULT ══════════════════════════════════════════════════ -->
+<!-- ══ RESULT ════════════════════════════════════════════════════ -->
 <section class="screen" id="screen-result">
-  <div class="result-wrap">
-    <div class="result-title" id="result-title">勝</div>
-    <div class="result-text" id="result-narration">史詩旁白</div>
-    <div class="result-stats">
+  <div class="result-card">
+    <div class="result-title win" id="result-title">勝</div>
+    <div class="result-narration" id="result-narration">史詩旁白</div>
+    <div class="result-pills">
       <span class="result-pill" id="result-rounds">回合：—</span>
-      <span class="result-pill" id="result-rank">段位 +25</span>
+      <span class="result-pill" id="result-rank">AI 推演</span>
       <span class="result-pill" id="result-bond">羈絆：—</span>
     </div>
-    <div style="display:flex; gap:10px; justify-content:center; margin-top:16px;">
+    <div class="result-actions">
       <button class="btn" onclick="BingFa.toLobby()">返回大廳</button>
       <button class="btn btn-purple" onclick="BingFa.startGame('ai')">再戰一場</button>
     </div>
   </div>
 </section>
 
-<!-- ══ HELP MODAL ══════════════════════════════════════════════ -->
+<!-- ══ HELP MODAL ════════════════════════════════════════════════ -->
 <div class="modal-mask" id="modal-help">
   <div class="modal-card">
-    <h2 style="text-align:center; color:#ffe8a8; letter-spacing:4px; margin-bottom:14px;">兵法推演 玩法</h2>
-    <div style="font-size:14px; line-height:2; color:#e8d8ff;">
-      <p><strong>1. BP 五階段</strong>：禁、選、禁、選、禁、選輪流，敵方先禁。</p>
-      <p><strong>2. 雙陣博弈</strong>：每回合佈下「第一陣」+「第二陣」，10種戰術（金木水火土各2）。</p>
-      <p><strong>3. 雙陣結算</strong>：先算我方雙陣內部相生／剋／同，再算敵我交鋒。</p>
-      <p><strong>4. 職位戰術</strong>：大將軍全軍+5%攻；破陣先鋒金陣優先；行軍總管被剋木陣減傷10；大司農3回合回5血。</p>
-      <p><strong>5. 勝利條件</strong>：敵方主公兵力歸零。</p>
-    </div>
-    <button class="btn" style="width:100%; margin-top:18px;" onclick="document.getElementById('modal-help').classList.remove('show')">明 白</button>
+    <h2>兵法推演 玩法</h2>
+    <p><strong>1. BP 五階段</strong>：禁、選、禁、選、禁、選輪流，敵方先禁。共 14 步。</p>
+    <p><strong>2. 雙陣博弈</strong>：每回合佈下「第一陣」+「第二陣」，10 種戰術（金木水火土各 2）。</p>
+    <p><strong>3. 雙陣結算</strong>：先算我方雙陣內部相生／剋／同，再算敵我交鋒。</p>
+    <p><strong>4. 職位戰術</strong>：大將軍全軍+5%攻；破陣先鋒金陣優先；行軍總管被剋木陣減傷 10；大司農 3 回合回 5 血。</p>
+    <p><strong>5. 五行相剋</strong>：木剋土 → 土剋水 → 水剋火 → 火剋金 → 金剋木。</p>
+    <p><strong>6. 勝利條件</strong>：敵方主公兵力歸零。</p>
+    <button class="btn" style="width:100%;margin-top:18px;" onclick="BingFa.hideHelp()">明 白</button>
   </div>
 </div>
 
