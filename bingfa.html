@@ -486,7 +486,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   border:2px solid rgba(201,168,76,.4);border-radius:50%;
   display:flex;align-items:center;justify-content:center;font-size:24px;
 }
-.ta-body{padding:10px 14px 8px;font-size:12px;line-height:1.9;color:var(--text2);min-height:72px}
+.ta-body{padding:10px 14px 8px;font-size:12px;line-height:1.9;color:var(--text2);min-height:72px;white-space:pre-line}
 .ta-progress{
   padding:6px 14px 10px;
   font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.3);
@@ -559,7 +559,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
       <div class="mc-name">排位天梯</div>
       <div class="mc-desc">純競技段位積分<br>無養成數值干擾<br>技巧定勝負</div>
     </div>
-    <div class="mode-card" data-mode="ai">
+    <div class="mode-card" data-mode="match">
       <div class="mc-icon">🌐</div>
       <div class="mc-name">全球匹配</div>
       <div class="mc-desc">10秒配對挑戰<br>找不到由 AI 補位<br>（開發中）</div>
@@ -1172,15 +1172,16 @@ function aiAdvice(state){
 }
 
 function aiTactics(state){
-  const enElems = state.picks.enemy.map(id => HEROES_IDX[id].elem);
-  return TACTICS.slice().sort((a,b)=>{
-    let s = Math.random()*2;
-    enElems.forEach(e=>{
-      if(KE[e]===a.elem) s+=3;
-      if(KE[a.elem]===e) s-=1;
+  // Pick 2 tactics that exploit player's element weaknesses
+  const playerElems = state.picks.player.map(id => HEROES_IDX[id].elem);
+  return TACTICS.slice().map(t=>{
+    let score = Math.random()*2;
+    playerElems.forEach(e=>{
+      if(KE[t.elem]===e) score+=3;  // t.elem counters player hero → good for enemy
+      if(KE[e]===t.elem) score-=1; // player hero counters t.elem → bad for enemy
     });
-    return b.pow - a.pow + s;
-  }).slice(0,2);
+    return {t,score};
+  }).sort((a,b)=>b.score-a.score).slice(0,2).map(x=>x.t);
 }
 
 function resolveBattle(state, ourT){
@@ -1394,9 +1395,14 @@ function goHome(){ window.location.href='index.html'; }
 /* ── BP ─────────────────────────────────────────────── */
 function startGame(mode){
   stopTimers();
+  // 全球匹配 is not yet implemented — fall back to AI mode with notice
+  if(mode === 'match'){
+    showToast('全球匹配開發中，暫以 AI 推演代替', 2600);
+    mode = 'ai';
+  }
   G = makeState(mode);
   pickedT = [null,null]; elemFilter = '';
-  const titles={tutorial:'新手教學',ai:'AI 推演',rank:'排位天梯',match:'全球匹配'};
+  const titles={tutorial:'新手教學',ai:'AI 推演',rank:'排位天梯'};
   tx('top-title', titles[mode]||'兵法推演');
   showScreen('scr-bp');
   if(mode==='tutorial'){
@@ -1556,6 +1562,14 @@ function renderPool(){
     }
     el.appendChild(d);
   });
+
+  // Tutorial: scroll pool to highlight target
+  if(tutTgt && isPlayerTurn){
+    requestAnimationFrame(()=>{
+      const tgtEl = el.querySelector('.tut-target');
+      if(tgtEl) tgtEl.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  }
 }
 
 function hexToRgb(hex){
@@ -1617,8 +1631,8 @@ function bpLoop(){
   } else {
     // Player turn
     if(G.mode === 'tutorial'){
-      // Tutorial mode: no timer; just highlight the target hero
-      tx('bp-timer', '∞');
+      // Tutorial mode: no timer; highlight target & show label
+      tx('bp-timer', '📖');
       $('bp-timer')?.classList.remove('warn');
       const tgt = tutTarget(G);
       const tgtHero = tgt ? HEROES_IDX[tgt] : null;
@@ -1791,8 +1805,14 @@ function showResult(outcome){
     tx('rp-mode', G.mode==='rank'?(delta>=0?`排位 +${delta}分`:`排位 ${delta}分`):'AI推演（不計分）');
   }
 
+  // Update replay button label
+  const replayBtn = $('btn-replay');
+  if(replayBtn){
+    replayBtn._mode = G.mode;
+    replayBtn.textContent = G.mode==='tutorial' ? '重新教學' : '再戰一場';
+  }
+
   showScreen('scr-result');
-  $('btn-replay')._mode = G.mode;
 }
 
 /* ═══════════════════════════════════════════════════════════
