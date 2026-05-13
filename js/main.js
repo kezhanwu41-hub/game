@@ -771,32 +771,55 @@ window.Game = (function() {
 
   function renderBattleCell(cell, card, isAtk, isTgt) {
     if (!cell) return;
-    cell.className = 'battle-cell front ' + (isAtk?'selected-attacker':'') + (isTgt?'selected-target':'');
-    if (!card || card.currentHp<=0) { cell.innerHTML=''; cell.classList.add('empty'); return; }
+    cell.className = 'battle-cell front'
+      + (isAtk?' selected-attacker':'') + (isTgt?' selected-target':'');
+    if (!card || card.currentHp <= 0) {
+      cell.innerHTML = '<div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:auto;margin-bottom:auto;">空</div>';
+      cell.classList.add('empty'); return;
+    }
     cell.classList.remove('empty');
     const eColor = getElemColor(card.element);
-    const hpPct  = Math.round(card.currentHp/card.maxHp*100);
-    cell.innerHTML = `<div class="battle-gen-card">
-      <div style="font-size:10px;color:${eColor}">${card.element||'?'}</div>
-      <div class="battle-gen-portrait-wrap">
-        <img class="battle-gen-portrait" src="img/generals/${card.id}.webp" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
-        <div class="battle-gen-kanji" style="display:none;color:${card.color||'#ccc'}">${card.name.charAt(0)}</div>
-      </div>
-      ${card.signatureItem?`<div class="battle-signature">${card.signatureItem.split(' ')[0]}</div>`:''}
-      <div class="battle-hp-bar"><div style="width:${hpPct}%;background:${hpPct>50?'#4caf50':hpPct>25?'#ff9800':'#ef5350'};height:100%;border-radius:3px;transition:width 0.3s;"></div></div>
-      <div style="font-size:9px;color:var(--text-muted)">${card.currentHp}/${card.maxHp}</div>
-      <div style="font-size:10px">${card.name}</div>
-    </div>`;
+    const hpPct  = Math.round(card.currentHp / card.maxHp * 100);
+    const hpCol  = hpPct > 50 ? '#4caf50' : hpPct > 25 ? '#ff9800' : '#ef5350';
+    cell.innerHTML = `
+      <div class="battle-gen-card">
+        <div class="battle-gen-elem-tag" style="color:${eColor};border:1px solid ${eColor}44;">${card.element||'?'}</div>
+        <div class="battle-gen-portrait-wrap">
+          <img class="battle-gen-portrait" src="img/generals/${card.id}.webp"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+          <div class="battle-gen-kanji" style="display:none;color:${card.color||eColor}">${card.name.charAt(0)}</div>
+        </div>
+        ${card.signatureItem?`<div class="battle-signature">${card.signatureItem.split(' ')[0]}</div>`:''}
+        <div class="battle-hp-bar">
+          <div style="width:${hpPct}%;background:${hpCol};height:100%;border-radius:3px;transition:width .35s;"></div>
+        </div>
+        <div class="battle-gen-hp-text">${card.currentHp}/${card.maxHp}</div>
+        <div class="battle-gen-name">${card.name}</div>
+      </div>`;
   }
 
   function renderBattleBackCell(cell, card, side) {
     if (!cell) return;
     cell.className = 'battle-cell back';
-    if (!card) { cell.innerHTML=''; return; }
-    const isHidden = side==='enemy' && !card.revealed;
-    cell.innerHTML = `<div style="font-size:10px;text-align:center;padding:4px;">
-      ${isHidden ? '🂠 伏牌' : (card.cardType==='heal'?'💊':'🪤')+' '+card.name}
-    </div>`;
+    if (!card) {
+      cell.innerHTML = '<div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:auto;margin-bottom:auto;">空</div>';
+      return;
+    }
+    const isHidden = side === 'enemy' && !card.revealed;
+    if (isHidden) {
+      cell.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:4px;">
+          <div style="font-size:28px;">🂠</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4);">伏牌</div>
+        </div>`;
+    } else {
+      const icon = card.cardType === 'heal' ? '💊' : '🪤';
+      cell.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:4px;padding:4px;">
+          <div style="font-size:24px;">${icon}</div>
+          <div style="font-size:9px;color:#ddd;text-align:center;line-height:1.3;">${card.name}</div>
+        </div>`;
+    }
   }
 
   function selectAttacker(row, idx) { selectedAttackerIdx=idx; renderBattleField(); }
