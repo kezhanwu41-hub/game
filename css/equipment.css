@@ -68,7 +68,7 @@
   color: #ccc; border-radius: 6px; cursor: pointer; font-size: 13px;
 }
 .armory-tab.active { background: linear-gradient(135deg, #c9a84c, #7a6030); color: #1a1a1a; border-color: #c9a84c; font-weight: 700; }
-.armory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.armory-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
 .armory-item, .equip-pickable {
   background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px;
   padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px;

@@ -10,6 +10,7 @@ window.Game = (function() {
   let currentSearch    = '';
   let currentPickTab   = 'general';
   let subPhase         = 'ban'; // 'ban' | 'pick'
+  let isCampaignMode   = false; // skip AI picks; enemy pre-loaded
 
   // Timers
   let banTimerInterval    = null;
@@ -117,6 +118,7 @@ window.Game = (function() {
 
   // ── STARTING GAMES ──────────────────────────────────────────
   function startGame() {
+    isCampaignMode = false;
     GameState.init(difficulty);
     currentFilter='all'; currentSearch=''; currentPickTab='general';
     window.NetworkEngine?.disconnect();
@@ -232,6 +234,7 @@ window.Game = (function() {
 
   function returnLobby() {
     clearAllTimers();
+    isCampaignMode = false;
     window.NetworkEngine?.disconnect();
     showScreen('screen-lobby');
   }
@@ -304,6 +307,7 @@ window.Game = (function() {
 
   function startCampaignLevel() {
     if (!selectedCampaignLevel) return;
+    isCampaignMode = true;                    // ← campaign flag
     CampaignEngine.currentLevelId = selectedCampaignLevel;
     GameState.init(difficulty);
     const s = GameState.getState();
@@ -317,7 +321,7 @@ window.Game = (function() {
       const role = (GameState.ROLES || ['主公','軍師','臣相','大司馬','大司農','大將軍','行軍總管','破陣先鋒'])[i] || '大將軍';
       return { id, role, penalty: 0, name: card ? card.name : id };
     });
-    // Skip ban phase, give player 8 free picks (one per role)
+    // Skip ban phase; player picks all 8 roles one by one
     s.pickPhase.pickOrder = new Array(8).fill('player');
     s.pickPhase.pickIndex = 0;
 
@@ -424,10 +428,11 @@ window.Game = (function() {
 
     const s = GameState.getState();
 
-    // Determine whose turn
-    const isPlayerTurn = (subPhase === 'ban')
-      ? (s.banPhase.banned.length % 2 === 0)
-      : (s.pickPhase.playerPicks.length === s.pickPhase.enemyPicks.length);
+    // Determine whose turn (campaign: always player)
+    const isPlayerTurn = isCampaignMode ? true
+      : (subPhase === 'ban')
+          ? (s.banPhase.banned.length % 2 === 0)
+          : (s.pickPhase.playerPicks.length === s.pickPhase.enemyPicks.length);
 
     if (!isPlayerTurn) { showToast('❌ 等待對手行動'); return; }
 
@@ -460,6 +465,25 @@ window.Game = (function() {
     if (isLocalAction && isMultiplayerGame()) NetworkEngine.sendAction('pick', { cardId });
 
     const s = GameState.getState();
+
+    if (isCampaignMode) {
+      // Campaign: enemy pre-loaded; player always picks
+      GameState.addPick('player', cardId);
+      // Advance bpStage to reflect how many players have picked
+      const pp = s.pickPhase.playerPicks.length;
+      if (pp <= 8) GameState.setBPStage(Math.min(pp, 7));
+      if (pp >= 8) {
+        clearInterval(banTimerInterval);
+        showToast('✅ 選將完成！即將進入部署階段…', 1800);
+        setTimeout(() => startDeployPhase(), 1800);
+        return;
+      }
+      updateDraftUI();
+      startDraftTimer();
+      return;
+    }
+
+    // Normal mode
     const side = (s.pickPhase.playerPicks.length === s.pickPhase.enemyPicks.length) ? 'player' : 'enemy';
     GameState.addPick(side, cardId);
 
@@ -491,14 +515,17 @@ window.Game = (function() {
     updateTimerDisplay('draft-timer', 'draft-timer-bar', banTimerVal, 30);
 
     const s = GameState.getState();
-    const isPlayerTurn = (subPhase === 'ban')
-      ? (s.banPhase.banned.length % 2 === 0)
-      : (s.pickPhase.playerPicks.length === s.pickPhase.enemyPicks.length);
+    // Campaign: enemy pre-loaded → always player's turn; no AI action
+    const isPlayerTurn = isCampaignMode ? true
+      : (subPhase === 'ban')
+          ? (s.banPhase.banned.length % 2 === 0)
+          : (s.pickPhase.playerPicks.length === s.pickPhase.enemyPicks.length);
 
     const indicator = document.getElementById('draft-side-indicator');
     if (indicator) indicator.textContent = `輪到：${isPlayerTurn ? '⚔️ 我方' : '🔴 敵方'}`;
 
     // AI plays automatically if not multiplayer and not player's turn
+    // (Campaign mode: isPlayerTurn is always true → AI never fires)
     if (!isMultiplayerGame() && !isPlayerTurn) {
       setTimeout(() => {
         if (!isDraftScreenActive()) return;
@@ -1251,6 +1278,87 @@ window.Game = (function() {
     renderDeployField();
   }
 
+  // ── CARD LIBRARY（牌庫瀏覽）──────────────────────────────────
+  function showCardLibrary(type) {
+    const modal = document.getElementById('modal-card-library');
+    const titleEl = document.getElementById('lib-title');
+    const subtitleEl = document.getElementById('lib-subtitle');
+    const filterRow = document.getElementById('lib-filter-row');
+    const grid = document.getElementById('lib-grid');
+    if (!modal || !grid) return;
+
+    const ELEM_COL = {木:'#4caf50',火:'#ef5350',土:'#ff9800',金:'#ffd600',水:'#42a5f5'};
+    let activeFilter = 'all';
+
+    function renderLib() {
+      if (type === 'general') {
+        let list = [...(window.GameData?.generals || [])];
+        if (activeFilter !== 'all') list = list.filter(g => g.dynasty === activeFilter || g.faction === activeFilter || g.element === activeFilter);
+        grid.innerHTML = list.map(g => {
+          const col = ELEM_COL[g.element] || '#ccc';
+          return `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);
+              border-radius:8px;padding:10px 8px;text-align:center;cursor:default;">
+            <div style="font-size:22px;font-weight:900;color:${col};letter-spacing:1px;">${g.name.charAt(0)}</div>
+            <div style="font-size:13px;font-weight:700;margin:4px 0;">${g.name}</div>
+            <div style="font-size:10px;color:${col};border:1px solid ${col}44;border-radius:3px;
+                display:inline-block;padding:1px 6px;">${g.element||'?'}</div>
+            <div style="font-size:10px;color:#999;margin-top:4px;">${g.dynasty||''} ${g.faction||''}</div>
+            ${g.atk?`<div style="font-size:10px;color:#ddd;margin-top:4px;">⚔️${g.atk} 🛡️${g.def||0} 💨${g.spd||0}</div>`:''}
+            ${g.signatureItem?`<div style="font-size:10px;color:#c9a84c;margin-top:3px;">${g.signatureItem}</div>`:''}
+          </div>`;
+        }).join('');
+      } else if (type === 'heal') {
+        const list = window.GameData?.healCards || [];
+        grid.innerHTML = list.map(c => `<div style="background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.3);
+            border-radius:8px;padding:12px 8px;text-align:center;cursor:default;">
+          <div style="font-size:32px;">${c.icon||'💊'}</div>
+          <div style="font-size:13px;font-weight:700;margin:6px 0;color:#81c784;">${c.name}</div>
+          <div style="font-size:11px;color:#aaa;line-height:1.5;">${c.desc||''}</div>
+          ${c.heal?`<div style="font-size:12px;color:#4caf50;margin-top:6px;">回復 +${c.heal}</div>`:''}
+        </div>`).join('');
+      } else if (type === 'trap') {
+        const list = window.GameData?.trapCards || [];
+        grid.innerHTML = list.map(c => `<div style="background:rgba(255,152,0,.08);border:1px solid rgba(255,152,0,.3);
+            border-radius:8px;padding:12px 8px;text-align:center;cursor:default;">
+          <div style="font-size:32px;">${c.icon||'🪤'}</div>
+          <div style="font-size:13px;font-weight:700;margin:6px 0;color:#ffb74d;">${c.name}</div>
+          <div style="font-size:11px;color:#aaa;line-height:1.5;">${c.desc||''}</div>
+          ${c.trigger?`<div style="font-size:11px;color:#ff9800;margin-top:6px;">觸發：${c.trigger}</div>`:''}
+        </div>`).join('');
+      }
+    }
+
+    // Title
+    const typeInfo = {
+      general: { title:'⚔️ 將牌圖鑑', sub:'歷史名將 · 各具五行屬性與覺醒技' },
+      heal:    { title:'💊 療牌圖鑑', sub:'回復支援牌 · 放置後排發動' },
+      trap:    { title:'🪤 陷阱圖鑑', sub:'伏牌 · 條件觸發效果' }
+    }[type] || { title:'牌庫', sub:'' };
+    if (titleEl)    titleEl.textContent    = typeInfo.title;
+    if (subtitleEl) subtitleEl.textContent = typeInfo.sub;
+
+    // Filter buttons (generals only)
+    filterRow.innerHTML = '';
+    if (type === 'general') {
+      const dynasties = ['all','三國','漢','秦','唐','宋','明'];
+      const elems = ['木','火','土','金','水'];
+      [...dynasties, ...elems].forEach(f => {
+        const btn = document.createElement('button');
+        btn.textContent = f === 'all' ? '全部' : f;
+        btn.style.cssText = `padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px;
+          background:${f===activeFilter?'rgba(201,168,76,.6)':'rgba(255,255,255,.08)'};
+          color:${f===activeFilter?'#1a1a1a':'#ccc'};border:1px solid rgba(255,255,255,.15);`;
+        btn.onclick = () => { activeFilter = f; filterRow.querySelectorAll('button').forEach((b,_)=>{
+          b.style.background='rgba(255,255,255,.08)'; b.style.color='#ccc';
+        }); btn.style.background='rgba(201,168,76,.6)'; btn.style.color='#1a1a1a'; renderLib(); };
+        filterRow.appendChild(btn);
+      });
+    }
+
+    renderLib();
+    modal.style.display = 'flex';
+  }
+
   // ── BOOT ─────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     initParticles();
@@ -1270,6 +1378,7 @@ window.Game = (function() {
     showArmory, filterArmory, dismantleEquipment, mergeFragment,
     showSmithy, switchSmithyTab, upgradeEquipment,
     openEquipModal, equipToCard,
+    showCardLibrary,
     onMultiplayerMatchStarted, onMatchmakingTimeout,
     applyOpponentBan, applyOpponentPick, applyOpponentDeploy, applyOpponentCommand
   };
