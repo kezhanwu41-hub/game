@@ -1,5 +1,5 @@
 /**
- * 羣雄遊戲館 — Google Apps Script Web App 入口
+ * 羣雄列陣 — Google Apps Script Web App 入口
  *
  * 功能：把 GitHub 上的靜態檔（index.html / bingfa.html / huaxia.html / css / js / img）
  *      包裝成 GAS Web App，讓任何人能用 GAS 網址直接遊玩。
@@ -37,7 +37,7 @@ function doGet(e) {
   template.cdn = CDN_BASE;
   return template
     .evaluate()
-    .setTitle('羣雄遊戲館 — 兵法推演 / 華夏風雲錄')
+    .setTitle('羣雄列陣 — 兵法推演 / 華夏風雲錄')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
 }

@@ -1,6 +1,6 @@
 # Google Apps Script 部署說明
 
-把「羣雄遊戲館」用 GAS 包成 Web App，最簡上線方式：
+把「羣雄列陣」用 GAS 包成 Web App，最簡上線方式：
 
 ## 步驟
 
