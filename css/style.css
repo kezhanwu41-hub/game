@@ -183,9 +183,27 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
   padding: 6px 4px;
 }
 .gen-card:hover { transform: translateY(-4px) scale(1.03); border-color: var(--gold); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-.gen-card.banned { opacity: 0.35; pointer-events: none; filter: grayscale(1); }
-.gen-card.picked-player { border-color: var(--blue); box-shadow: 0 0 12px var(--blue); }
-.gen-card.picked-enemy  { border-color: var(--red);  box-shadow: 0 0 12px var(--red); }
+
+/* ── 禁用 / 已選：暗色遮罩 ──────────────────────────────────── */
+.gen-card.banned,
+.gen-card.picked-player,
+.gen-card.picked-enemy  { pointer-events: none; cursor: not-allowed; }
+
+/* 共用暗色遮罩層 */
+.gen-card.banned::after,
+.gen-card.picked-player::after,
+.gen-card.picked-enemy::after {
+  content: ''; position: absolute; inset: 0; border-radius: 9px; z-index: 4;
+}
+.gen-card.banned {
+  filter: grayscale(1);
+  border-color: #333 !important;
+}
+.gen-card.banned::after        { background: rgba(0,0,0,.72); }
+.gen-card.picked-player        { border-color: var(--blue) !important; }
+.gen-card.picked-player::after { background: rgba(4,18,50,.76); }
+.gen-card.picked-enemy         { border-color: var(--red) !important; }
+.gen-card.picked-enemy::after  { background: rgba(50,4,4,.76); }
 
 .gen-card .elem-corner {
   position: absolute; top: 4px; left: 4px;
@@ -228,8 +246,14 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 .heal-card .card-icon { font-size: 28px; flex: 1; display: flex; align-items: center; }
 .heal-card .card-name { font-size: 12px; color: var(--wood); font-family: 'Noto Serif TC', serif; font-weight: 700; text-align: center; }
 .heal-card .card-desc { font-size: 9px; color: var(--text-muted); text-align: center; line-height: 1.3; }
+.heal-card.picked-player,
+.heal-card.picked-enemy  { pointer-events: none; }
+.heal-card.picked-player::after,
+.heal-card.picked-enemy::after  { content:''; position:absolute; inset:0; border-radius:9px; z-index:4; }
 .heal-card.picked-player { border-color: var(--blue); }
+.heal-card.picked-player::after { background: rgba(4,18,50,.76); }
 .heal-card.picked-enemy  { border-color: var(--red); }
+.heal-card.picked-enemy::after  { background: rgba(50,4,4,.76); }
 
 /* ── 陷阱牌 ─────────────────────────────────────────────────── */
 .trap-card {
@@ -248,8 +272,14 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 .trap-card .card-icon { font-size: 28px; flex: 1; display: flex; align-items: center; }
 .trap-card .card-name { font-size: 12px; color: #ce93d8; font-family: 'Noto Serif TC', serif; font-weight: 700; text-align: center; }
 .trap-card .card-desc { font-size: 9px; color: var(--text-muted); text-align: center; line-height: 1.3; }
+.trap-card.picked-player,
+.trap-card.picked-enemy  { pointer-events: none; }
+.trap-card.picked-player::after,
+.trap-card.picked-enemy::after  { content:''; position:absolute; inset:0; border-radius:9px; z-index:4; }
 .trap-card.picked-player { border-color: var(--blue); }
+.trap-card.picked-player::after { background: rgba(4,18,50,.76); }
 .trap-card.picked-enemy  { border-color: var(--red); }
+.trap-card.picked-enemy::after  { background: rgba(50,4,4,.76); }
 
 /* ── BAN/PICK SLOTS ──────────────────────────────────────────── */
 .ban-slots, .pick-slots { display: flex; flex-direction: column; gap: 6px; }
@@ -268,8 +298,12 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 .slot-kanji { font-family: 'Noto Serif TC', serif; font-size: 22px; font-weight: 700; }
 .slot-name { font-size: 11px; }
 .ban-overlay {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.7); font-size: 24px; border-radius: 10px;
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: transparent;           /* 暗色由 ::after 提供，這裡不再重複 */
+  font-size: 22px; border-radius: 10px;
+  z-index: 6;                        /* 浮在 ::after 暗層(z-index:4)上方 */
+  gap: 2px;
 }
 
 /* ── PICK TABS ───────────────────────────────────────────────── */
