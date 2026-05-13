@@ -1331,14 +1331,35 @@ window.Game = (function() {
     const ELEM_COL = {木:'#4caf50',火:'#ef5350',土:'#ff9800',金:'#ffd600',水:'#42a5f5'};
     let activeFilter = 'all';
 
+    function showLibDetail(html) {
+      const existing = document.getElementById('lib-detail-popup');
+      if (existing) existing.remove();
+      const pop = document.createElement('div');
+      pop.id = 'lib-detail-popup';
+      pop.style.cssText = 'position:fixed;inset:0;z-index:10010;display:flex;align-items:center;' +
+        'justify-content:center;background:rgba(0,0,0,.72);';
+      pop.innerHTML = `<div style="background:#0d1420;border:2px solid #c9a84c;border-radius:12px;
+          padding:24px 28px;max-width:360px;width:90%;color:#e8dcc8;font-size:13px;line-height:1.7;
+          position:relative;max-height:80vh;overflow-y:auto;">
+        ${html}
+        <button onclick="document.getElementById('lib-detail-popup').remove()"
+          style="position:absolute;top:10px;right:14px;background:none;border:none;
+          color:#fff;font-size:22px;cursor:pointer;">&times;</button>
+      </div>`;
+      pop.addEventListener('click', e => { if (e.target === pop) pop.remove(); });
+      document.body.appendChild(pop);
+    }
+
     function renderLib() {
       if (type === 'general') {
         let list = [...(window.GameData?.generals || [])];
         if (activeFilter !== 'all') list = list.filter(g => g.dynasty === activeFilter || g.faction === activeFilter || g.element === activeFilter);
-        grid.innerHTML = list.map(g => {
+        grid.innerHTML = list.map((g, i) => {
           const col = ELEM_COL[g.element] || '#ccc';
-          return `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);
-              border-radius:8px;padding:10px 8px;text-align:center;cursor:default;">
+          return `<div data-lib-idx="${i}" data-lib-type="general"
+              style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);
+              border-radius:8px;padding:10px 8px;text-align:center;cursor:pointer;
+              transition:transform .15s,box-shadow .15s;">
             <div style="font-size:22px;font-weight:900;color:${col};letter-spacing:1px;">${g.name.charAt(0)}</div>
             <div style="font-size:13px;font-weight:700;margin:4px 0;">${g.name}</div>
             <div style="font-size:10px;color:${col};border:1px solid ${col}44;border-radius:3px;
@@ -1350,8 +1371,10 @@ window.Game = (function() {
         }).join('');
       } else if (type === 'heal') {
         const list = window.GameData?.healCards || [];
-        grid.innerHTML = list.map(c => `<div style="background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.3);
-            border-radius:8px;padding:12px 8px;text-align:center;cursor:default;">
+        grid.innerHTML = list.map((c, i) => `<div data-lib-idx="${i}" data-lib-type="heal"
+            style="background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.3);
+            border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;
+            transition:transform .15s,box-shadow .15s;">
           <div style="font-size:32px;">${c.icon||'💊'}</div>
           <div style="font-size:13px;font-weight:700;margin:6px 0;color:#81c784;">${c.name}</div>
           <div style="font-size:11px;color:#aaa;line-height:1.5;">${c.desc||''}</div>
@@ -1359,14 +1382,66 @@ window.Game = (function() {
         </div>`).join('');
       } else if (type === 'trap') {
         const list = window.GameData?.trapCards || [];
-        grid.innerHTML = list.map(c => `<div style="background:rgba(255,152,0,.08);border:1px solid rgba(255,152,0,.3);
-            border-radius:8px;padding:12px 8px;text-align:center;cursor:default;">
+        grid.innerHTML = list.map((c, i) => `<div data-lib-idx="${i}" data-lib-type="trap"
+            style="background:rgba(255,152,0,.08);border:1px solid rgba(255,152,0,.3);
+            border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;
+            transition:transform .15s,box-shadow .15s;">
           <div style="font-size:32px;">${c.icon||'🪤'}</div>
           <div style="font-size:13px;font-weight:700;margin:6px 0;color:#ffb74d;">${c.name}</div>
           <div style="font-size:11px;color:#aaa;line-height:1.5;">${c.desc||''}</div>
           ${c.trigger?`<div style="font-size:11px;color:#ff9800;margin-top:6px;">觸發：${c.trigger}</div>`:''}
         </div>`).join('');
       }
+
+      // Hover lift + click detail
+      grid.querySelectorAll('[data-lib-idx]').forEach(el => {
+        el.addEventListener('mouseenter', () => { el.style.transform='translateY(-3px)'; el.style.boxShadow='0 6px 18px rgba(0,0,0,.5)'; });
+        el.addEventListener('mouseleave', () => { el.style.transform=''; el.style.boxShadow=''; });
+        el.addEventListener('click', () => {
+          const idx = +el.dataset.libIdx;
+          const lt  = el.dataset.libType;
+          if (lt === 'general') {
+            const g = (window.GameData?.generals||[])[idx]; if (!g) return;
+            const col = ELEM_COL[g.element]||'#ccc';
+            showLibDetail(`
+              <div style="font-size:28px;font-weight:900;color:${col};text-align:center;margin-bottom:8px;">${g.name.charAt(0)}</div>
+              <div style="font-size:18px;font-weight:700;color:#c9a84c;text-align:center;">${g.name}</div>
+              <div style="text-align:center;margin:6px 0;">
+                <span style="font-size:11px;color:${col};border:1px solid ${col}44;border-radius:3px;padding:1px 8px;">${g.element||'?'}</span>
+                ${g.dynasty?`<span style="font-size:11px;color:#aaa;margin-left:6px;">${g.dynasty}</span>`:''}
+                ${g.faction?`<span style="font-size:11px;color:#888;margin-left:6px;">${g.faction}</span>`:''}
+              </div>
+              ${g.atk?`<div style="display:flex;gap:16px;justify-content:center;margin:10px 0;font-size:13px;">
+                <span>⚔️ ${g.atk}</span><span>🛡️ ${g.def||0}</span><span>💨 ${g.spd||0}</span>
+                ${g.hp?`<span>❤️ ${g.hp}</span>`:''}
+              </div>`:''}
+              ${g.skill?`<div style="background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:6px;padding:8px 12px;margin-top:8px;">
+                <div style="font-size:11px;color:#c9a84c;font-weight:700;">✨ ${g.skill}</div>
+                ${g.skillDesc?`<div style="font-size:11px;color:#bbb;margin-top:4px;">${g.skillDesc}</div>`:''}
+              </div>`:''}
+              ${g.signatureItem?`<div style="font-size:11px;color:#c9a84c;margin-top:8px;text-align:center;">專屬：${g.signatureItem}</div>`:''}
+            `);
+          } else if (lt === 'heal') {
+            const c = (window.GameData?.healCards||[])[idx]; if (!c) return;
+            showLibDetail(`
+              <div style="font-size:40px;text-align:center;">${c.icon||'💊'}</div>
+              <div style="font-size:17px;font-weight:700;color:#81c784;text-align:center;margin:8px 0;">${c.name}</div>
+              <div style="font-size:12px;color:#aaa;line-height:1.7;">${c.desc||''}</div>
+              ${c.heal?`<div style="color:#4caf50;font-size:13px;margin-top:8px;text-align:center;">回復量：+${c.heal}</div>`:''}
+              ${c.effect?`<div style="color:#81c784;font-size:12px;margin-top:6px;">效果：${c.effect}</div>`:''}
+            `);
+          } else if (lt === 'trap') {
+            const c = (window.GameData?.trapCards||[])[idx]; if (!c) return;
+            showLibDetail(`
+              <div style="font-size:40px;text-align:center;">${c.icon||'🪤'}</div>
+              <div style="font-size:17px;font-weight:700;color:#ffb74d;text-align:center;margin:8px 0;">${c.name}</div>
+              <div style="font-size:12px;color:#aaa;line-height:1.7;">${c.desc||''}</div>
+              ${c.trigger?`<div style="color:#ff9800;font-size:12px;margin-top:8px;">觸發：${c.trigger}</div>`:''}
+              ${c.effect?`<div style="color:#ffa726;font-size:12px;margin-top:6px;">效果：${c.effect}</div>`:''}
+            `);
+          }
+        });
+      });
     }
 
     // Title
