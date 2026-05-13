@@ -73,11 +73,25 @@ window.Game = (function() {
     const el = document.getElementById(id);
     if (el) el.classList.add('active');
     // close all floating modals on screen change
-    ['modal-tutorial','modal-cemetery','modal-equip'].forEach(mid => {
+    ['modal-cemetery','modal-equip'].forEach(mid => {
       const m = document.getElementById(mid);
       if (m) m.style.display = 'none';
     });
     hideCardLibrary();
+    hideTutorial();
+  }
+
+  function showTutorial() {
+    const backdrop = document.getElementById('tutorial-backdrop');
+    const modal    = document.getElementById('modal-tutorial');
+    if (backdrop) backdrop.style.display = 'block';
+    if (modal)    modal.style.display    = 'block';
+  }
+  function hideTutorial() {
+    const backdrop = document.getElementById('tutorial-backdrop');
+    const modal    = document.getElementById('modal-tutorial');
+    if (backdrop) backdrop.style.display = 'none';
+    if (modal)    modal.style.display    = 'none';
   }
 
   let toastTimer = null;
@@ -1505,6 +1519,7 @@ window.Game = (function() {
     showSmithy, switchSmithyTab, upgradeEquipment,
     openEquipModal, equipToCard,
     showCardLibrary, hideCardLibrary,
+    showTutorial, hideTutorial,
     onMultiplayerMatchStarted, onMatchmakingTimeout,
     applyOpponentBan, applyOpponentPick, applyOpponentDeploy, applyOpponentCommand
   };

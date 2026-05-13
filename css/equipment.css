@@ -59,7 +59,7 @@
 .item-frag { font-size: 9px; color: #ab47bc; margin-top: 2px; }
 
 /* ── Armory 武器庫 ── */
-.armory-inner { padding: 30px 5%; max-width: 1400px; margin: 0 auto; height: 100%; box-sizing: border-box; overflow-y: auto; }
+.armory-inner { padding: 60px 5% 30px; max-width: 1400px; margin: 0 auto; height: 100%; box-sizing: border-box; overflow-y: auto; }
 .armory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .armory-title { font-family: 'Noto Serif TC', serif; font-size: 32px; color: var(--gold, #c9a84c); }
 .armory-tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -85,7 +85,7 @@
 .armory-empty { text-align: center; padding: 60px 20px; color: #888; font-size: 14px; }
 
 /* ── Smithy 鐵匠鋪 ── */
-.smithy-inner { padding: 30px 5%; max-width: 1100px; margin: 0 auto; height: 100%; box-sizing: border-box; overflow-y: auto; }
+.smithy-inner { padding: 60px 5% 30px; max-width: 1100px; margin: 0 auto; height: 100%; box-sizing: border-box; overflow-y: auto; }
 .smithy-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .smithy-title { font-family: 'Noto Serif TC', serif; font-size: 32px; color: #ff9800; }
 .smithy-materials { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }

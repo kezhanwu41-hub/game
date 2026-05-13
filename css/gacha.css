@@ -10,7 +10,7 @@
 
 .gacha-inner {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  height: 100%; gap: 30px; padding: 40px;
+  height: 100%; gap: 30px; padding: 40px; padding-top: 60px;
 }
 
 .gacha-banner-card {
@@ -31,9 +31,12 @@
 .gacha-banner-featured { font-size: 18px; color: #ff9f43; margin-top: 10px; }
 
 .gacha-currency {
-  position: absolute; top: 30px; right: 40px;
+  position: absolute; top: 62px; right: 40px;
   display: flex; align-items: center; gap: 10px;
   background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 20px; border: 1px solid var(--gold);
+}
+.gacha-return-btn {
+  position: absolute; top: 108px; right: 40px;
 }
 
 .gacha-actions { display: flex; gap: 20px; }
