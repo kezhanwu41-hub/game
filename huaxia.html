@@ -197,18 +197,26 @@
 </section>
 
 <!-- ══ CARD LIBRARY MODAL（牌庫瀏覽）═══════════════════════════ -->
-<div class="modal-overlay" id="modal-card-library" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal-content" style="max-width:900px;padding:24px;" onclick="event.stopPropagation()">
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(201,168,76,.25);padding-bottom:12px;margin-bottom:16px;">
-      <div>
-        <div id="lib-title" style="font-size:20px;font-weight:700;color:var(--gold);letter-spacing:3px;"></div>
-        <div id="lib-subtitle" style="font-size:12px;color:var(--text-muted);margin-top:2px;"></div>
-      </div>
-      <button onclick="document.getElementById('modal-card-library').style.display='none'" style="background:none;border:none;color:white;font-size:26px;cursor:pointer;">&times;</button>
+<!-- backdrop: closes modal when clicked -->
+<div id="lib-backdrop" style="display:none;position:fixed;inset:0;z-index:9998;
+  background:rgba(0,0,0,0.82);backdrop-filter:blur(4px);"
+  onclick="Game.hideCardLibrary()"></div>
+<!-- scrollable modal box (separate from backdrop so scroll/click always work) -->
+<div id="modal-card-library" style="display:none;position:fixed;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:9999;width:min(900px,94vw);max-height:85vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  background:var(--bg-panel);border:2px solid var(--gold);border-radius:12px;
+  padding:24px;color:var(--text);box-shadow:0 10px 40px rgba(0,0,0,0.8);">
+  <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(201,168,76,.25);padding-bottom:12px;margin-bottom:16px;">
+    <div>
+      <div id="lib-title" style="font-size:20px;font-weight:700;color:var(--gold);letter-spacing:3px;"></div>
+      <div id="lib-subtitle" style="font-size:12px;color:var(--text-muted);margin-top:2px;"></div>
     </div>
-    <div id="lib-filter-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
-    <div id="lib-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;"></div>
+    <button onclick="Game.hideCardLibrary()" style="background:none;border:none;color:white;font-size:26px;cursor:pointer;padding:0 4px;">&times;</button>
   </div>
+  <div id="lib-filter-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+  <div id="lib-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;"></div>
 </div>
 
 <!-- ══ CEMETERY MODAL（墓地 / 棄牌堆）═══════════════════════════ -->
