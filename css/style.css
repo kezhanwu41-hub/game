@@ -291,12 +291,16 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
   border-right: 1px solid var(--border);
 }
 .field-label { font-family: 'Noto Serif TC', serif; color: var(--gold); font-size: 14px; text-align: center; }
+/* deploy 5×1 single row */
 .field-rows { display: flex; flex-direction: column; gap: 10px; }
 .field-row { display: flex; gap: 10px; justify-content: center; }
 .field-row.back-row { justify-content: center; }
 .field-row-label { font-size: 11px; color: var(--text-muted); text-align: center; }
 .front-label { color: var(--gold) !important; }
 .field-divider { text-align: center; font-size: 12px; color: var(--text-muted); padding: 6px 0; border-top: 1px solid var(--border); }
+/* new flat 5-cell row for deploy */
+.deploy-slot-row { display: flex; gap: 8px; justify-content: center; align-items: stretch; }
+.deploy-slot-row .field-row { display: contents; } /* flatten children into parent */
 .field-cell {
   width: 110px; min-height: 130px; border-radius: 10px;
   background: var(--bg-field); border: 2px dashed rgba(74,144,217,0.25);
@@ -354,6 +358,7 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 }
 .battle-field {
   padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden;
+  justify-content: center;
 }
 .enemy-field { grid-row: 1; grid-column: 1; background: rgba(229,62,62,0.03); }
 .player-field { grid-row: 3; grid-column: 1; background: rgba(74,144,217,0.03); }
@@ -374,7 +379,16 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 .field-side-label.enemy { color: var(--red); }
 .field-side-label.player { color: var(--blue); }
 
-/* Battle rows */
+/* Battle rows — 5×1 flat layout */
+.battle-slot-row {
+  display: flex; gap: 8px; justify-content: center; align-items: stretch; flex: 1;
+}
+.battle-slot-row .battle-row { display: contents; } /* flatten children into parent */
+/* 前3 / 後2 visual separator inside the 5-cell row */
+.battle-slot-row .battle-row.back-row > .battle-cell:first-child {
+  border-left: 2px solid rgba(201,168,76,.25);
+  margin-left: 4px;
+}
 .battle-row {
   display: flex; gap: 8px; justify-content: center; flex: 1;
 }

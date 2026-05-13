@@ -384,39 +384,38 @@
     <!-- Field preview -->
     <div class="deploy-field-preview">
       <div class="field-label">我方場地</div>
-      <div class="field-rows">
-        <div class="field-row-label">後排</div>
-        <div class="field-row back-row" id="deploy-back-row">
-          <div class="field-cell" id="deploy-back-0" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'back',0)">
-            <div class="field-cell-label">後 1</div>
-            <div class="field-cell-content" id="deploy-back-0-content"></div>
-            <div class="field-cell-hint">療牌/陷阱/待命將</div>
-          </div>
-          <div class="field-cell" id="deploy-back-1" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'back',1)">
-            <div class="field-cell-label">後 2</div>
-            <div class="field-cell-content" id="deploy-back-1-content"></div>
-            <div class="field-cell-hint">療牌/陷阱/待命將</div>
-          </div>
-        </div>
-        <div class="field-row-label front-label">前排（武將）</div>
+      <div class="deploy-slot-row">
+        <!-- 前排 3 格 -->
         <div class="field-row front-row" id="deploy-front-row">
           <div class="field-cell front" id="deploy-front-0" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'front',0)">
-            <div class="field-cell-label">前 左</div>
+            <div class="field-cell-label">前 1</div>
             <div class="field-cell-content" id="deploy-front-0-content"></div>
             <div class="field-cell-hint">武將</div>
           </div>
           <div class="field-cell front" id="deploy-front-1" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'front',1)">
-            <div class="field-cell-label">前 中</div>
+            <div class="field-cell-label">前 2</div>
             <div class="field-cell-content" id="deploy-front-1-content"></div>
             <div class="field-cell-hint">武將</div>
           </div>
           <div class="field-cell front" id="deploy-front-2" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'front',2)">
-            <div class="field-cell-label">前 右</div>
+            <div class="field-cell-label">前 3</div>
             <div class="field-cell-content" id="deploy-front-2-content"></div>
             <div class="field-cell-hint">武將</div>
           </div>
         </div>
-        <div class="field-divider">── 對決線 ──</div>
+        <!-- 後排 2 格 -->
+        <div class="field-row back-row" id="deploy-back-row">
+          <div class="field-cell" id="deploy-back-0" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'back',0)">
+            <div class="field-cell-label">後 1</div>
+            <div class="field-cell-content" id="deploy-back-0-content"></div>
+            <div class="field-cell-hint">療牌/陷阱</div>
+          </div>
+          <div class="field-cell" id="deploy-back-1" ondragover="event.preventDefault()" ondrop="Game.dropCard(event,'back',1)">
+            <div class="field-cell-label">後 2</div>
+            <div class="field-cell-content" id="deploy-back-1-content"></div>
+            <div class="field-cell-hint">療牌/陷阱</div>
+          </div>
+        </div>
       </div>
       <div class="elem-legend">
         <span class="elem-badge wood sm">木克土</span>
@@ -444,16 +443,18 @@
     <!-- ── ENEMY FIELD ── -->
     <div class="battle-field enemy-field">
       <div class="field-side-label enemy">🔴 敵方</div>
-      <!-- Enemy back row -->
-      <div class="battle-row back-row" id="enemy-back-row">
-        <div class="battle-cell back" id="enemy-back-cell-0"></div>
-        <div class="battle-cell back" id="enemy-back-cell-1"></div>
-      </div>
-      <!-- Enemy front row -->
-      <div class="battle-row front-row" id="enemy-front-row">
-        <div class="battle-cell front" id="enemy-front-cell-0" onclick="Game.selectTarget('front',0)"></div>
-        <div class="battle-cell front" id="enemy-front-cell-1" onclick="Game.selectTarget('front',1)"></div>
-        <div class="battle-cell front" id="enemy-front-cell-2" onclick="Game.selectTarget('front',2)"></div>
+      <div class="battle-slot-row">
+        <!-- Enemy front row (前 1-3) -->
+        <div class="battle-row front-row" id="enemy-front-row">
+          <div class="battle-cell front" id="enemy-front-cell-0" onclick="Game.selectTarget('front',0)"></div>
+          <div class="battle-cell front" id="enemy-front-cell-1" onclick="Game.selectTarget('front',1)"></div>
+          <div class="battle-cell front" id="enemy-front-cell-2" onclick="Game.selectTarget('front',2)"></div>
+        </div>
+        <!-- Enemy back row (後 1-2) -->
+        <div class="battle-row back-row" id="enemy-back-row">
+          <div class="battle-cell back" id="enemy-back-cell-0"></div>
+          <div class="battle-cell back" id="enemy-back-cell-1"></div>
+        </div>
       </div>
     </div>
 
@@ -492,16 +493,18 @@
 
     <!-- ── PLAYER FIELD ── -->
     <div class="battle-field player-field">
-      <!-- Player front row -->
-      <div class="battle-row front-row" id="player-front-row">
-        <div class="battle-cell front" id="player-front-cell-0" onclick="Game.selectAttacker('front',0)"></div>
-        <div class="battle-cell front" id="player-front-cell-1" onclick="Game.selectAttacker('front',1)"></div>
-        <div class="battle-cell front" id="player-front-cell-2" onclick="Game.selectAttacker('front',2)"></div>
-      </div>
-      <!-- Player back row -->
-      <div class="battle-row back-row" id="player-back-row">
-        <div class="battle-cell back" id="player-back-cell-0" onclick="Game.clickBackCard('player',0)"></div>
-        <div class="battle-cell back" id="player-back-cell-1" onclick="Game.clickBackCard('player',1)"></div>
+      <div class="battle-slot-row">
+        <!-- Player front row (前 1-3) -->
+        <div class="battle-row front-row" id="player-front-row">
+          <div class="battle-cell front" id="player-front-cell-0" onclick="Game.selectAttacker('front',0)"></div>
+          <div class="battle-cell front" id="player-front-cell-1" onclick="Game.selectAttacker('front',1)"></div>
+          <div class="battle-cell front" id="player-front-cell-2" onclick="Game.selectAttacker('front',2)"></div>
+        </div>
+        <!-- Player back row (後 1-2) -->
+        <div class="battle-row back-row" id="player-back-row">
+          <div class="battle-cell back" id="player-back-cell-0" onclick="Game.clickBackCard('player',0)"></div>
+          <div class="battle-cell back" id="player-back-cell-1" onclick="Game.clickBackCard('player',1)"></div>
+        </div>
       </div>
       <div class="field-side-label player">🔵 我方</div>
     </div>
