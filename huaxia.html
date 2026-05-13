@@ -331,7 +331,13 @@
 
     <!-- ── 中央卡牌選擇區 ── -->
     <div class="draft-center">
-      <div class="draft-filter-row">
+      <!-- 卡牌類型分頁（選將階段才顯示） -->
+      <div class="pick-type-tabs" id="pick-type-tabs" style="display:none;">
+        <button class="pick-tab active" id="ptab-general" onclick="Game.switchPickTab('general')">⚔️ 將牌</button>
+        <button class="pick-tab" id="ptab-heal"    onclick="Game.switchPickTab('heal')">💊 療牌</button>
+        <button class="pick-tab" id="ptab-trap"    onclick="Game.switchPickTab('trap')">🪤 陷阱</button>
+      </div>
+      <div class="draft-filter-row" id="draft-dynasty-filters">
         <button class="filter-btn active" onclick="Game.filterDraft('all','draft')">全部</button>
         <button class="filter-btn" onclick="Game.filterDraft('三國','draft')">三國</button>
         <button class="filter-btn" onclick="Game.filterDraft('漢','draft')">漢</button>

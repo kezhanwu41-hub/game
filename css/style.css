@@ -274,6 +274,7 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 
 /* ── PICK TABS ───────────────────────────────────────────────── */
 .pick-tabs { display: flex; gap: 8px; flex-shrink: 0; }
+.pick-type-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
 .pick-tab {
   padding: 6px 16px; border-radius: 8px 8px 0 0; font-size: 13px;
   background: var(--bg-card); border: 1px solid var(--border); border-bottom: none;

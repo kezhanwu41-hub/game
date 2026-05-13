@@ -72,8 +72,11 @@ window.Game = (function() {
     document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
     const el = document.getElementById(id);
     if (el) el.classList.add('active');
-    const modal = document.getElementById('modal-tutorial');
-    if(modal) modal.style.display = 'none';
+    // close all floating modals on screen change
+    ['modal-tutorial','modal-card-library','modal-cemetery','modal-equip'].forEach(mid => {
+      const m = document.getElementById(mid);
+      if (m) m.style.display = 'none';
+    });
   }
 
   let toastTimer = null;
@@ -127,6 +130,7 @@ window.Game = (function() {
 
   function startDraftPhase() {
     subPhase = 'ban';
+    currentPickTab = 'general';
     GameState.setBPStage(0);      // also sets phase to 'bp_lord'
     showScreen('screen-draft');
     updateDraftUI();
@@ -147,6 +151,17 @@ window.Game = (function() {
     if (hintEl) hintEl.textContent = subPhase === 'ban'
       ? `禁止一名你不想讓對方使用的武將`
       : `選擇擔任【${role}】的武將（職位匹配獲得加成）`;
+
+    // Show/hide pick-type tabs & dynasty filter row
+    const pickTypeTabs  = document.getElementById('pick-type-tabs');
+    const dynastyFilter = document.getElementById('draft-dynasty-filters');
+    const isPick = subPhase === 'pick';
+    if (pickTypeTabs)  pickTypeTabs.style.display  = isPick ? 'flex' : 'none';
+    if (dynastyFilter) dynastyFilter.style.display  = (isPick && currentPickTab === 'general') ? '' : (isPick ? 'none' : '');
+    // Reset to general tab when entering pick phase
+    if (isPick && currentPickTab !== 'general' && currentPickTab !== 'heal' && currentPickTab !== 'trap') {
+      currentPickTab = 'general';
+    }
 
     // Ban grids (split even/odd indices)
     const pBans = s.banPhase.banned.filter((_,i) => i%2===0);
@@ -418,6 +433,9 @@ window.Game = (function() {
   function switchPickTab(t) {
     currentPickTab = t;
     document.querySelectorAll('.pick-tab').forEach(el=>el.classList.toggle('active', el.id==='ptab-'+t));
+    // show dynasty filters only for generals
+    const dynastyFilter = document.getElementById('draft-dynasty-filters');
+    if (dynastyFilter) dynastyFilter.style.display = (t === 'general') ? '' : 'none';
     renderCardGrid('draft-card-grid', 'pick');
   }
 
