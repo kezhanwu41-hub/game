@@ -692,7 +692,7 @@ body::before {
 @keyframes rotate-slow { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
 .campaign-sidebar {
   width: 300px; border-right: 1px solid var(--border); background: var(--bg-panel);
-  display: flex; flex-direction: column; padding: 20px;
+  display: flex; flex-direction: column; padding: 60px 20px 20px;
 }
 .campaign-title-area { margin-bottom: 24px; text-align: center; }
 .campaign-title { font-size: 28px; font-family: 'Noto Serif TC', serif; color: #ce93d8; font-weight: 900; letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(156,39,176,0.6); }
