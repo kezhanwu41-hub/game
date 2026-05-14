@@ -1435,6 +1435,7 @@ window.Game = (function() {
                 ${g.skillDesc?`<div style="font-size:11px;color:#bbb;margin-top:4px;">${g.skillDesc}</div>`:''}
               </div>`:''}
               ${g.signatureItem?`<div style="font-size:11px;color:#c9a84c;margin-top:8px;text-align:center;">專屬：${g.signatureItem}</div>`:''}
+              ${(()=>{const st=window.GameData?.generalStories?.[g.id];return st?`<div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.04);border-left:3px solid rgba(201,168,76,.5);border-radius:0 6px 6px 0;font-size:11px;color:#bbb;line-height:1.8;"><div style="font-size:10px;color:#c9a84c;font-weight:700;margin-bottom:4px;">📜 生平故事</div>${st}</div>`:'';})()}
             `);
           } else if (lt === 'heal') {
             const c = (window.GameData?.healCards||[])[idx]; if (!c) return;
