@@ -540,10 +540,9 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
     </div>
     <div class="spl-sub">禁選 ‧ 雙陣 ‧ 五行博弈</div>
     <div class="spl-jobs">
-      <span class="spl-job">👑 主公</span><span class="spl-job">🪶 軍師</span>
-      <span class="spl-job">📜 臣相</span><span class="spl-job">🛡️ 大司馬</span>
-      <span class="spl-job">🌾 大司農</span><span class="spl-job">⚔️ 大將軍</span>
-      <span class="spl-job">🏹 行軍總管</span><span class="spl-job">🔱 破陣先鋒</span>
+      <span class="spl-job">👑 主帥</span>
+      <span class="spl-job">🪶 謀臣</span>
+      <span class="spl-job">⚔️ 武將</span>
     </div>
     <button class="spl-btn" id="spl-btn">出 師 征 戰</button>
     <div class="spl-tip">點 擊 任 意 處 進 入</div>
@@ -694,8 +693,8 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 <div class="modal-bg" id="modal-help">
   <div class="modal-box">
     <h2>兵法推演 玩法指南</h2>
-    <p><strong>1. BP 14步</strong>：敵先禁 → 雙方輪流禁/選，共6禁8選。</p>
-    <p><strong>2. 8大職位</strong>：主公（HP基礎）、軍師（雙陣+8%）、臣相（化解相剋30%）、大司馬（揭露敵陣）、大司農（每3回回血+5）、大將軍（+5%攻）、行軍總管（被剋減傷）、破陣先鋒（金陣優先+8）。</p>
+    <p><strong>1. BP 12步</strong>：三階段禁選——主帥→謀臣→武將，每階段雙方各禁1選1，共12步。</p>
+    <p><strong>2. 三路陣容</strong>：主帥（全軍核心·HP基礎）、謀臣（軍師/臣相/大司農·謀略加成）、武將（大司馬/大將軍/行軍總管/破陣先鋒·戰場決勝）。</p>
     <p><strong>3. 雙陣博弈</strong>：每回選「第一陣」＋「第二陣」，10種五行兵法。</p>
     <p><strong>4. 結算順序</strong>：① 我方雙陣內部相生/剋/同 → ② 雙方第一陣對決 → ③ 雙方第二陣對決 → ④ 職位特效加成。</p>
     <p><strong>5. 五行相剋</strong>：木→土→水→火→金→木。</p>
@@ -722,7 +721,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   <div class="ta-avatar">🧙</div>
   <div class="ta-body" id="tut-msg">歡迎進入新手教學！我將一步步引導你完成禁選，學習兵法精髓。</div>
   <div class="ta-progress">
-    <span id="tut-prog-lbl">0 / 22</span>
+    <span id="tut-prog-lbl">0 / 12</span>
     <div class="ta-bar"><div class="ta-bar-fill" id="tut-bar-fill" style="width:0%"></div></div>
   </div>
 </div>
@@ -833,6 +832,8 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 const ELEM_COL  = {木:'#81c784',火:'#ef5350',土:'#ffca28',金:'#b0bec5',水:'#42a5f5'};
 const ROLE_ICON = {king:'👑',strategist:'🪶',chancellor:'📜',marshal:'🛡️',minister:'🌾',general:'⚔️',commandant:'🏹',vanguard:'🔱'};
 const ROLE_NAME = {king:'主公',strategist:'軍師',chancellor:'臣相',marshal:'大司馬',minister:'大司農',general:'大將軍',commandant:'行軍總管',vanguard:'破陣先鋒'};
+const ADVISOR_ROLES = ['strategist','chancellor','minister'];
+const WARRIOR_ROLES = ['marshal','general','commandant','vanguard'];
 
 const HEROES = [
   // 主公 (6)
@@ -893,6 +894,7 @@ const HEROES = [
   {id:'h_xue_rg',    name:'薛仁貴', role:'vanguard',   elem:'火',faction:'唐',pow:86,desc:'三箭定天山，火陣先攻'},
   {id:'h_qin_qiong', name:'秦瓊',   role:'vanguard',   elem:'金',faction:'唐',pow:84,desc:'馬踏黃河，金陣+8傷'},
   {id:'h_ran_min',   name:'冉閔',   role:'vanguard',   elem:'金',faction:'後趙',pow:92,desc:'殺胡令，金陣爆發+12'},
+  {id:'h_huang_zhong',name:'黃忠',  role:'vanguard',   elem:'火',faction:'蜀', pow:88,desc:'老當益壯，定軍山斬夏侯淵，火陣首輪+10傷'},
 ];
 
 const HEROES_IDX = Object.fromEntries(HEROES.map(h=>[h.id,h]));
@@ -936,6 +938,7 @@ const BONDS = [
   {ids:['h_sun_wu','h_zhou_yu'],                  name:'吳地兵法',  bonus:{atk:10,def:5}},
   {ids:['h_qin_qiong','h_xue_rg','h_yu_chi'],     name:'唐初三傑',  bonus:{atk:12,def:8}},
   {ids:['h_ran_min','h_bai_qi'],                  name:'屠戮之神',  bonus:{atk:20}},
+  {ids:['h_guan_yu','h_zhang_fei','h_zhao_yun','h_ma_chao','h_huang_zhong'], name:'五虎上將', bonus:{atk:25,def:15,hp:20}},
 ];
 
 function activeBonds(picks){
@@ -944,116 +947,89 @@ function activeBonds(picks){
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TUTORIAL DATA
-   22 actions total: 11 enemy + 11 player
-   BP_STEPS: [0]enemy-ban [1]player-ban [2]enemy-king [3]player-king
-             [4]enemy-strat [5]player-strat [6]enemy-ban [7]player-ban
-             [8]enemy-2x-sp [9]player-2x-sp [10]enemy-ban [11]player-ban
-             [12]enemy-4x-sp [13]player-4x-sp
+   TUTORIAL DATA — 12 steps (3 role groups × ban ban pick pick)
+   Enemy moves are scripted; player moves show suggestions (free choice)
 ═══════════════════════════════════════════════════════════ */
 
-// Indexed by BP stepIdx → array of heroIds for that step (in order)
-const TUTORIAL_PICKS = {
-  0:  {heroIds:['h_han_xin']},
-  1:  {heroIds:['h_caocao']},
-  2:  {heroIds:['h_qin']},
-  3:  {heroIds:['h_liubei']},
-  4:  {heroIds:['h_sima']},
-  5:  {heroIds:['h_zhuge']},
-  6:  {heroIds:['h_xiang_yu']},
-  7:  {heroIds:['h_bai_qi']},
-  8:  {heroIds:['h_guo_jia','h_zhang_liao']},
-  9:  {heroIds:['h_guan_yu','h_zhang_fei']},
-  10: {heroIds:['h_yue_fei']},
-  11: {heroIds:['h_lvbu']},
-  12: {heroIds:['h_xu_huang','h_lu_meng','h_ma_chao','h_ran_min']},
-  13: {heroIds:['h_zhao_yun','h_huo_qb','h_xiao_he','h_guan_z']},
+// Scripted enemy moves (stepIdx → heroId, enemy-side steps only)
+const TUTORIAL_ENEMY = {
+  0: 'h_qin',         // enemy bans: 秦始皇
+  3: 'h_caocao',      // enemy picks king: 曹操
+  4: 'h_zhuge',       // enemy bans advisor: 諸葛亮
+  6: 'h_sima',        // enemy picks advisor: 司馬懿
+  8: 'h_xiang_yu',    // enemy bans warrior: 項羽
+  11:'h_bai_qi',      // enemy picks warrior: 白起
 };
 
-// Flat messages — indexed 0-21 (one per individual hero action)
-const TUTORIAL_FLAT = [
-  // [0] step0 enemy ban: h_han_xin
-  {hint:'敵方禁止了「韓信」！兵仙太強，先手封禁。',
-   msg:'韓信「用兵多多益善」，乃千古兵仙，木系強攻。敵方率先禁去，以防我方憑其奔襲之勢一發不可收拾。'},
-  // [1] step1 player ban: h_caocao
-  {hint:'【禁選教學】請點選「曹操」將其禁止！',
-   msg:'曹操「魏武揮鞭，全軍+3攻」，若讓他成為敵主公威脅極大。現在在武將池中找到曹操，點擊即可禁止！'},
-  // [2] step2 enemy king: h_qin
-  {hint:'敵方選擇「秦始皇」為主公！土系霸業登場。',
-   msg:'秦始皇「王道霸業，主公HP+10」，以土系築起厚盾。敵陣確立土系核心，我方需謹慎應對其高耐久主公。'},
-  // [3] step3 player king: h_liubei
-  {hint:'【主公選擇】請點選「劉備」成為你的主公！',
-   msg:'劉備「仁德之主，臣相效果+10%」。以土系之道配合軍師，加上後續的桃園三結義羈絆，是絕佳起手！'},
-  // [4] step4 enemy strat: h_sima
-  {hint:'敵方選擇「司馬懿」為軍師！每回合將揭露你的戰術。',
-   msg:'冢虎司馬懿「每回合揭露1戰術」！敵方資訊優勢甚大，須以靈活的兵法出其不意，不可讓對手摸透路數。'},
-  // [5] step5 player strat: h_zhuge
-  {hint:'【軍師選擇】請點選「諸葛亮」成為你的軍師！',
-   msg:'臥龍出山，「雙陣加成+10%」！與劉備觸發「三顧茅廬」羈絆（攻+8，防+5）。再招募關羽張飛，桃園三結義即現！'},
-  // [6] step6 enemy ban: h_xiang_yu
-  {hint:'敵方禁止了「項羽」！霸王破陣先鋒遭封印。',
-   msg:'項羽「全軍+5%攻」破壞力極強，敵方識破我方意圖果斷禁去。破陣先鋒需另擇良將——霍去病首回合+15傷是絕佳替補！'},
-  // [7] step7 player ban: h_bai_qi
-  {hint:'【禁選】請點選「白起」將其禁止！',
-   msg:'殺神白起「每回合額外-8傷」，持久戰必成噩夢！且金系克木，劉備/諸葛亮易受壓制。現在必須禁掉他！'},
-  // [8a] step8 enemy sp1: h_guo_jia
-  {hint:'敵方選擇「郭嘉」（大司農）。',
-   msg:'鬼才郭嘉「補給點+20%」，提升敵方持久力。敵陣著眼長線作戰，速戰速決對我有利！'},
-  // [8b] step8 enemy sp2: h_zhang_liao
-  {hint:'敵方選擇「張遼」（大將軍）。',
-   msg:'張遼「威震逍遙津，破甲+12」，金系強攻！敵方金系陣容漸成，我方行軍總管的選擇將決定能否抵禦破甲衝擊。'},
-  // [9a] step9 player sp1: h_guan_yu
-  {hint:'【大司馬選擇】請點選「關羽」！',
-   msg:'武聖關羽「揭露敵方雙陣其一」——情報制勝！更重要的是，劉備+關羽+張飛可觸發【桃園三結義】：攻+15，防+10，HP+20！'},
-  // [9b] step9 player sp2: h_zhang_fei
-  {hint:'【大將軍選擇】請點選「張飛」！桃園三結義即將觸發！',
-   msg:'張飛「萬人敵，征伐+10傷」，招募即刻觸發【桃園三結義】與【臥龍燕人】兩大羈絆！我方戰力飆升，士氣大振！'},
-  // [10] step10 enemy ban: h_yue_fei
-  {hint:'敵方禁止了「岳飛」！精忠報國無緣此戰。',
-   msg:'岳飛「精忠報國，主公+8防」，木系防護極高。敵方看穿我方需要防禦武將，及時封鎖。需另選護衛主公的方案。'},
-  // [11] step11 player ban: h_lvbu
-  {hint:'【禁選】請點選「呂布」將其禁止！',
-   msg:'人中呂布「金陣+5傷優先」！若與冉閔共聚，「天下無雙」羈絆攻+18堪稱無解。先手禁去，斷絕此局最大威脅！'},
-  // [12a] step12 enemy sp1: h_xu_huang
-  {hint:'敵方選擇「徐晃」（行軍總管）。',
-   msg:'徐晃「治軍嚴明，被剋減傷15」，防禦型武將鞏固後防。敵方陣容趨於完整，土金火系混編，需細心應對。'},
-  // [12b] step12 enemy sp2: h_lu_meng
-  {hint:'敵方選擇「呂蒙」（行軍總管）。',
-   msg:'呂蒙「白衣渡江，後援優先」，水系克火。若我方選用火系兵法過多，可能受制！下一步選趙雲防禦金系破甲吧。'},
-  // [12c] step12 enemy sp3: h_ma_chao
-  {hint:'敵方選擇「馬超」（大司馬）。',
-   msg:'錦馬超「突襲+10傷」，火系先手優勢大！敵方火系攻勢不容輕視，我方行軍總管趙雲的「被剋減傷」將是關鍵！'},
-  // [12d] step12 enemy sp4: h_ran_min
-  {hint:'敵方選擇「冉閔」（破陣先鋒）。',
-   msg:'冉閔「殺胡令，金陣爆發+12」！此前禁掉呂布，確保了「天下無雙」羈絆無法觸發——英明的一步！'},
-  // [13a] step13 player sp1: h_zhao_yun
-  {hint:'【行軍總管】請點選「趙雲」！',
-   msg:'趙雲「七進七出，金系被剋時減傷10」！面對敵方大量金系武將（張遼+冉閔+徐晃），趙雲是最完美的行軍總管！更觸發【蜀漢雙壁】羈絆（攻+8，防+8）！'},
-  // [13b] step13 player sp2: h_huo_qb
-  {hint:'【破陣先鋒】請點選「霍去病」！',
-   msg:'冠軍侯「首回合+15傷」搶佔先機！項羽已被敵方封禁，霍去病便是最強替補先鋒。首回合的壓制往往能主導整場走勢！'},
-  // [13c] step13 player sp3: h_xiao_he
-  {hint:'【大司農】請點選「蕭何」！',
-   msg:'蕭何「每3回合全軍回5血」，持久戰的定海神針！我方已有劉備+諸葛亮+關羽+張飛+趙雲，陣容豪華，拖到後期必勝！'},
-  // [13d] step13 player sp4: h_guan_z
-  {hint:'【臣相】請點選「管仲」完成禁選！',
-   msg:'管仲「霸主之師，全軍攻擊+6」！八將齊聚，四大羈絆在握（三顧茅廬·桃園三結義·臥龍燕人·蜀漢雙壁）。大陣已成，出征！'},
+// Suggested highlights for player steps (stepIdx → heroIds)
+const TUTORIAL_SUGGEST = {
+  1: ['h_liubang','h_zhu_yz','h_li_shimin'],
+  2: ['h_liubei','h_li_shimin','h_liubang'],
+  5: ['h_guo_jia','h_liu_bw','h_zhang_l'],
+  7: ['h_liu_bw','h_zhang_l','h_fan_li'],
+  9: ['h_lvbu','h_han_xin','h_bai_qi'],
+  10:['h_guan_yu','h_zhao_yun','h_yue_fei'],
+};
+
+// Per-step educational messages
+const TUTORIAL_MSG = [
+  // 0: enemy bans king
+  {hint:'敵方禁止了「秦始皇」！王道霸業先手封印。',
+   msg:'秦始皇「王道霸業，主公HP+10」是最耐打的主公，敵方搶先封禁防我方構建厚盾陣容。對頂級主公的封禁往往決定整局走向！'},
+  // 1: player bans king
+  {hint:'【主帥禁選】金色高亮為建議，你也可以選其他！',
+   msg:'劉邦「布衣天子，全軍士氣+5」、朱元璋「洪武大帝，主公反擊+10傷」都是後期爆發型主公，留給對手非常危險。看看金色高亮的建議，或選你最忌憚的主公封鎖！'},
+  // 2: player picks king
+  {hint:'【選主帥】金色高亮為建議，選你最信任的主公！',
+   msg:'劉備「仁德之主，臣相效果+10%」配合後期謀臣羈絆潛力極大；李世民「天策上將，破陣+5傷」攻守兼備。選好主公，決定了全軍的氣場！'},
+  // 3: enemy picks king
+  {hint:'敵方選擇「曹操」為主帥！魏武揮鞭，全軍+3攻！',
+   msg:'曹操的全軍攻擊加成在長線作戰中非常恐怖。接下來是謀臣爭奪——謀臣決定全軍的謀略上限，千萬別讓對手搶到頂尖軍師！'},
+  // 4: enemy bans advisor
+  {hint:'敵方禁止了「諸葛亮」！臥龍出山之機被封。',
+   msg:'諸葛亮「雙陣加成+10%」是最強謀臣，敵方果斷封禁。這也是教訓：有時禁掉對手最依賴的人，比搶自己想要的更重要！'},
+  // 5: player bans advisor
+  {hint:'【謀臣禁選】金色高亮為建議，選你認為最威脅的謀士！',
+   msg:'郭嘉「鬼才，補給點+20%」長線壓制力極強；劉伯溫「被剋反噬-30%」防剋制神器；張良「每3回抽1戰術」機動極佳。看高亮建議，也可以選其他危險謀士！'},
+  // 6: enemy picks advisor
+  {hint:'敵方選擇「司馬懿」為謀士！每回合將揭露你的兵法！',
+   msg:'冢虎司馬懿讓敵方掌握情報優勢，你的兵法無所遁形！對策是靈活換陣，不要連出同一兵法。進入最後一階段：武將爭奪！'},
+  // 7: player picks advisor
+  {hint:'【選謀臣】金色高亮為建議，選一名謀士輔佐你！',
+   msg:'劉伯溫「被剋反噬-30%」是應對司馬懿揭露後的最佳解；張良「每3回抽1戰術」讓選擇更靈活；范蠡「水陣回血+8」抗衡拉鋸。按戰術風格選一位！'},
+  // 8: enemy bans warrior
+  {hint:'敵方禁止了「項羽」！霸王衝陣被封印！',
+   msg:'項羽「全軍+5%攻」破壞力極強，敵方識破意圖率先封禁。武將是最終的決勝力量——選對武將才能在五行博弈中立於不敗！'},
+  // 9: player bans warrior
+  {hint:'【武將禁選】金色高亮為建議，封殺最強猛將！',
+   msg:'呂布「金陣+5傷優先」加冉閔「金陣爆發+12」是天下無雙羈絆核心；韓信「兵仙，多多益善」攻力無解；白起「殺神，每回額外-8傷」持久必勝。選最危險的那個！'},
+  // 10: player picks warrior
+  {hint:'【選武將】金色高亮為建議，選一名猛將完成你的陣容！',
+   msg:'關羽「揭露敵雙陣其一」讓你掌握情報；趙雲「七進七出，金系減傷10」完美應對白起；岳飛「精忠報國，主公+8防」保護主公。選完三人，陣容確定，準備出征！'},
+  // 11: enemy picks warrior
+  {hint:'敵方選擇「白起」完成陣容！殺神出場！',
+   msg:'白起「每回合額外-8傷」的持久傷害令人生畏！不過你的陣容也已就位。接下來進入五行雙陣博弈——用好五行相生相剋，以弱勝強！'},
 ];
 
-// Current tutorial target: returns heroId to pick/ban right now
+// Enemy scripted pick: returns heroId for enemy steps, null for player steps
 function tutTarget(state){
   if(state.mode!=='tutorial') return null;
   const step = curStep(state); if(!step) return null;
-  const entry = TUTORIAL_PICKS[state.stepIdx]; if(!entry) return null;
-  return entry.heroIds[state.stepProg[state.stepIdx]] || null;
+  if(step.side !== 'enemy') return null;
+  return TUTORIAL_ENEMY[state.stepIdx] || null;
 }
 
-// Flat message index (0-21) for current action
+// Suggestion IDs for current player step
+function tutSuggest(state){
+  if(state.mode!=='tutorial') return [];
+  const step = curStep(state); if(!step) return [];
+  if(step.side !== 'player') return [];
+  return TUTORIAL_SUGGEST[state.stepIdx] || [];
+}
+
+// Flat message index = stepIdx (all steps have cnt:1)
 function tutFlatIdx(state){
-  let idx = 0;
-  for(let i=0;i<state.stepIdx;i++) idx += BP_STEPS[i].cnt;
-  idx += state.stepProg[state.stepIdx];
-  return idx;
+  return state.stepIdx;
 }
 
 /* Five-element relations */
@@ -1072,22 +1048,23 @@ function elemRel(a,b){
    GAME ENGINE
 ═══════════════════════════════════════════════════════════ */
 
-// BP: 14 steps — enemy先禁 → alternating ban/pick
+// BP: 12 steps — 3 role groups × (ban ban pick pick)
 const BP_STEPS = [
-  {phase:'ban',  side:'enemy',  cnt:1, jf:null},
-  {phase:'ban',  side:'player', cnt:1, jf:null},
-  {phase:'pick', side:'enemy',  cnt:1, jf:'king'},
-  {phase:'pick', side:'player', cnt:1, jf:'king'},
-  {phase:'pick', side:'enemy',  cnt:1, jf:'strategist'},
-  {phase:'pick', side:'player', cnt:1, jf:'strategist'},
-  {phase:'ban',  side:'enemy',  cnt:1, jf:null},
-  {phase:'ban',  side:'player', cnt:1, jf:null},
-  {phase:'pick', side:'enemy',  cnt:2, jf:'special'},
-  {phase:'pick', side:'player', cnt:2, jf:'special'},
-  {phase:'ban',  side:'enemy',  cnt:1, jf:null},
-  {phase:'ban',  side:'player', cnt:1, jf:null},
-  {phase:'pick', side:'enemy',  cnt:4, jf:'special'},
-  {phase:'pick', side:'player', cnt:4, jf:'special'},
+  // 第一階段：主帥
+  {phase:'ban',  side:'enemy',  cnt:1, jf:'king',    label:'主帥禁選'},
+  {phase:'ban',  side:'player', cnt:1, jf:'king',    label:'主帥禁選'},
+  {phase:'pick', side:'player', cnt:1, jf:'king',    label:'選主帥'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'king',    label:'選主帥'},
+  // 第二階段：謀臣
+  {phase:'ban',  side:'enemy',  cnt:1, jf:'advisor', label:'謀臣禁選'},
+  {phase:'ban',  side:'player', cnt:1, jf:'advisor', label:'謀臣禁選'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'advisor', label:'選謀臣'},
+  {phase:'pick', side:'player', cnt:1, jf:'advisor', label:'選謀臣'},
+  // 第三階段：武將
+  {phase:'ban',  side:'enemy',  cnt:1, jf:'warrior', label:'武將禁選'},
+  {phase:'ban',  side:'player', cnt:1, jf:'warrior', label:'武將禁選'},
+  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將'},
 ];
 
 function makeState(mode){
@@ -1112,7 +1089,9 @@ function poolFor(state, jf){
     ...state.picks.player, ...state.picks.enemy
   ]);
   let p = HEROES.filter(h => !used.has(h.id));
-  if(jf === 'special') p = p.filter(h => h.role !== 'king' && h.role !== 'strategist');
+  if(jf === 'advisor') p = p.filter(h => ADVISOR_ROLES.includes(h.role));
+  else if(jf === 'warrior') p = p.filter(h => WARRIOR_ROLES.includes(h.role));
+  else if(jf === 'special') p = p.filter(h => h.role !== 'king' && h.role !== 'strategist');
   else if(jf && jf !== 'any') p = p.filter(h => h.role === jf);
   return p;
 }
@@ -1127,9 +1106,13 @@ function doStep(state, side, heroId){
   if(!hero) return {ok:false, err:'找不到武將'};
   const used = new Set([...state.bans.player,...state.bans.enemy,...state.picks.player,...state.picks.enemy]);
   if(used.has(heroId)) return {ok:false, err:'此武將已被使用'};
+  if(step.jf === 'advisor' && !ADVISOR_ROLES.includes(hero.role))
+    return {ok:false, err:'本步需選謀臣類（軍師/臣相/大司農）'};
+  if(step.jf === 'warrior' && !WARRIOR_ROLES.includes(hero.role))
+    return {ok:false, err:'本步需選武將類（大司馬/大將軍/行軍總管/破陣先鋒）'};
   if(step.jf === 'special' && (hero.role === 'king' || hero.role === 'strategist'))
     return {ok:false, err:'本步需選非主公/軍師'};
-  if(step.jf && step.jf !== 'special' && step.jf !== 'any' && hero.role !== step.jf)
+  if(step.jf && !['advisor','warrior','special','any'].includes(step.jf) && hero.role !== step.jf)
     return {ok:false, err:`本步需選 ${ROLE_NAME[step.jf]}`};
 
   if(step.phase === 'ban') state.bans[side].push(heroId);
@@ -1356,16 +1339,16 @@ function tutHideAll(){
 function tutUpdate(){
   if(!G || G.mode!=='tutorial') return;
   const flat = tutFlatIdx(G);
-  const total = 22;
+  const total = 12;
   const step = curStep(G);
   if(!step){
     tutShowBanner('🎉 禁選完成！準備進入戰場…','完成');
-    tutShowAssistant('八將齊聚，四大羈絆在握！禁選階段圓滿結束，即將進入雙陣博弈——記得選好五行兵法！',total,total);
+    tutShowAssistant('三路陣容已定！接下來進入五行雙陣博弈——選好兵法，用相生相剋決勝千里！',total,total);
     return;
   }
-  const msg = TUTORIAL_FLAT[flat];
+  const msg = TUTORIAL_MSG[flat];
   if(!msg) return;
-  const phaseLabel = step.phase==='ban'?'禁選':'選將';
+  const phaseLabel = step.label || (step.phase==='ban'?'禁選':'選將');
   const stepLabel = `步驟 ${flat+1} / ${total} — ${step.side==='player'?'我方':'敵方'}${phaseLabel}`;
   tutShowBanner(msg.hint, stepLabel);
   tutShowAssistant(msg.msg, flat, total);
@@ -1471,9 +1454,12 @@ function renderBPStatus(){
     return;
   }
   const isPlayerTurn = step.side === 'player';
-  const phaseLabel = step.phase==='ban'?'禁選':'選將';
-  const jfLabel = step.jf==='special'?'非主公/軍師':
-                  step.jf?ROLE_NAME[step.jf]:'任意職位';
+  const phaseLabel = step.label || (step.phase==='ban'?'禁選':'選將');
+  const jfLabel = step.jf==='advisor' ? '謀臣（軍師·臣相·大司農）' :
+                  step.jf==='warrior' ? '武將（大司馬·大將軍·先鋒）' :
+                  step.jf==='king' ? '主帥' :
+                  step.jf==='special' ? '非主公/軍師' :
+                  step.jf ? ROLE_NAME[step.jf] : '任意職位';
   txt.innerHTML = `${isPlayerTurn?'<strong>你的回合</strong>':'<strong>敵方回合</strong>'} — ${phaseLabel}（${jfLabel}）`;
   badge.className = 'bp-turn-badge '+(isPlayerTurn?'mine':'enemy');
   badge.textContent = isPlayerTurn?'▶ 我方行動':'⏳ 敵方思考';
@@ -1512,24 +1498,26 @@ function renderOneSide(side){
     }
   }
 
-  /* ── Pick slots (by role order) ─────────── */
+  /* ── Pick slots (3 groups) ─────────── */
   pickEl.innerHTML = '';
-  const roles = ['king','strategist','chancellor','marshal','minister','general','commandant','vanguard'];
+  const groups = [
+    {label:'主帥', icon:'👑', roles:['king']},
+    {label:'謀臣', icon:'🪶', roles:ADVISOR_ROLES},
+    {label:'武將', icon:'⚔️', roles:WARRIOR_ROLES},
+  ];
   const picks = G.picks[side];
-  const pickRoles = picks.map(id => HEROES_IDX[id]?.role);
 
-  roles.forEach(role=>{
-    const idx = pickRoles.indexOf(role);
+  groups.forEach(group=>{
+    const hero = picks.map(id=>HEROES_IDX[id]).find(h=>h && group.roles.includes(h.role));
     const d = document.createElement('div');
-    d.className = 'bp-slot'+(idx>=0?' filled':'');
-    if(idx>=0){
-      const h = HEROES_IDX[picks[idx]];
-      const col = ELEM_COL[h.elem]||'#9c6dd6';
-      d.innerHTML = `<div class="sl-role">${ROLE_ICON[role]} ${ROLE_NAME[role]}</div>
-                     <div class="sl-name">${h.name}</div>
-                     <div class="sl-elem" style="color:${col}">${h.elem} · ${h.faction}</div>`;
+    d.className = 'bp-slot'+(hero?' filled':'');
+    if(hero){
+      const col = ELEM_COL[hero.elem]||'#9c6dd6';
+      d.innerHTML = `<div class="sl-role">${group.icon} ${group.label}</div>
+                     <div class="sl-name">${hero.name}</div>
+                     <div class="sl-elem" style="color:${col}">${hero.elem} · ${hero.faction}</div>`;
     } else {
-      d.innerHTML = `<div class="sl-role">${ROLE_ICON[role]} ${ROLE_NAME[role]}</div>
+      d.innerHTML = `<div class="sl-role">${group.icon} ${group.label}</div>
                      <div class="sl-empty">待選</div>`;
     }
     pickEl.appendChild(d);
@@ -1550,9 +1538,9 @@ function renderPool(){
   const isPlayerTurn = step && step.side === 'player';
   const isBan = step && step.phase === 'ban';
 
-  // Tutorial target for this player step
   const tutMode = G && G.mode === 'tutorial';
-  const tutTgt  = tutMode && isPlayerTurn ? tutTarget(G) : null;
+  const tutTgt  = tutMode ? tutTarget(G) : null;           // scripted enemy pick
+  const suggestIds = tutMode ? tutSuggest(G) : [];          // player suggestions
 
   HEROES.filter(h => elemFilter ? h.elem===elemFilter : true)
         .forEach(h=>{
@@ -1563,11 +1551,12 @@ function renderPool(){
     if(isUsed){
       cls += ' used';
     } else if(!isPlayerTurn){
-      cls += ' enemy-turn';
-    } else if(tutTgt){
-      // Tutorial player turn: highlight target, dim everything else
-      if(h.id === tutTgt) cls += ' tut-target';
-      else cls += ' tut-locked';
+      // Enemy turn: dim all except scripted tutorial target
+      if(tutTgt && h.id === tutTgt) cls += ' tut-target';
+      else cls += ' enemy-turn';
+    } else if(suggestIds.includes(h.id)){
+      // Player turn in tutorial: golden highlight for suggestions (still clickable)
+      cls += ' tut-target';
     } else if(isBan){
       cls += ' ban-highlight';
     }
@@ -1586,14 +1575,14 @@ function renderPool(){
       <div class="hc-pow-bar"><div class="hc-pow-fill" style="width:${pct}%;background:${col}"></div></div>
       <div class="hc-pow-label">戰力 ${h.pow}</div>`;
 
-    if(!isUsed && isPlayerTurn && (!tutTgt || h.id === tutTgt)){
+    if(!isUsed && isPlayerTurn){
       d.addEventListener('click',()=>onHeroClick(h.id));
     }
     el.appendChild(d);
   });
 
-  // Tutorial: scroll pool to highlight target
-  if(tutTgt && isPlayerTurn){
+  // Scroll to first suggestion on player tutorial turn
+  if(suggestIds.length && isPlayerTurn){
     requestAnimationFrame(()=>{
       const tgtEl = el.querySelector('.tut-target');
       if(tgtEl) tgtEl.scrollIntoView({behavior:'smooth',block:'center'});
@@ -1610,15 +1599,6 @@ function onHeroClick(heroId){
   if(!G || G.phase !== 'bp') return;
   const step = curStep(G);
   if(!step || step.side !== 'player') return;
-  // Tutorial: enforce correct pick
-  if(G.mode === 'tutorial'){
-    const tgt = tutTarget(G);
-    if(tgt && heroId !== tgt){
-      const tgtH = HEROES_IDX[tgt];
-      showToast(`請按教學選擇：${tgtH ? '「'+tgtH.name+'」' : '指定武將'}`);
-      return;
-    }
-  }
   const res = doStep(G, 'player', heroId);
   if(!res.ok){ showToast(res.err); return; }
   stopTimers();
@@ -1660,12 +1640,12 @@ function bpLoop(){
   } else {
     // Player turn
     if(G.mode === 'tutorial'){
-      // Tutorial mode: no timer; highlight target & show label
+      // Tutorial mode: no timer; show educational hint
       tx('bp-timer', '📖');
       $('bp-timer')?.classList.remove('warn');
-      const tgt = tutTarget(G);
-      const tgtHero = tgt ? HEROES_IDX[tgt] : null;
-      tx('bp-advice-txt', tgtHero ? `請選擇「${tgtHero.name}」（${tgtHero.elem}·${ROLE_NAME[tgtHero.role]}）` : '請按教學選擇武將');
+      const suggests = tutSuggest(G);
+      const suggestNames = suggests.map(id=>HEROES_IDX[id]?.name).filter(Boolean).join('、');
+      tx('bp-advice-txt', suggestNames ? `💡 建議：${suggestNames}（金色高亮）— 也可自由選擇` : '請選擇武將');
     } else {
       // Normal 30s timer
       let t = 30;
@@ -1695,7 +1675,7 @@ function enterBattle(){
   // Tutorial: hide banner, update assistant for battle guidance
   if(G.mode === 'tutorial'){
     tutShowBanner(null);
-    tutShowAssistant('BP完成！現在是雙陣博弈階段。\n第一陣選「先鋒兵法」，第二陣選「後援兵法」。注意五行相生相剋關係——土生金，金克木！選好後按「確認雙陣·開戰」。',22,22);
+    tutShowAssistant('BP完成！現在是雙陣博弈階段。\n第一陣選「先鋒兵法」，第二陣選「後援兵法」。注意五行相生相剋——木→火→土→金→水→木。選好後按「確認雙陣·開戰」。',12,12);
   }
 
   // Set king names
