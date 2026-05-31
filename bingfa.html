@@ -1134,8 +1134,9 @@ const HEROES_IDX = Object.fromEntries(HEROES.map(h=>[h.id,h]));
 const _portraitQ = [];
 const _portraitActive = new Set();
 const _portraitDone = new Set();
-const PORTRAIT_MAX = 3;          // 同時最多 3 張在生成
+const PORTRAIT_MAX = 6;          // 同時最多 6 張在生成
 const PORTRAIT_RETRY_MAX = 3;
+const PORTRAIT_TIMEOUT = 60000;  // 60s 給 Pollinations 充裕時間
 
 function _processPortraitQ(){
   while(_portraitActive.size < PORTRAIT_MAX && _portraitQ.length){
@@ -1144,32 +1145,35 @@ function _processPortraitQ(){
     const src = img.dataset.src;
     if(!src) continue;
     _portraitActive.add(img);
-    img._loadStart = Date.now();
-    img.src = src;
+    let resolved = false;
     const done = ok=>{
+      if(resolved) return;
+      resolved = true;
       _portraitActive.delete(img);
       if(ok){
         img._loaded = true;
         img.classList.add('loaded');
         _portraitDone.add(src);
       } else if((img._retry=(img._retry||0)+1) < PORTRAIT_RETRY_MAX){
-        // Exponential backoff retry
         setTimeout(()=>{
           if(img.isConnected && !img._loaded){
+            // Force new attempt by switching seed (some seeds randomly fail)
+            const u = new URL(img.dataset.src);
+            const oldSeed = +u.searchParams.get('seed')||0;
+            u.searchParams.set('seed', (oldSeed + 7919*img._retry) % 99999);
+            img.dataset.src = u.toString();
             img.src = '';
             _portraitQ.push(img);
             _processPortraitQ();
           }
-        }, 1500*img._retry);
+        }, 1200*img._retry);
       }
       _processPortraitQ();
     };
     img.onload  = ()=>done(true);
     img.onerror = ()=>done(false);
-    // Timeout safety net (Pollinations sometimes hangs)
-    setTimeout(()=>{
-      if(_portraitActive.has(img) && !img._loaded){ done(false); }
-    }, 25000);
+    img.src = src;
+    setTimeout(()=>{ if(!resolved) done(false); }, PORTRAIT_TIMEOUT);
   }
 }
 
@@ -1204,46 +1208,35 @@ function attachPortrait(img, src){
 /* ── Hero portrait URL (free Pollinations.ai AI image generation) ── */
 function heroPortraitUrl(h){
   if(!h) return '';
-  let roleStyle;
-  if(h.role==='king'){
-    roleStyle = 'Chinese ancient emperor sovereign, regal golden imperial robes, dragon embroidery, ornate crown, throne hall, majestic ruler';
-  } else if(['strategist','chancellor','minister'].includes(h.role)){
-    roleStyle = 'Chinese ancient scholar strategist, flowing silk robes, scholar crown hat, holding folding fan or scroll, wise expression, court setting';
-  } else {
-    // warrior types — vary by role
-    if(h.role==='vanguard') roleStyle = 'Chinese ancient elite warrior vanguard, ornate battle armor with golden trim, fierce gaze, holding weapon, dynamic pose, sunset battlefield';
-    else if(h.role==='commandant') roleStyle = 'Chinese ancient cavalry commandant, lamellar armor, riding war horse, lance in hand, snowy plains';
-    else if(h.role==='marshal') roleStyle = 'Chinese ancient grand marshal, heavy plate armor, crimson cape, longsword, commanding presence, banner background';
-    else roleStyle = 'Chinese ancient general warrior, full battle armor, halberd weapon, fierce expression, war banners';
-  }
-  const elemMood = {
-    '木':'forest green accents, vibrant plant motifs',
-    '火':'crimson red flames, fiery atmosphere',
-    '土':'earthy gold tones, mountain backdrop',
-    '金':'shining metal silver armor, sharp highlights',
-    '水':'deep blue tones, river or rain backdrop'
-  }[h.elem] || '';
-  const prompt = `${h.name}, ${roleStyle}, ${elemMood}, Chinese historical character portrait, traditional ink painting, dramatic lighting, half body`;
-  // Deterministic seed per hero so image stays consistent
+  let role;
+  if(h.role==='king') role = 'emperor in dragon robes';
+  else if(['strategist','chancellor','minister'].includes(h.role)) role = 'scholar in silk robes with fan';
+  else if(h.role==='vanguard') role = 'fierce warrior in armor';
+  else if(h.role==='commandant') role = 'cavalry general';
+  else if(h.role==='marshal') role = 'grand marshal in heavy armor';
+  else role = 'general with halberd';
+  // Very short prompt → faster Pollinations response
+  const prompt = `${h.name}, Chinese ancient ${role}, ink painting portrait, half body, ${h.faction} dynasty`;
   let seed = 0;
   for(let i=0;i<h.id.length;i++) seed = (seed*31 + h.id.charCodeAt(i)) >>> 0;
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=340&nologo=true&seed=${seed%99999}&model=flux`;
+  // No model=flux → uses default 'turbo' which is 5-10× faster
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=340&nologo=true&seed=${seed%99999}`;
 }
 
 /* ── Generic unit-type image for 3D battlefield ── */
 function unitTypeUrl(type, side){
-  const team = side==='player' ? 'blue armor with white robes, calm noble' : 'red dark armor crimson cape, fierce';
+  const team = side==='player' ? 'blue armor' : 'red armor';
   const prompts = {
-    'infantry':`Chinese ancient infantry soldier, ${team}, holding spear and round shield, standing battle pose, full body, isolated plain background, traditional ink painting`,
-    'archer':`Chinese ancient archer soldier, ${team}, drawing longbow with arrow ready, standing pose, full body, isolated plain background, traditional ink painting`,
-    'cavalry':`Chinese ancient cavalry warrior on war horse, ${team}, holding long lance, side view dynamic pose, isolated plain background, traditional ink painting`,
-    'general':`Chinese ancient grand general commander, ${team}, ornate plumed helmet, commanding pose with sword, full body, banner background, traditional ink painting`,
-    'advisor':`Chinese ancient scholar military strategist, ${team} flowing silk robes, holding folding fan, wise calm pose, full body, isolated plain background`,
-    'warrior':`Chinese ancient elite warrior champion, ${team}, holding long halberd, fierce battle stance, full body, isolated plain background, traditional ink painting`,
+    'infantry':`Chinese ancient infantry, ${team}, spear and shield, full body, ink painting`,
+    'archer':  `Chinese ancient archer, ${team}, drawing bow, full body, ink painting`,
+    'cavalry': `Chinese ancient cavalry on horse, ${team}, long lance, full body, ink painting`,
+    'general': `Chinese ancient general, ${team}, plumed helmet, full body, ink painting`,
+    'advisor': `Chinese ancient scholar strategist, ${team} robes, folding fan, full body, ink painting`,
+    'warrior': `Chinese ancient warrior, ${team}, halberd, full body, ink painting`,
   };
   const prompt = prompts[type] || prompts.infantry;
   const seed = (side==='player' ? 4321 : 8765) + type.length*17 + type.charCodeAt(0);
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=200&height=320&nologo=true&seed=${seed}&model=flux`;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=200&height=320&nologo=true&seed=${seed}`;
 }
 
 const TACTICS = [
