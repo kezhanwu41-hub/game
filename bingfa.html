@@ -772,12 +772,9 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
       <div class="bp-center">
         <div class="pool-toolbar">
           <span class="pool-title">候選武將</span>
-          <button class="ef-btn" data-elem="">全部</button>
-          <button class="ef-btn" data-elem="木">木</button>
-          <button class="ef-btn" data-elem="火">火</button>
-          <button class="ef-btn" data-elem="土">土</button>
-          <button class="ef-btn" data-elem="金">金</button>
-          <button class="ef-btn" data-elem="水">水</button>
+          <button class="ef-btn" data-role="king">👑 主公</button>
+          <button class="ef-btn" data-role="advisor">🪶 軍師</button>
+          <button class="ef-btn" data-role="warrior">⚔️ 將軍</button>
         </div>
         <div class="pool-box">
           <div class="pool-grid" id="pool-grid"></div>
@@ -1892,7 +1889,7 @@ const battle3D = {
    UI CONTROLLER
 ═══════════════════════════════════════════════════════════ */
 let G = null;          // game state
-let elemFilter = '';   // element filter for pool
+let roleFilter = '';   // role group filter for pool: '', 'king', 'advisor', 'warrior'
 let pickedT = [null,null];
 let timerIv = null;
 let aiTO = null;
@@ -2002,7 +1999,7 @@ function toLobby(){
   stopMatchmaking();
   tutHideAll();
   if(battle3D) battle3D.destroy();
-  G = null; pickedT=[null,null]; elemFilter='';
+  G = null; pickedT=[null,null]; roleFilter='';
   tx('top-title','兵 法 推 演');
   showScreen('scr-lobby');
   refreshLobby();
@@ -2117,7 +2114,7 @@ function cancelMatchmaking(){
 function startGame(mode){
   stopTimers();
   G = makeState(mode);
-  pickedT = [null,null]; elemFilter = '';
+  pickedT = [null,null]; roleFilter = '';
   const titles={tutorial:'新手教學',ai:'AI 推演',rank:'排位天梯'};
   tx('top-title', titles[mode]||'兵法推演');
   showScreen('scr-bp');
@@ -2247,6 +2244,13 @@ function renderPool(){
   el.innerHTML = '';
   const step = curStep(G);
   const jf = step ? step.jf : null;
+  // Auto-sync filter to current step's role group
+  if(jf && ['king','advisor','warrior'].includes(jf)){
+    roleFilter = jf;
+    document.querySelectorAll('.ef-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.role === jf);
+    });
+  }
   const used = new Set([...G.bans.player,...G.bans.enemy,...G.picks.player,...G.picks.enemy]);
   const isPlayerTurn = step && step.side === 'player';
   const isBan = step && step.phase === 'ban';
@@ -2255,8 +2259,13 @@ function renderPool(){
   const tutTgt  = tutMode ? tutTarget(G) : null;           // scripted enemy pick
   const suggestIds = tutMode ? tutSuggest(G) : [];          // player suggestions
 
-  HEROES.filter(h => elemFilter ? h.elem===elemFilter : true)
-        .forEach(h=>{
+  HEROES.filter(h=>{
+    if(!roleFilter) return true;
+    if(roleFilter==='king') return h.role==='king';
+    if(roleFilter==='advisor') return ADVISOR_ROLES.includes(h.role);
+    if(roleFilter==='warrior') return WARRIOR_ROLES.includes(h.role);
+    return true;
+  }).forEach(h=>{
     const d = document.createElement('div');
     const col = ELEM_COL[h.elem]||'#9c6dd6';
     const isUsed = used.has(h.id);
@@ -2580,17 +2589,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Tutorial assistant close
   $('tut-close')?.addEventListener('click',()=>$('tut-assistant')?.classList.remove('show'));
 
-  // Element filter buttons
+  // Role-group filter buttons (主公 / 軍師 / 將軍)
   document.querySelectorAll('.ef-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       document.querySelectorAll('.ef-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      elemFilter = btn.dataset.elem;
+      roleFilter = btn.dataset.role;
       if(G && G.phase==='bp') renderPool();
     });
   });
-  // Default: all active
-  document.querySelector('.ef-btn[data-elem=""]')?.classList.add('active');
 
   // Battle confirm
   $('btn-confirm')?.addEventListener('click', confirmBattle);
