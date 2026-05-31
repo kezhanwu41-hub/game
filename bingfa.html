@@ -387,10 +387,14 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   position:relative;border:1px solid rgba(201,168,76,.25);
 }
 .hc-portrait::before{
-  content:'⏳';position:absolute;inset:0;
+  content:attr(data-name);position:absolute;inset:0;z-index:1;
   display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.25);font-size:20px;
+  color:rgba(232,208,168,.55);font-size:18px;font-weight:900;letter-spacing:3px;
+  text-shadow:0 0 12px rgba(201,168,76,.4);
+  background:radial-gradient(circle,rgba(91,58,138,.4) 0%,transparent 70%);
+  animation:portraitWait 2s ease infinite;
 }
+@keyframes portraitWait{0%,100%{opacity:.7}50%{opacity:1}}
 .hc-portrait img{
   position:relative;z-index:2;
   width:100%;height:100%;object-fit:cover;
@@ -1047,68 +1051,79 @@ const ROLE_ICON = {king:'👑',strategist:'🪶',chancellor:'📜',marshal:'🛡
 const ROLE_NAME = {king:'主公',strategist:'軍師',chancellor:'臣相',marshal:'大司馬',minister:'大司農',general:'大將軍',commandant:'行軍總管',vanguard:'破陣先鋒'};
 const ADVISOR_ROLES = ['strategist','chancellor','minister'];
 const WARRIOR_ROLES = ['marshal','general','commandant','vanguard'];
+// Check if hero fits a BP role-group ('king' | 'advisor' | 'warrior')
+function heroFitsGroup(hero, group){
+  if(!hero) return false;
+  const roles = hero.roles || [hero.role];
+  if(group==='king') return roles.includes('king');
+  if(group==='advisor') return roles.some(r => ADVISOR_ROLES.includes(r));
+  if(group==='warrior') return roles.some(r => WARRIOR_ROLES.includes(r));
+  return false;
+}
 
+// roles[]: 多職位 — 依正史所任官職分配，部分角色可跨組(軍師⇄武將)
 const HEROES = [
-  // 主公 (6)
-  {id:'h_liubei',    name:'劉備',   role:'king',       elem:'土',faction:'蜀',pow:88,desc:'仁德之主，臣相效果+10%'},
-  {id:'h_caocao',    name:'曹操',   role:'king',       elem:'水',faction:'魏',pow:92,desc:'魏武揮鞭，全軍+3攻'},
-  {id:'h_li_shimin', name:'李世民', role:'king',       elem:'金',faction:'唐',pow:90,desc:'天策上將，破陣+5傷'},
-  {id:'h_qin',       name:'秦始皇', role:'king',       elem:'土',faction:'秦',pow:95,desc:'王道霸業，主公HP+10'},
-  {id:'h_liubang',   name:'劉邦',   role:'king',       elem:'土',faction:'漢',pow:82,desc:'布衣天子，全軍士氣+5'},
-  {id:'h_zhu_yz',    name:'朱元璋', role:'king',       elem:'火',faction:'明',pow:88,desc:'洪武大帝，主公反擊+10傷'},
-  // 軍師 (6)
-  {id:'h_zhuge',     name:'諸葛亮', role:'strategist', elem:'木',faction:'蜀',pow:90,desc:'臥龍出山，雙陣加成+10%'},
-  {id:'h_sima',      name:'司馬懿', role:'strategist', elem:'土',faction:'魏',pow:88,desc:'冢虎，每回合揭露1戰術'},
-  {id:'h_zhou_yu',   name:'周瑜',   role:'strategist', elem:'火',faction:'吳',pow:85,desc:'美周郎，火陣+15傷'},
-  {id:'h_liu_bw',    name:'劉伯溫', role:'strategist', elem:'水',faction:'明',pow:84,desc:'神機軍師，被剋反噬-30%'},
-  {id:'h_fan_li',    name:'范蠡',   role:'strategist', elem:'水',faction:'越',pow:80,desc:'商聖，水陣回血+8'},
-  {id:'h_chen_ping', name:'陳平',   role:'strategist', elem:'土',faction:'漢',pow:78,desc:'六出奇計，敵第一陣-20%'},
-  // 臣相 (5)
-  {id:'h_xun_yu',    name:'荀彧',   role:'chancellor', elem:'土',faction:'魏',pow:78,desc:'王佐之才，化解相剋+10%'},
-  {id:'h_wei_zheng', name:'魏徵',   role:'chancellor', elem:'金',faction:'唐',pow:76,desc:'諫官，每回合回血+3'},
-  {id:'h_li_si',     name:'李斯',   role:'chancellor', elem:'金',faction:'秦',pow:75,desc:'法家相，主公受擊-10%'},
-  {id:'h_zhang_l',   name:'張良',   role:'chancellor', elem:'木',faction:'漢',pow:80,desc:'運籌帷幄，每3回抽1戰術'},
-  {id:'h_guan_z',    name:'管仲',   role:'chancellor', elem:'金',faction:'齊',pow:82,desc:'霸主之師，全軍攻擊+6'},
-  // 大司馬 (7)
-  {id:'h_guan_yu',   name:'關羽',   role:'marshal',    elem:'金',faction:'蜀',pow:90,desc:'武聖，揭露敵雙陣其一'},
-  {id:'h_xh_dun',    name:'夏侯惇', role:'marshal',    elem:'金',faction:'魏',pow:82,desc:'拔矢啖睛，反擊+10傷'},
-  {id:'h_yu_chi',    name:'尉遲恭', role:'marshal',    elem:'土',faction:'唐',pow:80,desc:'門神，先手防禦+15%'},
-  {id:'h_xu_da',     name:'徐達',   role:'marshal',    elem:'土',faction:'明',pow:78,desc:'中山王，金陣+10傷'},
-  {id:'h_wei_qing',  name:'衛青',   role:'marshal',    elem:'水',faction:'漢',pow:84,desc:'長平侯，水陣+12傷'},
-  {id:'h_ma_chao',   name:'馬超',   role:'marshal',    elem:'火',faction:'蜀',pow:86,desc:'錦馬超，突襲+10傷'},
-  {id:'h_han_xin',   name:'韓信',   role:'marshal',    elem:'木',faction:'漢',pow:88,desc:'兵仙，用兵多多益善'},
-  // 大司農 (6)
-  {id:'h_xiao_he',   name:'蕭何',   role:'minister',   elem:'土',faction:'漢',pow:75,desc:'每3回合全軍回5血'},
-  {id:'h_zhang_jj',  name:'張居正', role:'minister',   elem:'木',faction:'明',pow:74,desc:'一條鞭法，每2回補1戰術'},
-  {id:'h_guo_jia',   name:'郭嘉',   role:'minister',   elem:'火',faction:'魏',pow:72,desc:'鬼才，補給點+20%'},
-  {id:'h_fang_xl',   name:'房玄齡', role:'minister',   elem:'土',faction:'唐',pow:70,desc:'貞觀文相，前3回穩定+5'},
-  {id:'h_fan_zy',    name:'范仲淹', role:'minister',   elem:'木',faction:'宋',pow:76,desc:'先憂後樂，木陣回血+5'},
-  {id:'h_bao_zh',    name:'包拯',   role:'minister',   elem:'金',faction:'宋',pow:73,desc:'黑臉包公，被剋減傷10%'},
-  // 大將軍 (7)
-  {id:'h_zhang_fei', name:'張飛',   role:'general',    elem:'木',faction:'蜀',pow:88,desc:'萬人敵，征伐+10傷'},
-  {id:'h_xiang_yu',  name:'項羽',   role:'general',    elem:'火',faction:'楚',pow:96,desc:'霸王，全軍+5%攻'},
-  {id:'h_zhang_liao',name:'張遼',   role:'general',    elem:'金',faction:'魏',pow:85,desc:'威震逍遙津，破甲+12'},
-  {id:'h_yue_fei',   name:'岳飛',   role:'general',    elem:'木',faction:'宋',pow:90,desc:'精忠報國，主公+8防'},
-  {id:'h_bai_qi',    name:'白起',   role:'general',    elem:'金',faction:'秦',pow:94,desc:'殺神，每回合額外-8傷'},
-  {id:'h_han_szh',   name:'韓世忠', role:'general',    elem:'火',faction:'宋',pow:84,desc:'梁山英雄，火陣+10傷'},
-  {id:'h_qi_jg',     name:'戚繼光', role:'general',    elem:'金',faction:'明',pow:86,desc:'戚家軍，步兵抵禦+10%'},
-  // 行軍總管 (6)
-  {id:'h_zhao_yun',  name:'趙雲',   role:'commandant', elem:'金',faction:'蜀',pow:86,desc:'七進七出，被剋木陣減傷10'},
-  {id:'h_li_jing',   name:'李靖',   role:'commandant', elem:'水',faction:'唐',pow:84,desc:'藥師，敵雙同時-3傷'},
-  {id:'h_xu_huang',  name:'徐晃',   role:'commandant', elem:'土',faction:'魏',pow:78,desc:'治軍嚴明，被剋減傷15'},
-  {id:'h_lu_meng',   name:'呂蒙',   role:'commandant', elem:'水',faction:'吳',pow:76,desc:'白衣渡江，後援優先'},
-  {id:'h_sun_wu',    name:'孫武',   role:'commandant', elem:'水',faction:'吳',pow:90,desc:'兵聖，水陣不被剋制'},
-  {id:'h_di_qing',   name:'狄青',   role:'commandant', elem:'金',faction:'宋',pow:80,desc:'銅面震敵，恐嚇-5攻'},
-  // 破陣先鋒 (7)
-  {id:'h_lvbu',      name:'呂布',   role:'vanguard',   elem:'火',faction:'漢',pow:98,desc:'人中呂布，金陣+5傷優先'},
-  {id:'h_chang_yc',  name:'常遇春', role:'vanguard',   elem:'金',faction:'明',pow:88,desc:'先鋒之神，同五行-5'},
-  {id:'h_huo_qb',    name:'霍去病', role:'vanguard',   elem:'金',faction:'漢',pow:90,desc:'冠軍侯，首回合+15傷'},
-  {id:'h_yang_zx',   name:'楊再興', role:'vanguard',   elem:'木',faction:'宋',pow:82,desc:'小商河，反擊+5%'},
-  {id:'h_xue_rg',    name:'薛仁貴', role:'vanguard',   elem:'火',faction:'唐',pow:86,desc:'三箭定天山，火陣先攻'},
-  {id:'h_qin_qiong', name:'秦瓊',   role:'vanguard',   elem:'金',faction:'唐',pow:84,desc:'馬踏黃河，金陣+8傷'},
-  {id:'h_ran_min',   name:'冉閔',   role:'vanguard',   elem:'金',faction:'後趙',pow:92,desc:'殺胡令，金陣爆發+12'},
-  {id:'h_huang_zhong',name:'黃忠',  role:'vanguard',   elem:'火',faction:'蜀', pow:88,desc:'老當益壯，定軍山斬夏侯淵，火陣首輪+10傷'},
+  // ─── 主公 (6) ─────────────────────────
+  {id:'h_liubei',    name:'劉備',   roles:['king'],                       elem:'土',faction:'蜀',pow:88,desc:'蜀漢昭烈帝，仁德之主，臣相效果+10%'},
+  {id:'h_caocao',    name:'曹操',   roles:['king'],                       elem:'水',faction:'魏',pow:92,desc:'魏武帝，魏武揮鞭，全軍+3攻'},
+  {id:'h_li_shimin', name:'李世民', roles:['king'],                       elem:'金',faction:'唐',pow:90,desc:'唐太宗，天策上將，破陣+5傷'},
+  {id:'h_qin',       name:'秦始皇', roles:['king'],                       elem:'土',faction:'秦',pow:95,desc:'始皇帝，王道霸業，主公HP+10'},
+  {id:'h_liubang',   name:'劉邦',   roles:['king'],                       elem:'土',faction:'漢',pow:82,desc:'漢高祖，布衣天子，全軍士氣+5'},
+  {id:'h_zhu_yz',    name:'朱元璋', roles:['king'],                       elem:'火',faction:'明',pow:88,desc:'明太祖，洪武大帝，主公反擊+10傷'},
+
+  // ─── 軍師類（軍師/臣相/大司農）依正史 ──────
+  {id:'h_zhuge',     name:'諸葛亮', roles:['strategist','chancellor'],    elem:'木',faction:'蜀',pow:92,desc:'蜀漢丞相，臥龍出山，雙陣加成+10%'},
+  {id:'h_sima',      name:'司馬懿', roles:['strategist','chancellor'],    elem:'土',faction:'魏',pow:88,desc:'魏太傅，冢虎，每回合揭露1戰術'},
+  {id:'h_zhou_yu',   name:'周瑜',   roles:['strategist','commandant'],    elem:'火',faction:'吳',pow:86,desc:'吳大都督，火陣+15傷'},
+  {id:'h_liu_bw',    name:'劉伯溫', roles:['strategist','chancellor'],    elem:'水',faction:'明',pow:84,desc:'御史中丞，神機軍師，被剋反噬-30%'},
+  {id:'h_fan_li',    name:'范蠡',   roles:['strategist','minister'],      elem:'水',faction:'越',pow:80,desc:'越大夫，商聖，水陣回血+8'},
+  {id:'h_chen_ping', name:'陳平',   roles:['strategist','chancellor'],    elem:'土',faction:'漢',pow:78,desc:'漢丞相，六出奇計，敵第一陣-20%'},
+  {id:'h_xun_yu',    name:'荀彧',   roles:['strategist','chancellor'],    elem:'土',faction:'魏',pow:82,desc:'魏尚書令，王佐之才，化解相剋+10%'},
+  {id:'h_zhang_l',   name:'張良',   roles:['strategist'],                 elem:'木',faction:'漢',pow:88,desc:'謀聖張子房，運籌帷幄，每3回抽1戰術'},
+  {id:'h_guo_jia',   name:'郭嘉',   roles:['strategist'],                 elem:'火',faction:'魏',pow:85,desc:'魏軍師祭酒，鬼才，補給點+20%'},
+  {id:'h_jiang_sh',  name:'姜尚',   roles:['strategist','chancellor'],    elem:'水',faction:'周',pow:90,desc:'太公望，兵家始祖，火陣+20傷'},
+  {id:'h_wei_zheng', name:'魏徵',   roles:['chancellor','minister'],      elem:'金',faction:'唐',pow:76,desc:'唐諫議大夫，每回合回血+3'},
+  {id:'h_li_si',     name:'李斯',   roles:['chancellor'],                 elem:'金',faction:'秦',pow:75,desc:'秦丞相，法家相，主公受擊-10%'},
+  {id:'h_guan_z',    name:'管仲',   roles:['chancellor','minister'],      elem:'金',faction:'齊',pow:82,desc:'齊國相，霸主之師，全軍攻擊+6'},
+  {id:'h_xiao_he',   name:'蕭何',   roles:['chancellor','minister'],      elem:'土',faction:'漢',pow:82,desc:'漢丞相，蕭規曹隨，每3回合全軍回5血'},
+  {id:'h_zhang_jj',  name:'張居正', roles:['chancellor','minister'],      elem:'木',faction:'明',pow:78,desc:'明首輔，一條鞭法，每2回補1戰術'},
+  {id:'h_fang_xl',   name:'房玄齡', roles:['chancellor','minister'],      elem:'土',faction:'唐',pow:76,desc:'唐丞相，貞觀文相，前3回穩定+5'},
+  {id:'h_fan_zy',    name:'范仲淹', roles:['chancellor','minister'],      elem:'木',faction:'宋',pow:78,desc:'宋參知政事，先憂後樂，木陣回血+5'},
+  {id:'h_bao_zh',    name:'包拯',   roles:['minister','chancellor'],      elem:'金',faction:'宋',pow:74,desc:'樞密副使，鐵面公，被剋減傷10%'},
+
+  // ─── 武將類（大司馬/大將軍/行軍總管/破陣先鋒）依正史 ──────
+  {id:'h_guan_yu',   name:'關羽',   roles:['marshal','general'],          elem:'金',faction:'蜀',pow:92,desc:'前將軍假節鉞，武聖，揭露敵雙陣其一'},
+  {id:'h_xh_dun',    name:'夏侯惇', roles:['marshal','general'],          elem:'金',faction:'魏',pow:82,desc:'前將軍，拔矢啖睛，反擊+10傷'},
+  {id:'h_yu_chi',    name:'尉遲恭', roles:['marshal','vanguard'],         elem:'土',faction:'唐',pow:80,desc:'鄂國公，門神，先手防禦+15%'},
+  {id:'h_xu_da',     name:'徐達',   roles:['marshal','general'],          elem:'土',faction:'明',pow:84,desc:'明大將軍中山王，金陣+10傷'},
+  {id:'h_wei_qing',  name:'衛青',   roles:['marshal','general'],          elem:'水',faction:'漢',pow:86,desc:'大司馬大將軍長平侯，水陣+12傷'},
+  {id:'h_han_xin',   name:'韓信',   roles:['general','marshal','strategist'],elem:'木',faction:'漢',pow:92,desc:'兵仙，漢大將軍楚王，用兵多多益善（可任軍師）'},
+  {id:'h_huo_qb',    name:'霍去病', roles:['marshal','vanguard'],         elem:'金',faction:'漢',pow:90,desc:'大司馬驃騎將軍冠軍侯，首回合+15傷'},
+  {id:'h_ma_chao',   name:'馬超',   roles:['general','vanguard'],         elem:'火',faction:'蜀',pow:86,desc:'蜀驃騎將軍，錦馬超，突襲+10傷'},
+  {id:'h_zhang_fei', name:'張飛',   roles:['general','vanguard'],         elem:'木',faction:'蜀',pow:88,desc:'蜀車騎將軍，萬人敵，征伐+10傷'},
+  {id:'h_xiang_yu',  name:'項羽',   roles:['general'],                    elem:'火',faction:'楚',pow:96,desc:'西楚霸王，上將軍，全軍+5%攻'},
+  {id:'h_zhang_liao',name:'張遼',   roles:['general','marshal'],          elem:'金',faction:'魏',pow:85,desc:'魏征東將軍，威震逍遙津，破甲+12'},
+  {id:'h_yue_fei',   name:'岳飛',   roles:['general','marshal','strategist'],elem:'木',faction:'宋',pow:92,desc:'宋少保樞密副使，精忠報國，主公+8防（可任軍師）'},
+  {id:'h_bai_qi',    name:'白起',   roles:['general'],                    elem:'金',faction:'秦',pow:94,desc:'武安君上將軍，殺神，每回合額外-8傷'},
+  {id:'h_han_szh',   name:'韓世忠', roles:['general','vanguard'],         elem:'火',faction:'宋',pow:84,desc:'中興四將，火陣+10傷'},
+  {id:'h_qi_jg',     name:'戚繼光', roles:['general','commandant'],       elem:'金',faction:'明',pow:86,desc:'戚家軍主帥，步兵抵禦+10%'},
+  {id:'h_zhao_yun',  name:'趙雲',   roles:['commandant','vanguard','general'],elem:'金',faction:'蜀',pow:88,desc:'蜀鎮東將軍，七進七出，被剋木陣減傷10'},
+  {id:'h_li_jing',   name:'李靖',   roles:['commandant','marshal'],       elem:'水',faction:'唐',pow:88,desc:'唐衛國公行軍總管，敵雙同時-3傷'},
+  {id:'h_xu_huang',  name:'徐晃',   roles:['commandant','general'],       elem:'土',faction:'魏',pow:78,desc:'魏右將軍，治軍嚴明，被剋減傷15'},
+  {id:'h_lu_meng',   name:'呂蒙',   roles:['commandant'],                 elem:'水',faction:'吳',pow:78,desc:'吳偏將軍，白衣渡江，後援優先'},
+  {id:'h_sun_wu',    name:'孫武',   roles:['strategist','commandant'],    elem:'水',faction:'吳',pow:92,desc:'兵聖孫子，《孫子兵法》，水陣不被剋制（可任軍師）'},
+  {id:'h_di_qing',   name:'狄青',   roles:['commandant','general'],       elem:'金',faction:'宋',pow:80,desc:'樞密副使西北邊將，恐嚇-5攻'},
+  {id:'h_lvbu',      name:'呂布',   roles:['vanguard','general'],         elem:'火',faction:'漢',pow:98,desc:'人中呂布奉先，金陣+5傷優先'},
+  {id:'h_chang_yc',  name:'常遇春', roles:['vanguard','general'],         elem:'金',faction:'明',pow:88,desc:'明先鋒鄂國公，同五行-5'},
+  {id:'h_yang_zx',   name:'楊再興', roles:['vanguard'],                   elem:'木',faction:'宋',pow:82,desc:'岳家軍前鋒，小商河，反擊+5%'},
+  {id:'h_xue_rg',    name:'薛仁貴', roles:['vanguard','general'],         elem:'火',faction:'唐',pow:86,desc:'唐先鋒平陽郡公，火陣先攻'},
+  {id:'h_qin_qiong', name:'秦瓊',   roles:['vanguard','marshal'],         elem:'金',faction:'唐',pow:84,desc:'凌煙閣武將，馬踏黃河，金陣+8傷'},
+  {id:'h_ran_min',   name:'冉閔',   roles:['vanguard','general'],         elem:'金',faction:'後趙',pow:92,desc:'冉魏天王，殺胡令，金陣爆發+12'},
+  {id:'h_huang_zhong',name:'黃忠',  roles:['vanguard','general'],         elem:'火',faction:'蜀',pow:88,desc:'蜀後將軍五虎上將，定軍山斬夏侯淵'},
 ];
+
+// Backward-compat: synthesize `.role` from `.roles[0]` for legacy code paths
+HEROES.forEach(h=>{ if(!h.role) h.role = h.roles[0]; });
 
 const HEROES_IDX = Object.fromEntries(HEROES.map(h=>[h.id,h]));
 
@@ -1341,10 +1356,11 @@ function poolFor(state, jf){
     ...state.picks.player, ...state.picks.enemy
   ]);
   let p = HEROES.filter(h => !used.has(h.id));
-  if(jf === 'advisor') p = p.filter(h => ADVISOR_ROLES.includes(h.role));
-  else if(jf === 'warrior') p = p.filter(h => WARRIOR_ROLES.includes(h.role));
-  else if(jf === 'special') p = p.filter(h => h.role !== 'king' && h.role !== 'strategist');
-  else if(jf && jf !== 'any') p = p.filter(h => h.role === jf);
+  if(jf === 'advisor') p = p.filter(h => heroFitsGroup(h,'advisor'));
+  else if(jf === 'warrior') p = p.filter(h => heroFitsGroup(h,'warrior'));
+  else if(jf === 'king') p = p.filter(h => heroFitsGroup(h,'king'));
+  else if(jf === 'special') p = p.filter(h => !heroFitsGroup(h,'king') && !(h.roles||[h.role]).includes('strategist'));
+  else if(jf && jf !== 'any') p = p.filter(h => (h.roles||[h.role]).includes(jf));
   return p;
 }
 
@@ -1358,13 +1374,15 @@ function doStep(state, side, heroId){
   if(!hero) return {ok:false, err:'找不到武將'};
   const used = new Set([...state.bans.player,...state.bans.enemy,...state.picks.player,...state.picks.enemy]);
   if(used.has(heroId)) return {ok:false, err:'此武將已被使用'};
-  if(step.jf === 'advisor' && !ADVISOR_ROLES.includes(hero.role))
+  if(step.jf === 'advisor' && !heroFitsGroup(hero,'advisor'))
     return {ok:false, err:'本步需選謀臣類（軍師/臣相/大司農）'};
-  if(step.jf === 'warrior' && !WARRIOR_ROLES.includes(hero.role))
+  if(step.jf === 'warrior' && !heroFitsGroup(hero,'warrior'))
     return {ok:false, err:'本步需選武將類（大司馬/大將軍/行軍總管/破陣先鋒）'};
-  if(step.jf === 'special' && (hero.role === 'king' || hero.role === 'strategist'))
+  if(step.jf === 'king' && !heroFitsGroup(hero,'king'))
+    return {ok:false, err:'本步需選主公'};
+  if(step.jf === 'special' && (heroFitsGroup(hero,'king') || (hero.roles||[hero.role]).includes('strategist')))
     return {ok:false, err:'本步需選非主公/軍師'};
-  if(step.jf && !['advisor','warrior','special','any'].includes(step.jf) && hero.role !== step.jf)
+  if(step.jf && !['advisor','warrior','king','special','any'].includes(step.jf) && !(hero.roles||[hero.role]).includes(step.jf))
     return {ok:false, err:`本步需選 ${ROLE_NAME[step.jf]}`};
 
   if(step.phase === 'ban') state.bans[side].push(heroId);
@@ -1446,7 +1464,8 @@ function resolveBattle(state, ourT){
   const [e1,e2] = aiTactics(state);
   const log = [];
   let ourDmg = 0, enDmg = 0;
-  const myRoles = state.picks.player.map(id => HEROES_IDX[id].role);
+  // Flatten all roles across player picks (supports multi-role heroes)
+  const myRoles = state.picks.player.flatMap(id => HEROES_IDX[id]?.roles || [HEROES_IDX[id]?.role]).filter(Boolean);
 
   // 1. Inner dual-formation (our t1 vs t2)
   const inner = elemRel(t1.elem, t2.elem);
@@ -1861,13 +1880,12 @@ const battle3D = {
     ];
 
     const addSide = (picks, side)=>{
-      const heroBy = {};
-      picks.forEach(id=>{
-        const h = HEROES_IDX[id]; if(!h) return;
-        if(h.role==='king') heroBy.king = h;
-        else if(ADVISOR_ROLES.includes(h.role)) heroBy.advisor = h;
-        else if(WARRIOR_ROLES.includes(h.role)) heroBy.warrior = h;
-      });
+      // Map picks by pick order: 0=king, 1=advisor, 2=warrior
+      const heroBy = {
+        king:    HEROES_IDX[picks[0]] || null,
+        advisor: HEROES_IDX[picks[1]] || null,
+        warrior: HEROES_IDX[picks[2]] || null,
+      };
       layout.forEach(slot=>{
         const mesh = makeSoldier(slot.type, side);
         const sign = side==='player' ? 1 : -1;
@@ -2279,24 +2297,31 @@ function renderOneSide(side){
     }
   }
 
-  /* ── Pick slots (3 groups) ─────────── */
+  /* ── Pick slots (3 groups by pick order — slot 0=主帥, 1=謀臣, 2=武將) ── */
   pickEl.innerHTML = '';
   const groups = [
-    {label:'主帥', icon:'👑', roles:['king']},
-    {label:'謀臣', icon:'🪶', roles:ADVISOR_ROLES},
-    {label:'武將', icon:'⚔️', roles:WARRIOR_ROLES},
+    {label:'主帥', icon:'👑'},
+    {label:'謀臣', icon:'🪶'},
+    {label:'武將', icon:'⚔️'},
   ];
   const picks = G.picks[side];
 
-  groups.forEach(group=>{
-    const hero = picks.map(id=>HEROES_IDX[id]).find(h=>h && group.roles.includes(h.role));
+  groups.forEach((group, idx)=>{
+    const hero = HEROES_IDX[picks[idx]];
     const d = document.createElement('div');
     d.className = 'bp-slot'+(hero?' filled':'');
     if(hero){
       const col = ELEM_COL[hero.elem]||'#9c6dd6';
-      d.innerHTML = `<div class="sl-portrait"><img src="${heroPortraitUrl(hero)}" alt="${hero.name}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'"></div>
+      const slotRole = idx===0?'king':idx===1?'advisor':'warrior';
+      // Pick the most fitting display sub-role
+      const subRole = (hero.roles||[hero.role]).find(r =>
+        slotRole==='king' ? r==='king'
+        : slotRole==='advisor' ? ADVISOR_ROLES.includes(r)
+        : WARRIOR_ROLES.includes(r)
+      ) || hero.role;
+      d.innerHTML = `<div class="sl-portrait" data-name="${hero.name}"><img src="${heroPortraitUrl(hero)}" alt="${hero.name}" loading="lazy" onload="this.classList.add('loaded')"></div>
                      <div class="sl-info">
-                       <div class="sl-role">${group.icon} ${group.label}</div>
+                       <div class="sl-role">${group.icon} ${ROLE_NAME[subRole]||group.label}</div>
                        <div class="sl-name">${hero.name}</div>
                        <div class="sl-elem" style="color:${col}">${hero.elem} · ${hero.faction}</div>
                      </div>`;
@@ -2359,12 +2384,14 @@ function renderPool(){
     d.className = cls;
     d.style.setProperty('--ec',`rgba(${hexToRgb(col)||'156,109,214'},.2)`);
     const pct = Math.round((h.pow-60)/(100-60)*100);
+    const dispRoles = (h.roles||[h.role]).map(r=>ROLE_NAME[r]).join('/');
+    const primaryRoleIcon = ROLE_ICON[(h.roles||[h.role])[0]] || '';
     d.innerHTML = `
-      <div class="hc-portrait">
-        <img src="${heroPortraitUrl(h)}" alt="${h.name}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+      <div class="hc-portrait" data-name="${h.name}">
+        <img src="${heroPortraitUrl(h)}" alt="${h.name}" loading="lazy" onload="this.classList.add('loaded')">
         <div class="hc-portrait-vig"></div>
       </div>
-      <div class="hc-role">${ROLE_ICON[h.role]} ${ROLE_NAME[h.role]}</div>
+      <div class="hc-role">${primaryRoleIcon} ${dispRoles}</div>
       <div class="hc-name">${h.name}</div>
       <div class="hc-elem">
         <span class="hc-elem-dot" style="background:${col}"></span>
