@@ -6,6 +6,7 @@
 <title>兵法推演 — 八位禁選 · 五行雙陣</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════
    RESET & VARIABLES
@@ -341,6 +342,49 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 .hp-txt{font-size:11px;color:rgba(255,255,255,.55)}
 .round-lbl{text-align:center;font-size:14px;font-weight:700;letter-spacing:4px;color:var(--gold);white-space:nowrap}
 
+/* 3D Battle Stage — ancient battlefield */
+#battle-stage{
+  position:relative;width:100%;height:340px;
+  border:1px solid rgba(201,168,76,.4);border-radius:10px;
+  overflow:hidden;
+  background:linear-gradient(180deg,#1a0d22 0%,#2a1f3a 40%,#3a2818 100%);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.7),0 4px 18px rgba(0,0,0,.5);
+}
+#battle-canvas{display:block;width:100%;height:100%}
+.bs-label{
+  position:absolute;pointer-events:none;
+  font-size:11px;font-weight:900;letter-spacing:2px;
+  padding:2px 8px;border-radius:10px;
+  white-space:nowrap;text-shadow:0 1px 3px #000;
+  transform:translate(-50%,-100%);
+  transition:opacity .3s;
+}
+.bs-label.player{background:rgba(74,144,217,.85);color:#fff;border:1px solid #6ab2ff}
+.bs-label.enemy{background:rgba(201,69,69,.85);color:#fff;border:1px solid #ff8a8a}
+.bs-overlay{
+  position:absolute;top:8px;left:0;right:0;
+  display:flex;justify-content:space-between;
+  padding:0 14px;pointer-events:none;z-index:5;
+}
+.bs-side-label{
+  font-size:14px;font-weight:900;letter-spacing:4px;
+  padding:5px 14px;border-radius:14px;
+  text-shadow:0 1px 4px rgba(0,0,0,.9);
+  backdrop-filter:blur(3px);
+}
+.bs-side-label.player{background:rgba(74,144,217,.4);color:#bfe1ff;border:1px solid rgba(106,178,255,.6)}
+.bs-side-label.enemy{background:rgba(201,69,69,.4);color:#ffcccc;border:1px solid rgba(255,138,138,.6)}
+.bs-vs{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-size:38px;font-weight:900;color:rgba(255,232,168,.18);
+  letter-spacing:8px;pointer-events:none;z-index:1;
+  text-shadow:0 0 30px rgba(201,168,76,.5);
+}
+.bs-fog{
+  position:absolute;inset:0;pointer-events:none;z-index:4;
+  background:radial-gradient(ellipse at 50% 100%,transparent 30%,rgba(20,10,30,.45) 100%);
+}
+
 /* Enemy reveal */
 .enemy-reveal{
   background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.35);
@@ -650,6 +694,16 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
         <div class="hp-bar"><div class="hp-fill" id="en-hp-fill" style="width:100%"></div></div>
         <div class="hp-txt"><span id="en-hp-val">100</span> / <span id="en-hp-max">100</span></div>
       </div>
+    </div>
+    <!-- 3D 古戰場 -->
+    <div id="battle-stage">
+      <div class="bs-overlay">
+        <div class="bs-side-label player">📋 我方</div>
+        <div class="bs-side-label enemy">⚔️ 敵方 (AI)</div>
+      </div>
+      <div class="bs-vs">兩 軍 對 陣</div>
+      <canvas id="battle-canvas"></canvas>
+      <div class="bs-fog"></div>
     </div>
     <div class="enemy-reveal" id="enemy-reveal">等待雙方下令…</div>
     <div class="form-zones">
@@ -1269,6 +1323,435 @@ function resolveBattle(state, ourT){
 }
 
 /* ═══════════════════════════════════════════════════════════
+   3D BATTLEFIELD — Ancient warfare scene (Three.js)
+═══════════════════════════════════════════════════════════ */
+function makeSoldier(type, side){
+  const grp = new THREE.Group();
+  const teamCol = side==='player' ? 0x4a90d9 : 0xc94545;
+  const armorCol = side==='player' ? 0x3a5a8a : 0x6a2828;
+  const skinCol = 0xf4d4a0;
+
+  // Body (torso)
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.28, 0.7, 8),
+    new THREE.MeshLambertMaterial({color:armorCol})
+  );
+  body.position.y = 0.45;
+  grp.add(body);
+
+  // Shoulder armor accent
+  const sash = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 0.12, 8),
+    new THREE.MeshLambertMaterial({color:teamCol})
+  );
+  sash.position.y = 0.75;
+  grp.add(sash);
+
+  // Head
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(0.16, 8, 6),
+    new THREE.MeshLambertMaterial({color:skinCol})
+  );
+  head.position.y = 0.95;
+  grp.add(head);
+
+  // Helmet
+  const helmet = new THREE.Mesh(
+    new THREE.ConeGeometry(0.2, 0.28, 8),
+    new THREE.MeshLambertMaterial({color:0x3a3030})
+  );
+  helmet.position.y = 1.15;
+  grp.add(helmet);
+
+  // Type-specific add-ons
+  if(type==='archer'){
+    // Bow
+    const bow = new THREE.Mesh(
+      new THREE.TorusGeometry(0.28, 0.022, 6, 14, Math.PI),
+      new THREE.MeshLambertMaterial({color:0x8b4513})
+    );
+    bow.position.set(0.32, 0.55, 0);
+    bow.rotation.set(0, 0, Math.PI/2);
+    grp.add(bow);
+    // String
+    const str = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.005,0.005,0.56),
+      new THREE.MeshBasicMaterial({color:0xddccaa})
+    );
+    str.position.set(0.32, 0.55, 0);
+    grp.add(str);
+    // Quiver on back
+    const q = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07,0.07,0.4),
+      new THREE.MeshLambertMaterial({color:0x4a2c10})
+    );
+    q.position.set(-0.18, 0.7, -0.05);
+    q.rotation.z = 0.3;
+    grp.add(q);
+  } else if(type==='cavalry'){
+    // Horse
+    const horseCol = side==='player' ? 0x6b4423 : 0x2a1a10;
+    const horseBody = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 0.4, 0.32),
+      new THREE.MeshLambertMaterial({color:horseCol})
+    );
+    horseBody.position.y = 0.5;
+    grp.add(horseBody);
+    // Horse neck/head
+    const hNeck = new THREE.Mesh(
+      new THREE.BoxGeometry(0.18, 0.4, 0.2),
+      new THREE.MeshLambertMaterial({color:horseCol})
+    );
+    hNeck.position.set(0.45, 0.7, 0);
+    hNeck.rotation.z = 0.4;
+    grp.add(hNeck);
+    const hHead = new THREE.Mesh(
+      new THREE.BoxGeometry(0.22, 0.16, 0.16),
+      new THREE.MeshLambertMaterial({color:horseCol})
+    );
+    hHead.position.set(0.62, 0.92, 0);
+    grp.add(hHead);
+    // 4 legs
+    [[-0.3,0.12],[0.3,0.12],[-0.3,-0.12],[0.3,-0.12]].forEach(([x,z])=>{
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04,0.04,0.5),
+        new THREE.MeshLambertMaterial({color:0x3a2818})
+      );
+      leg.position.set(x, 0.25, z);
+      grp.add(leg);
+    });
+    // Lift rider
+    [body,sash,head,helmet].forEach(m=>m.position.y += 0.6);
+    // Lance
+    const lance = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025,0.025,1.3),
+      new THREE.MeshLambertMaterial({color:0x654321})
+    );
+    lance.position.set(0.45, 1.2, 0);
+    lance.rotation.z = -Math.PI/3.5;
+    grp.add(lance);
+    const lanceTip = new THREE.Mesh(
+      new THREE.ConeGeometry(0.05,0.18,6),
+      new THREE.MeshLambertMaterial({color:0xd0d0d0})
+    );
+    lanceTip.position.set(1.0, 1.85, 0);
+    lanceTip.rotation.z = -Math.PI/3.5;
+    grp.add(lanceTip);
+  } else if(type==='general'){
+    // Cape
+    const cape = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.55, 0.8),
+      new THREE.MeshLambertMaterial({color:side==='player'?0xc9a84c:0x8b0000,side:THREE.DoubleSide})
+    );
+    cape.position.set(0, 0.55, -0.16);
+    grp.add(cape);
+    // Tall plume on helmet
+    const plume = new THREE.Mesh(
+      new THREE.ConeGeometry(0.06,0.4,6),
+      new THREE.MeshLambertMaterial({color:side==='player'?0xc9a84c:0xc94545})
+    );
+    plume.position.y = 1.5;
+    grp.add(plume);
+    // Banner pole
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025,0.025,2.3),
+      new THREE.MeshLambertMaterial({color:0x654321})
+    );
+    pole.position.set(0.4, 1.3, 0);
+    grp.add(pole);
+    const flag = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.55, 0.4),
+      new THREE.MeshLambertMaterial({color:teamCol,side:THREE.DoubleSide})
+    );
+    flag.position.set(0.7, 1.95, 0);
+    grp.add(flag);
+    grp.scale.set(1.2,1.2,1.2);
+  } else if(type==='advisor'){
+    // Robe (longer body)
+    body.scale.set(1.15, 1.4, 1.15);
+    body.position.y = 0.55;
+    body.material = new THREE.MeshLambertMaterial({color:side==='player'?0x3a5a8a:0x4a2848});
+    // Fan
+    const fan = new THREE.Mesh(
+      new THREE.CircleGeometry(0.2, 8, 0, Math.PI),
+      new THREE.MeshLambertMaterial({color:0xeeeeee,side:THREE.DoubleSide})
+    );
+    fan.position.set(0.3, 0.95, 0);
+    fan.rotation.set(0, 0, -Math.PI/4);
+    grp.add(fan);
+    // Tall hat instead of helmet
+    helmet.geometry.dispose();
+    helmet.geometry = new THREE.CylinderGeometry(0.13,0.18,0.32,8);
+    helmet.material = new THREE.MeshLambertMaterial({color:0x1a1a2a});
+    helmet.position.y = 1.18;
+    grp.scale.set(1.05,1.05,1.05);
+  } else if(type==='warrior'){
+    // Halberd (戟)
+    const handle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03,0.03,1.8),
+      new THREE.MeshLambertMaterial({color:0x654321})
+    );
+    handle.position.set(0.32, 0.9, 0);
+    grp.add(handle);
+    const blade = new THREE.Mesh(
+      new THREE.BoxGeometry(0.18, 0.3, 0.04),
+      new THREE.MeshLambertMaterial({color:0xc8c8c8})
+    );
+    blade.position.set(0.32, 1.7, 0);
+    grp.add(blade);
+    const hook = new THREE.Mesh(
+      new THREE.ConeGeometry(0.06,0.2,6),
+      new THREE.MeshLambertMaterial({color:0xc8c8c8})
+    );
+    hook.position.set(0.5, 1.65, 0);
+    hook.rotation.z = -Math.PI/2;
+    grp.add(hook);
+    grp.scale.set(1.15,1.15,1.15);
+  } else { // infantry
+    // Spear
+    const spear = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02,0.02,1.5),
+      new THREE.MeshLambertMaterial({color:0x654321})
+    );
+    spear.position.set(0.28, 0.95, 0);
+    grp.add(spear);
+    const tip = new THREE.Mesh(
+      new THREE.ConeGeometry(0.05,0.18,6),
+      new THREE.MeshLambertMaterial({color:0xc0c0c0})
+    );
+    tip.position.set(0.28, 1.75, 0);
+    grp.add(tip);
+    // Shield
+    const shield = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.45, 0.32),
+      new THREE.MeshLambertMaterial({color:teamCol})
+    );
+    shield.position.set(-0.28, 0.55, 0);
+    grp.add(shield);
+  }
+
+  return grp;
+}
+
+const battle3D = {
+  scene:null, camera:null, renderer:null, clock:null,
+  units:[], labels:[], raf:null, container:null, _onResize:null,
+  _charging:null,
+
+  init(){
+    if(typeof THREE==='undefined') return;
+    const container = document.getElementById('battle-stage');
+    const canvas = document.getElementById('battle-canvas');
+    if(!container || !canvas) return;
+    if(this.renderer) this.destroy();
+    this.container = container;
+
+    const w = container.clientWidth, h = container.clientHeight;
+    this.scene = new THREE.Scene();
+    this.scene.fog = new THREE.Fog(0x2a1f3a, 9, 22);
+
+    this.camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
+    this.camera.position.set(0, 4.5, 8);
+    this.camera.lookAt(0, 0.8, 0);
+
+    this.renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    this.renderer.setSize(w, h, false);
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    this.renderer.setClearColor(0x000000, 0);
+
+    // Lighting
+    this.scene.add(new THREE.AmbientLight(0x6a5a8a, 0.7));
+    const sun = new THREE.DirectionalLight(0xffe8a8, 0.85);
+    sun.position.set(5, 10, 4);
+    this.scene.add(sun);
+    const rim = new THREE.DirectionalLight(0x9c6dd6, 0.4);
+    rim.position.set(-5, 6, -3);
+    this.scene.add(rim);
+
+    // Ground — uneven terrain
+    const groundGeo = new THREE.PlaneGeometry(28, 22, 28, 22);
+    const gpos = groundGeo.attributes.position;
+    for(let i=0;i<gpos.count;i++){
+      const x = gpos.getX(i), y = gpos.getY(i);
+      const d = Math.sqrt(x*x+y*y);
+      gpos.setZ(i, Math.random()*0.18 - d*0.005);
+    }
+    groundGeo.computeVertexNormals();
+    const ground = new THREE.Mesh(
+      groundGeo,
+      new THREE.MeshLambertMaterial({color:0x5a4028})
+    );
+    ground.rotation.x = -Math.PI/2;
+    this.scene.add(ground);
+
+    // Distant banners / poles for atmosphere
+    for(let i=0;i<10;i++){
+      const ang = (i/10)*Math.PI*2;
+      const r = 9 + Math.random()*2;
+      const x = Math.cos(ang)*r, z = Math.sin(ang)*r;
+      if(Math.abs(z) < 5) continue; // keep flanks/center clear
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04,0.04,3.5),
+        new THREE.MeshLambertMaterial({color:0x3a2818})
+      );
+      pole.position.set(x, 1.7, z);
+      this.scene.add(pole);
+      const flag = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.7, 1.2),
+        new THREE.MeshLambertMaterial({
+          color: z>0 ? 0x4a90d9 : 0x8b3030,
+          side:THREE.DoubleSide, transparent:true, opacity:0.85
+        })
+      );
+      flag.position.set(x+0.4, 2.6, z);
+      this.scene.add(flag);
+    }
+
+    // Some rocks for ambience
+    for(let i=0;i<8;i++){
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.25 + Math.random()*0.2),
+        new THREE.MeshLambertMaterial({color:0x4a3a28})
+      );
+      const ang = Math.random()*Math.PI*2;
+      const r = 5 + Math.random()*4;
+      rock.position.set(Math.cos(ang)*r, 0.1, Math.sin(ang)*r);
+      rock.rotation.set(Math.random(),Math.random(),Math.random());
+      this.scene.add(rock);
+    }
+
+    this._onResize = ()=>{
+      if(!this.renderer||!this.container) return;
+      const w = this.container.clientWidth, h = this.container.clientHeight;
+      this.camera.aspect = w/h;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(w, h, false);
+    };
+    window.addEventListener('resize', this._onResize);
+
+    this.clock = new THREE.Clock();
+    this.animate();
+  },
+
+  populate(playerPicks, enemyPicks){
+    if(!this.scene) return;
+    // Remove old units & labels
+    this.units.forEach(u=>this.scene.remove(u.mesh));
+    this.units = [];
+    this.labels.forEach(el=>el.remove());
+    this.labels = [];
+
+    // Player at +z (front, near camera), enemy at -z
+    const layout = [
+      {type:'general',  x:-1.6, z:3.0, role:'king'},
+      {type:'advisor',  x:1.6,  z:3.0, role:'advisor'},
+      {type:'warrior',  x:0,    z:2.0, role:'warrior'},
+      {type:'cavalry',  x:-3.2, z:2.2},
+      {type:'cavalry',  x:3.2,  z:2.2},
+      {type:'archer',   x:-2.1, z:3.5},
+      {type:'archer',   x:2.1,  z:3.5},
+      {type:'infantry', x:-1,   z:1.2},
+      {type:'infantry', x:0,    z:0.7},
+      {type:'infantry', x:1,    z:1.2},
+    ];
+
+    const addSide = (picks, side)=>{
+      const heroBy = {};
+      picks.forEach(id=>{
+        const h = HEROES_IDX[id]; if(!h) return;
+        if(h.role==='king') heroBy.king = h;
+        else if(ADVISOR_ROLES.includes(h.role)) heroBy.advisor = h;
+        else if(WARRIOR_ROLES.includes(h.role)) heroBy.warrior = h;
+      });
+      layout.forEach(slot=>{
+        const mesh = makeSoldier(slot.type, side);
+        const sign = side==='player' ? 1 : -1;
+        mesh.position.set(slot.x*0.9, 0, slot.z*sign);
+        mesh.rotation.y = side==='player' ? Math.PI : 0;
+        this.scene.add(mesh);
+        const hero = slot.role ? heroBy[slot.role] : null;
+        this.units.push({
+          mesh, side, type:slot.type,
+          baseZ: mesh.position.z,
+          phase: Math.random()*Math.PI*2,
+          hero
+        });
+        // HTML label for named heroes
+        if(hero){
+          const lbl = document.createElement('div');
+          lbl.className = 'bs-label '+side;
+          lbl.textContent = hero.name;
+          lbl._unit = this.units[this.units.length-1];
+          this.container.appendChild(lbl);
+          this.labels.push(lbl);
+        }
+      });
+    };
+    addSide(playerPicks||[], 'player');
+    addSide(enemyPicks||[], 'enemy');
+  },
+
+  animate(){
+    if(!this.renderer) return;
+    this.raf = requestAnimationFrame(()=>this.animate());
+    const t = this.clock.getElapsedTime();
+    // Idle bob
+    this.units.forEach(u=>{
+      u.mesh.position.y = Math.sin(t*1.6 + u.phase)*0.04;
+      if(this._charging && u.side===this._charging.side){
+        const dt = (Date.now()-this._charging.start)/this._charging.dur;
+        if(dt < 1){
+          const dir = u.side==='player' ? -1 : 1;
+          const f = Math.sin(dt*Math.PI);
+          u.mesh.position.z = u.baseZ + dir*f*0.8;
+        } else {
+          u.mesh.position.z = u.baseZ;
+        }
+      }
+    });
+    if(this._charging && Date.now()-this._charging.start > this._charging.dur){
+      this._charging = null;
+    }
+    // Camera idle sway
+    this.camera.position.x = Math.sin(t*0.25)*0.6;
+    this.camera.position.y = 4.5 + Math.sin(t*0.18)*0.15;
+    this.camera.lookAt(0, 0.8, 0);
+
+    // Update HTML labels
+    if(this.labels.length){
+      const w = this.container.clientWidth, h = this.container.clientHeight;
+      const tmp = new THREE.Vector3();
+      this.labels.forEach(lbl=>{
+        const u = lbl._unit; if(!u) return;
+        tmp.set(u.mesh.position.x, u.mesh.position.y + 1.9, u.mesh.position.z);
+        tmp.project(this.camera);
+        const x = (tmp.x*0.5+0.5)*w, y = (-tmp.y*0.5+0.5)*h;
+        lbl.style.left = x+'px';
+        lbl.style.top = y+'px';
+        lbl.style.opacity = tmp.z < 1 ? '1' : '0';
+      });
+    }
+
+    this.renderer.render(this.scene, this.camera);
+  },
+
+  charge(side){
+    this._charging = {side, start:Date.now(), dur:700};
+  },
+
+  destroy(){
+    if(this.raf) cancelAnimationFrame(this.raf);
+    if(this._onResize) window.removeEventListener('resize', this._onResize);
+    this.labels.forEach(el=>el.remove());
+    this.labels = [];
+    if(this.renderer){
+      this.renderer.dispose();
+    }
+    this.renderer = null; this.scene = null; this.units = []; this.raf = null;
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════
    UI CONTROLLER
 ═══════════════════════════════════════════════════════════ */
 let G = null;          // game state
@@ -1380,6 +1863,7 @@ function tutSetupDrag(){
 function toLobby(){
   stopTimers();
   tutHideAll();
+  if(battle3D) battle3D.destroy();
   G = null; pickedT=[null,null]; elemFilter='';
   tx('top-title','兵 法 推 演');
   showScreen('scr-lobby');
@@ -1684,6 +2168,12 @@ function enterBattle(){
   tx('enemy-reveal','等待雙方下令…');
   tx('round-lbl',`第 ${G.round} 回合`);
   renderLog();
+
+  // Init 3D battlefield — both armies face off
+  requestAnimationFrame(()=>{
+    battle3D.init();
+    battle3D.populate(G.picks.player, G.picks.enemy);
+  });
 }
 
 function renderTacticGrids(){
@@ -1742,6 +2232,12 @@ function confirmBattle(){
 
   const result = resolveBattle(G, [pickedT[0], pickedT[1]]);
   if(!result) return;
+
+  // Trigger charge animations
+  if(battle3D && battle3D.scene){
+    battle3D.charge('player');
+    setTimeout(()=>battle3D.charge('enemy'), 250);
+  }
 
   // Show enemy tactics
   const [e1,e2] = result.enemyT;
