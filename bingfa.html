@@ -1127,6 +1127,78 @@ HEROES.forEach(h=>{ if(!h.role) h.role = h.roles[0]; });
 
 const HEROES_IDX = Object.fromEntries(HEROES.map(h=>[h.id,h]));
 
+/* ───────────────────────────────────────────────────────
+   PORTRAIT LOADER — queue + retry + intersection observer
+   防止同時 30+ 張圖塞爆 Pollinations 而全失敗
+─────────────────────────────────────────────────────── */
+const _portraitQ = [];
+const _portraitActive = new Set();
+const _portraitDone = new Set();
+const PORTRAIT_MAX = 3;          // 同時最多 3 張在生成
+const PORTRAIT_RETRY_MAX = 3;
+
+function _processPortraitQ(){
+  while(_portraitActive.size < PORTRAIT_MAX && _portraitQ.length){
+    const img = _portraitQ.shift();
+    if(!img || !img.isConnected || img._loaded) continue;
+    const src = img.dataset.src;
+    if(!src) continue;
+    _portraitActive.add(img);
+    img._loadStart = Date.now();
+    img.src = src;
+    const done = ok=>{
+      _portraitActive.delete(img);
+      if(ok){
+        img._loaded = true;
+        img.classList.add('loaded');
+        _portraitDone.add(src);
+      } else if((img._retry=(img._retry||0)+1) < PORTRAIT_RETRY_MAX){
+        // Exponential backoff retry
+        setTimeout(()=>{
+          if(img.isConnected && !img._loaded){
+            img.src = '';
+            _portraitQ.push(img);
+            _processPortraitQ();
+          }
+        }, 1500*img._retry);
+      }
+      _processPortraitQ();
+    };
+    img.onload  = ()=>done(true);
+    img.onerror = ()=>done(false);
+    // Timeout safety net (Pollinations sometimes hangs)
+    setTimeout(()=>{
+      if(_portraitActive.has(img) && !img._loaded){ done(false); }
+    }, 25000);
+  }
+}
+
+const _portraitIO = (typeof IntersectionObserver!=='undefined') ? new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const img = e.target;
+      if(!img._queued && !img._loaded){
+        img._queued = true;
+        _portraitQ.push(img);
+        _processPortraitQ();
+      }
+      _portraitIO.unobserve(img);
+    }
+  });
+}, {rootMargin:'160px'}) : null;
+
+/** Attach lazy-loaded portrait to an <img>. Pass actual URL via src param. */
+function attachPortrait(img, src){
+  if(!img || !src) return;
+  img.dataset.src = src;
+  if(_portraitIO){
+    _portraitIO.observe(img);
+  } else {
+    // Fallback for old browsers
+    img.src = src;
+  }
+}
+
 /* ── Hero portrait URL (free Pollinations.ai AI image generation) ── */
 function heroPortraitUrl(h){
   if(!h) return '';
@@ -1149,11 +1221,27 @@ function heroPortraitUrl(h){
     '金':'shining metal silver armor, sharp highlights',
     '水':'deep blue tones, river or rain backdrop'
   }[h.elem] || '';
-  const prompt = `${h.name}, ${roleStyle}, ${elemMood}, Three Kingdoms historical art style, official character portrait, ink wash painting blended with realistic painting, dramatic cinematic lighting, half body, detailed face, no text, no watermark`;
+  const prompt = `${h.name}, ${roleStyle}, ${elemMood}, Chinese historical character portrait, traditional ink painting, dramatic lighting, half body`;
   // Deterministic seed per hero so image stays consistent
   let seed = 0;
   for(let i=0;i<h.id.length;i++) seed = (seed*31 + h.id.charCodeAt(i)) >>> 0;
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=320&height=420&nologo=true&seed=${seed%99999}&model=flux`;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=340&nologo=true&seed=${seed%99999}&model=flux`;
+}
+
+/* ── Generic unit-type image for 3D battlefield ── */
+function unitTypeUrl(type, side){
+  const team = side==='player' ? 'blue armor with white robes, calm noble' : 'red dark armor crimson cape, fierce';
+  const prompts = {
+    'infantry':`Chinese ancient infantry soldier, ${team}, holding spear and round shield, standing battle pose, full body, isolated plain background, traditional ink painting`,
+    'archer':`Chinese ancient archer soldier, ${team}, drawing longbow with arrow ready, standing pose, full body, isolated plain background, traditional ink painting`,
+    'cavalry':`Chinese ancient cavalry warrior on war horse, ${team}, holding long lance, side view dynamic pose, isolated plain background, traditional ink painting`,
+    'general':`Chinese ancient grand general commander, ${team}, ornate plumed helmet, commanding pose with sword, full body, banner background, traditional ink painting`,
+    'advisor':`Chinese ancient scholar military strategist, ${team} flowing silk robes, holding folding fan, wise calm pose, full body, isolated plain background`,
+    'warrior':`Chinese ancient elite warrior champion, ${team}, holding long halberd, fierce battle stance, full body, isolated plain background, traditional ink painting`,
+  };
+  const prompt = prompts[type] || prompts.infantry;
+  const seed = (side==='player' ? 4321 : 8765) + type.length*17 + type.charCodeAt(0);
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=200&height=320&nologo=true&seed=${seed}&model=flux`;
 }
 
 const TACTICS = [
@@ -1549,6 +1637,79 @@ function resolveBattle(state, ourT){
 /* ═══════════════════════════════════════════════════════════
    3D BATTLEFIELD — Ancient warfare scene (Three.js)
 ═══════════════════════════════════════════════════════════ */
+/* ── Texture cache (shared by all sprite units) ── */
+const _texCache = new Map();
+function getUnitTexture(url){
+  if(_texCache.has(url)) return _texCache.get(url);
+  const loader = new THREE.TextureLoader();
+  loader.crossOrigin = 'anonymous';
+  const tex = loader.load(url,
+    t=>{ t.needsUpdate = true; },
+    undefined,
+    err=>{ console.warn('texture load failed', url); }
+  );
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  _texCache.set(url, tex);
+  return tex;
+}
+
+/* ── Sprite-based soldier (real AI image instead of procedural model) ── */
+function makeSoldierSprite(type, side, hero){
+  const grp = new THREE.Group();
+  const teamCol = side==='player' ? 0x6ab2ff : 0xff6868;
+  const url = hero ? heroPortraitUrl(hero) : unitTypeUrl(type, side);
+  const tex = getUnitTexture(url);
+
+  // Frame plane (slightly bigger, behind card)
+  const isHero = !!hero;
+  const W = isHero ? 1.4 : (type==='cavalry'?1.5:1.0);
+  const H = isHero ? 2.0 : (type==='cavalry'?1.7:1.5);
+
+  // Glow backplate
+  const frame = new THREE.Mesh(
+    new THREE.PlaneGeometry(W*1.08, H*1.06),
+    new THREE.MeshBasicMaterial({color:teamCol, transparent:true, opacity:.55})
+  );
+  frame.position.y = H/2;
+  grp.add(frame);
+
+  // Character sprite (using Sprite for auto-billboard)
+  const spMat = new THREE.SpriteMaterial({
+    map: tex, transparent:true, depthTest:true, depthWrite:false,
+    color: 0xffffff
+  });
+  const sp = new THREE.Sprite(spMat);
+  sp.scale.set(W, H, 1);
+  sp.position.y = H/2;
+  sp.userData.isUnitSprite = true;
+  grp.add(sp);
+
+  // Hero golden plume on top + name plate base
+  if(isHero){
+    const plume = new THREE.Mesh(
+      new THREE.ConeGeometry(0.08, 0.4, 6),
+      new THREE.MeshBasicMaterial({color: side==='player' ? 0xc9a84c : 0xc94545})
+    );
+    plume.position.y = H + 0.15;
+    grp.add(plume);
+  }
+
+  // Ground shadow
+  const shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.55, 18),
+    new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:.55})
+  );
+  shadow.rotation.x = -Math.PI/2;
+  shadow.position.y = 0.01;
+  grp.add(shadow);
+
+  grp.userData.unitW = W;
+  grp.userData.unitH = H;
+  return grp;
+}
+
+/* ── DEPRECATED procedural model (kept for compatibility, not used) ── */
 function makeSoldier(type, side){
   const grp = new THREE.Group();
   const teamCol = side==='player' ? 0x4a90d9 : 0xc94545;
@@ -1774,9 +1935,10 @@ const battle3D = {
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog(0x2a1f3a, 9, 22);
 
-    this.camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
-    this.camera.position.set(0, 4.5, 8);
-    this.camera.lookAt(0, 0.8, 0);
+    this.camera = new THREE.PerspectiveCamera(42, w/h, 0.1, 100);
+    // Higher camera angle to see both armies clearly with sprite cards
+    this.camera.position.set(0, 5.5, 9);
+    this.camera.lookAt(0, 1.2, 0);
 
     this.renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
     this.renderer.setSize(w, h, false);
@@ -1887,12 +2049,13 @@ const battle3D = {
         warrior: HEROES_IDX[picks[2]] || null,
       };
       layout.forEach(slot=>{
-        const mesh = makeSoldier(slot.type, side);
+        // Hero only for the named role slots
+        const hero = slot.role ? heroBy[slot.role] : null;
+        const mesh = makeSoldierSprite(slot.type, side, hero);
         const sign = side==='player' ? 1 : -1;
         mesh.position.set(slot.x*0.9, 0, slot.z*sign);
-        mesh.rotation.y = side==='player' ? Math.PI : 0;
+        // Sprites auto-billboard so rotation.y on the group only affects shadow/frame which are symmetric — skip rotation
         this.scene.add(mesh);
-        const hero = slot.role ? heroBy[slot.role] : null;
         this.units.push({
           mesh, side, type:slot.type,
           baseZ: mesh.position.z,
@@ -1936,9 +2099,9 @@ const battle3D = {
       this._charging = null;
     }
     // Camera idle sway
-    this.camera.position.x = Math.sin(t*0.25)*0.6;
-    this.camera.position.y = 4.5 + Math.sin(t*0.18)*0.15;
-    this.camera.lookAt(0, 0.8, 0);
+    this.camera.position.x = Math.sin(t*0.25)*0.7;
+    this.camera.position.y = 5.5 + Math.sin(t*0.18)*0.2;
+    this.camera.lookAt(0, 1.2, 0);
 
     // Update HTML labels
     if(this.labels.length){
@@ -1946,7 +2109,8 @@ const battle3D = {
       const tmp = new THREE.Vector3();
       this.labels.forEach(lbl=>{
         const u = lbl._unit; if(!u) return;
-        tmp.set(u.mesh.position.x, u.mesh.position.y + 1.9, u.mesh.position.z);
+        const topY = (u.mesh.userData.unitH || 1.6) + 0.4;
+        tmp.set(u.mesh.position.x, u.mesh.position.y + topY, u.mesh.position.z);
         tmp.project(this.camera);
         const x = (tmp.x*0.5+0.5)*w, y = (-tmp.y*0.5+0.5)*h;
         lbl.style.left = x+'px';
@@ -2319,7 +2483,7 @@ function renderOneSide(side){
         : slotRole==='advisor' ? ADVISOR_ROLES.includes(r)
         : WARRIOR_ROLES.includes(r)
       ) || hero.role;
-      d.innerHTML = `<div class="sl-portrait" data-name="${hero.name}"><img src="${heroPortraitUrl(hero)}" alt="${hero.name}" loading="lazy" onload="this.classList.add('loaded')"></div>
+      d.innerHTML = `<div class="sl-portrait" data-name="${hero.name}"><img alt="${hero.name}" data-hero="${hero.id}"></div>
                      <div class="sl-info">
                        <div class="sl-role">${group.icon} ${ROLE_NAME[subRole]||group.label}</div>
                        <div class="sl-name">${hero.name}</div>
@@ -2330,6 +2494,12 @@ function renderOneSide(side){
                      <div class="sl-empty">待選</div>`;
     }
     pickEl.appendChild(d);
+  });
+
+  // Attach slot portraits via queue
+  pickEl.querySelectorAll('img[data-hero]').forEach(img=>{
+    const h = HEROES_IDX[img.dataset.hero];
+    if(h) attachPortrait(img, heroPortraitUrl(h));
   });
 
   /* ── Bond hint ──────────────────────────── */
@@ -2388,7 +2558,7 @@ function renderPool(){
     const primaryRoleIcon = ROLE_ICON[(h.roles||[h.role])[0]] || '';
     d.innerHTML = `
       <div class="hc-portrait" data-name="${h.name}">
-        <img src="${heroPortraitUrl(h)}" alt="${h.name}" loading="lazy" onload="this.classList.add('loaded')">
+        <img alt="${h.name}" data-hero="${h.id}">
         <div class="hc-portrait-vig"></div>
       </div>
       <div class="hc-role">${primaryRoleIcon} ${dispRoles}</div>
@@ -2406,6 +2576,12 @@ function renderPool(){
       d.addEventListener('click',()=>onHeroClick(h.id));
     }
     el.appendChild(d);
+  });
+
+  // Attach portraits via queue loader (so they load in order, not all at once)
+  el.querySelectorAll('img[data-hero]').forEach(img=>{
+    const h = HEROES_IDX[img.dataset.hero];
+    if(h) attachPortrait(img, heroPortraitUrl(h));
   });
 
   // Scroll to first suggestion on player tutorial turn
