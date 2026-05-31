@@ -380,6 +380,38 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 .hc.used{opacity:.4;cursor:not-allowed;filter:grayscale(.7)}
 .hc.enemy-turn{opacity:.55;cursor:not-allowed}
 .hc.ban-highlight{border-color:#ef5350;box-shadow:0 0 10px rgba(239,83,80,.3)}
+.hc-portrait{
+  width:100%;aspect-ratio:3/4;
+  background:linear-gradient(160deg,rgba(91,58,138,.3),rgba(20,10,38,.7));
+  border-radius:5px;overflow:hidden;margin-bottom:6px;
+  position:relative;border:1px solid rgba(201,168,76,.25);
+}
+.hc-portrait::before{
+  content:'⏳';position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.25);font-size:20px;
+}
+.hc-portrait img{
+  position:relative;z-index:2;
+  width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity .5s ease;
+  filter:saturate(.9) contrast(1.08);
+}
+.hc-portrait img.loaded{opacity:1}
+.hc-portrait-vig{position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(180deg,transparent 55%,rgba(10,5,20,.75) 100%);
+  border-radius:5px}
+.sl-portrait{
+  width:34px;height:46px;border-radius:3px;overflow:hidden;flex-shrink:0;
+  background:rgba(20,10,38,.6);border:1px solid rgba(201,168,76,.3);
+  position:relative;
+}
+.sl-portrait img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s}
+.sl-portrait img.loaded{opacity:1}
+.bp-slot.filled{display:flex;gap:8px;align-items:center}
+.bp-slot.filled .sl-info{flex:1;min-width:0;overflow:hidden}
+.sl-info .sl-name,.sl-info .sl-elem{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 .hc-role{font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:2px}
 .hc-name{font-size:14px;font-weight:900;color:#e8d0ff;margin-bottom:3px}
 .hc-elem{font-size:11px;margin-bottom:4px;display:flex;align-items:center;gap:4px}
@@ -428,9 +460,19 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   position:relative;width:100%;height:340px;
   border:1px solid rgba(201,168,76,.4);border-radius:10px;
   overflow:hidden;
-  background:linear-gradient(180deg,#1a0d22 0%,#2a1f3a 40%,#3a2818 100%);
+  background:#1a0d22;
   box-shadow:inset 0 0 60px rgba(0,0,0,.7),0 4px 18px rgba(0,0,0,.5);
 }
+#battle-stage::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  background:url('https://image.pollinations.ai/prompt/ancient%20Chinese%20battlefield%20landscape%2C%20great%20wall%20in%20distance%2C%20mountains%2C%20misty%20dawn%2C%20Three%20Kingdoms%20era%2C%20epic%20cinematic%2C%20ink%20painting%20style%2C%20no%20people?width=1200&height=400&nologo=true&seed=2046&model=flux') center/cover;
+  opacity:.55;filter:saturate(.85) brightness(.7);
+}
+#battle-stage::after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(26,13,34,.5) 0%,transparent 30%,transparent 70%,rgba(58,40,24,.6) 100%);
+}
+#battle-canvas{position:relative;z-index:2}
 #battle-canvas{display:block;width:100%;height:100%}
 .bs-label{
   position:absolute;pointer-events:none;
@@ -1069,6 +1111,35 @@ const HEROES = [
 ];
 
 const HEROES_IDX = Object.fromEntries(HEROES.map(h=>[h.id,h]));
+
+/* ── Hero portrait URL (free Pollinations.ai AI image generation) ── */
+function heroPortraitUrl(h){
+  if(!h) return '';
+  let roleStyle;
+  if(h.role==='king'){
+    roleStyle = 'Chinese ancient emperor sovereign, regal golden imperial robes, dragon embroidery, ornate crown, throne hall, majestic ruler';
+  } else if(['strategist','chancellor','minister'].includes(h.role)){
+    roleStyle = 'Chinese ancient scholar strategist, flowing silk robes, scholar crown hat, holding folding fan or scroll, wise expression, court setting';
+  } else {
+    // warrior types — vary by role
+    if(h.role==='vanguard') roleStyle = 'Chinese ancient elite warrior vanguard, ornate battle armor with golden trim, fierce gaze, holding weapon, dynamic pose, sunset battlefield';
+    else if(h.role==='commandant') roleStyle = 'Chinese ancient cavalry commandant, lamellar armor, riding war horse, lance in hand, snowy plains';
+    else if(h.role==='marshal') roleStyle = 'Chinese ancient grand marshal, heavy plate armor, crimson cape, longsword, commanding presence, banner background';
+    else roleStyle = 'Chinese ancient general warrior, full battle armor, halberd weapon, fierce expression, war banners';
+  }
+  const elemMood = {
+    '木':'forest green accents, vibrant plant motifs',
+    '火':'crimson red flames, fiery atmosphere',
+    '土':'earthy gold tones, mountain backdrop',
+    '金':'shining metal silver armor, sharp highlights',
+    '水':'deep blue tones, river or rain backdrop'
+  }[h.elem] || '';
+  const prompt = `${h.name}, ${roleStyle}, ${elemMood}, Three Kingdoms historical art style, official character portrait, ink wash painting blended with realistic painting, dramatic cinematic lighting, half body, detailed face, no text, no watermark`;
+  // Deterministic seed per hero so image stays consistent
+  let seed = 0;
+  for(let i=0;i<h.id.length;i++) seed = (seed*31 + h.id.charCodeAt(i)) >>> 0;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=320&height=420&nologo=true&seed=${seed%99999}&model=flux`;
+}
 
 const TACTICS = [
   {id:'t_jin1', name:'白虎陣',  elem:'金',desc:'鋒銳破甲：對相剋目標+10傷'},
@@ -2223,9 +2294,12 @@ function renderOneSide(side){
     d.className = 'bp-slot'+(hero?' filled':'');
     if(hero){
       const col = ELEM_COL[hero.elem]||'#9c6dd6';
-      d.innerHTML = `<div class="sl-role">${group.icon} ${group.label}</div>
-                     <div class="sl-name">${hero.name}</div>
-                     <div class="sl-elem" style="color:${col}">${hero.elem} · ${hero.faction}</div>`;
+      d.innerHTML = `<div class="sl-portrait"><img src="${heroPortraitUrl(hero)}" alt="${hero.name}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'"></div>
+                     <div class="sl-info">
+                       <div class="sl-role">${group.icon} ${group.label}</div>
+                       <div class="sl-name">${hero.name}</div>
+                       <div class="sl-elem" style="color:${col}">${hero.elem} · ${hero.faction}</div>
+                     </div>`;
     } else {
       d.innerHTML = `<div class="sl-role">${group.icon} ${group.label}</div>
                      <div class="sl-empty">待選</div>`;
@@ -2286,6 +2360,10 @@ function renderPool(){
     d.style.setProperty('--ec',`rgba(${hexToRgb(col)||'156,109,214'},.2)`);
     const pct = Math.round((h.pow-60)/(100-60)*100);
     d.innerHTML = `
+      <div class="hc-portrait">
+        <img src="${heroPortraitUrl(h)}" alt="${h.name}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+        <div class="hc-portrait-vig"></div>
+      </div>
       <div class="hc-role">${ROLE_ICON[h.role]} ${ROLE_NAME[h.role]}</div>
       <div class="hc-name">${h.name}</div>
       <div class="hc-elem">
