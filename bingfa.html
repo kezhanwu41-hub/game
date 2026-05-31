@@ -1191,11 +1191,13 @@ const _portraitIO = (typeof IntersectionObserver!=='undefined') ? new Intersecti
 function attachPortrait(img, src){
   if(!img || !src) return;
   img.dataset.src = src;
-  if(_portraitIO){
-    _portraitIO.observe(img);
-  } else {
-    // Fallback for old browsers
-    img.src = src;
+  // Always enqueue immediately — IntersectionObserver doesn't reliably
+  // detect visibility inside scrollable containers (pool-box).
+  // The queue's MAX=3 concurrency is enough throttling.
+  if(!img._queued && !img._loaded){
+    img._queued = true;
+    _portraitQ.push(img);
+    _processPortraitQ();
   }
 }
 
@@ -1657,27 +1659,52 @@ function getUnitTexture(url){
 /* ── Sprite-based soldier (real AI image instead of procedural model) ── */
 function makeSoldierSprite(type, side, hero){
   const grp = new THREE.Group();
-  const teamCol = side==='player' ? 0x6ab2ff : 0xff6868;
+  const teamColHex = side==='player' ? 0x6ab2ff : 0xff6868;
+  const teamColCSS = side==='player' ? '#6ab2ff' : '#ff6868';
   const url = hero ? heroPortraitUrl(hero) : unitTypeUrl(type, side);
   const tex = getUnitTexture(url);
 
-  // Frame plane (slightly bigger, behind card)
   const isHero = !!hero;
-  const W = isHero ? 1.4 : (type==='cavalry'?1.5:1.0);
-  const H = isHero ? 2.0 : (type==='cavalry'?1.7:1.5);
+  const W = isHero ? 1.5 : (type==='cavalry'?1.4:1.0);
+  const H = isHero ? 2.1 : (type==='cavalry'?1.7:1.5);
 
-  // Glow backplate
-  const frame = new THREE.Mesh(
-    new THREE.PlaneGeometry(W*1.08, H*1.06),
-    new THREE.MeshBasicMaterial({color:teamCol, transparent:true, opacity:.55})
-  );
+  // Background glow sprite (auto-billboards — won't flatten when viewed from above)
+  const glowCanvas = document.createElement('canvas');
+  glowCanvas.width = 128; glowCanvas.height = 128;
+  const gctx = glowCanvas.getContext('2d');
+  const grad = gctx.createRadialGradient(64,64,10,64,64,64);
+  grad.addColorStop(0, teamColCSS+'cc');
+  grad.addColorStop(0.6, teamColCSS+'33');
+  grad.addColorStop(1, teamColCSS+'00');
+  gctx.fillStyle = grad;
+  gctx.fillRect(0,0,128,128);
+  const glowTex = new THREE.CanvasTexture(glowCanvas);
+  const glowMat = new THREE.SpriteMaterial({map:glowTex, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending});
+  const glow = new THREE.Sprite(glowMat);
+  glow.scale.set(W*1.6, H*1.25, 1);
+  glow.position.y = H/2;
+  grp.add(glow);
+
+  // Frame sprite (team-colored card border behind the portrait)
+  const frameCanvas = document.createElement('canvas');
+  frameCanvas.width = 96; frameCanvas.height = 128;
+  const fctx = frameCanvas.getContext('2d');
+  fctx.fillStyle = teamColCSS;
+  fctx.fillRect(0,0,96,128);
+  // Inner cut-out
+  fctx.fillStyle = '#1a0d22';
+  fctx.fillRect(4,4,88,120);
+  const frameTex = new THREE.CanvasTexture(frameCanvas);
+  const frameMat = new THREE.SpriteMaterial({map:frameTex, transparent:true, depthWrite:false});
+  const frame = new THREE.Sprite(frameMat);
+  frame.scale.set(W*1.05, H*1.04, 1);
   frame.position.y = H/2;
+  frame.position.z = -0.01;
   grp.add(frame);
 
-  // Character sprite (using Sprite for auto-billboard)
+  // Character sprite (auto-billboards)
   const spMat = new THREE.SpriteMaterial({
-    map: tex, transparent:true, depthTest:true, depthWrite:false,
-    color: 0xffffff
+    map: tex, transparent:false, depthTest:true, depthWrite:true
   });
   const sp = new THREE.Sprite(spMat);
   sp.scale.set(W, H, 1);
@@ -1685,24 +1712,25 @@ function makeSoldierSprite(type, side, hero){
   sp.userData.isUnitSprite = true;
   grp.add(sp);
 
-  // Hero golden plume on top + name plate base
-  if(isHero){
-    const plume = new THREE.Mesh(
-      new THREE.ConeGeometry(0.08, 0.4, 6),
-      new THREE.MeshBasicMaterial({color: side==='player' ? 0xc9a84c : 0xc94545})
-    );
-    plume.position.y = H + 0.15;
-    grp.add(plume);
-  }
-
-  // Ground shadow
+  // Ground shadow (flat circle on ground — these CAN be a plane)
   const shadow = new THREE.Mesh(
     new THREE.CircleGeometry(0.55, 18),
-    new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:.55})
+    new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:.6})
   );
   shadow.rotation.x = -Math.PI/2;
-  shadow.position.y = 0.01;
+  shadow.position.y = 0.02;
   grp.add(shadow);
+
+  // Hero team-color ring on ground
+  if(isHero){
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.5, 0.65, 28),
+      new THREE.MeshBasicMaterial({color:teamColHex, transparent:true, opacity:.7, side:THREE.DoubleSide})
+    );
+    ring.rotation.x = -Math.PI/2;
+    ring.position.y = 0.04;
+    grp.add(ring);
+  }
 
   grp.userData.unitW = W;
   grp.userData.unitH = H;
