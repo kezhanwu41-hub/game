@@ -348,14 +348,116 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   background:linear-gradient(180deg,rgba(13,8,32,.96),rgba(26,15,46,.85));
   border:2px solid rgba(201,168,76,.55);border-radius:12px;
   padding:18px 22px 14px;margin-bottom:14px;
-  min-height:220px;display:flex;gap:18px;
+  min-height:240px;display:flex;gap:18px;
   animation:narrIn .55s cubic-bezier(.34,1.56,.64,1);
   box-shadow:0 4px 18px rgba(0,0,0,.5),inset 0 0 30px rgba(156,109,214,.1);
   overflow:hidden;
 }
 @keyframes narrIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* === Scene background layer (chapter-themed) === */
+.wl-scene-bg{
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  opacity:0;transition:opacity .8s ease;
+}
+.wl-scene-bg.show{opacity:.55}
+.wl-scene-bg::before,.wl-scene-bg::after{
+  content:'';position:absolute;inset:0;
+}
+/* Chapter-specific themed scenes */
+.wl-scene-bg[data-ch="zhou"]::before{
+  background:
+    radial-gradient(ellipse at 50% 80%,rgba(255,180,80,.22) 0%,transparent 50%),
+    linear-gradient(180deg,#1a1228 0%,#3a2418 70%,#5a3818 100%);
+}
+.wl-scene-bg[data-ch="zhou"]::after{
+  background:
+    repeating-linear-gradient(90deg,transparent 0 60px,rgba(255,200,100,.04) 60px 62px),
+    radial-gradient(ellipse at 20% 30%,rgba(255,200,80,.15) 0%,transparent 30%);
+}
+.wl-scene-bg[data-ch="qinhan"]::before{
+  background:
+    radial-gradient(ellipse at 50% 100%,rgba(180,40,40,.25) 0%,transparent 50%),
+    linear-gradient(180deg,#0d0815 0%,#2a0d20 60%,#4a1818 100%);
+}
+.wl-scene-bg[data-ch="qinhan"]::after{
+  background:radial-gradient(circle at 80% 20%,rgba(255,80,80,.15) 0%,transparent 30%);
+}
+.wl-scene-bg[data-ch="sanguo"]::before{
+  background:
+    radial-gradient(ellipse at 50% 50%,rgba(100,40,140,.25) 0%,transparent 60%),
+    linear-gradient(180deg,#0d0820 0%,#1a0d28 50%,#3a1838 100%);
+}
+.wl-scene-bg[data-ch="sanguo"]::after{
+  background:
+    radial-gradient(ellipse at 30% 70%,rgba(156,109,214,.18) 0%,transparent 40%),
+    radial-gradient(circle at 70% 30%,rgba(201,168,76,.1) 0%,transparent 30%);
+}
+.wl-scene-bg[data-ch="suitang"]::before{
+  background:
+    radial-gradient(ellipse at 50% 80%,rgba(255,210,100,.22) 0%,transparent 50%),
+    linear-gradient(180deg,#1a0d20 0%,#3a2818 60%,#5a4028 100%);
+}
+.wl-scene-bg[data-ch="suitang"]::after{
+  background:radial-gradient(circle at 50% 20%,rgba(255,232,168,.15) 0%,transparent 35%);
+}
+.wl-scene-bg[data-ch="song"]::before{
+  background:
+    radial-gradient(ellipse at 50% 80%,rgba(80,140,200,.22) 0%,transparent 55%),
+    linear-gradient(180deg,#0d1828 0%,#1a2840 50%,#2a3858 100%);
+}
+.wl-scene-bg[data-ch="song"]::after{
+  background:
+    repeating-linear-gradient(180deg,transparent 0 8px,rgba(180,200,240,.04) 8px 9px),
+    radial-gradient(circle at 30% 30%,rgba(180,200,240,.15) 0%,transparent 35%);
+}
+.wl-scene-bg[data-ch="yuanming"]::before{
+  background:
+    radial-gradient(ellipse at 50% 80%,rgba(180,60,40,.22) 0%,transparent 50%),
+    linear-gradient(180deg,#0d0815 0%,#28140d 60%,#4a2814 100%);
+}
+.wl-scene-bg[data-ch="qing"]::before{
+  background:
+    radial-gradient(ellipse at 50% 100%,rgba(180,40,40,.18) 0%,transparent 50%),
+    linear-gradient(180deg,#1a0820 0%,#2a0d18 50%,#3a1828 100%);
+}
+
+/* === Ash / mist particles === */
+.wl-scene-particles{
+  position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;
+}
+.wl-scene-particles span{
+  position:absolute;width:3px;height:3px;border-radius:50%;
+  background:rgba(255,232,168,.6);
+  animation:ashFloat 12s linear infinite;
+  opacity:0;
+}
+@keyframes ashFloat{
+  0%{opacity:0;transform:translateY(100%) translateX(0)}
+  10%{opacity:.8}
+  90%{opacity:.6}
+  100%{opacity:0;transform:translateY(-20%) translateX(40px)}
+}
+/* mood: red for war scenes */
+.wl-scene-particles.mood-war span{background:rgba(255,140,80,.7)}
+.wl-scene-particles.mood-peace span{background:rgba(180,220,255,.5)}
+.wl-scene-particles.mood-court span{background:rgba(255,232,168,.5)}
+
+/* === Cinematic light beams === */
+.wl-scene-rays{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(105deg,transparent 40%,rgba(255,232,168,.05) 50%,transparent 60%),
+    linear-gradient(75deg,transparent 30%,rgba(156,109,214,.04) 50%,transparent 70%);
+  mix-blend-mode:screen;animation:rayMove 16s ease-in-out infinite;
+}
+@keyframes rayMove{
+  0%,100%{transform:translateX(-5%) translateY(-3%)}
+  50%{transform:translateX(5%) translateY(3%)}
+}
+
 .wl-narrative::before{
-  content:'';position:absolute;inset:0;pointer-events:none;
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
   background:
     radial-gradient(circle at 8% 50%,rgba(156,109,214,.18) 0%,transparent 40%),
     radial-gradient(circle at 92% 50%,rgba(201,168,76,.1) 0%,transparent 40%);
@@ -364,8 +466,13 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   flex-shrink:0;width:120px;height:160px;
   background:linear-gradient(160deg,rgba(91,58,138,.5),rgba(20,10,38,.8));
   border:2px solid rgba(201,168,76,.5);border-radius:8px;overflow:hidden;
-  position:relative;z-index:1;
-  box-shadow:0 4px 12px rgba(0,0,0,.4),inset 0 0 18px rgba(156,109,214,.2);
+  position:relative;z-index:3;
+  box-shadow:0 4px 12px rgba(0,0,0,.4),inset 0 0 18px rgba(156,109,214,.2),0 0 30px rgba(255,232,168,.15);
+  animation:portraitGlow 3s ease infinite;
+}
+@keyframes portraitGlow{
+  0%,100%{box-shadow:0 4px 12px rgba(0,0,0,.4),inset 0 0 18px rgba(156,109,214,.2),0 0 24px rgba(255,232,168,.12)}
+  50%{box-shadow:0 4px 16px rgba(0,0,0,.5),inset 0 0 22px rgba(156,109,214,.3),0 0 36px rgba(255,232,168,.28)}
 }
 @media(max-width:600px){.wl-narr-portrait{width:80px;height:108px}}
 .wl-narr-portrait img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
@@ -376,7 +483,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   color:rgba(232,208,168,.5);font-size:22px;font-weight:900;letter-spacing:2px;
   text-shadow:0 0 12px rgba(201,168,76,.4);
 }
-.wl-narr-body{flex:1;display:flex;flex-direction:column;position:relative;z-index:1;min-width:0}
+.wl-narr-body{flex:1;display:flex;flex-direction:column;position:relative;z-index:3;min-width:0}
 .wl-narr-speaker{
   font-size:14px;letter-spacing:4px;color:var(--gold);font-weight:900;
   padding:4px 14px;background:linear-gradient(90deg,rgba(201,168,76,.25),transparent);
@@ -1072,7 +1179,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
     </div>
     <div class="mode-card" data-mode="campaign">
       <div class="mc-icon">📜</div>
-      <div class="mc-name">中國全史</div>
+      <div class="mc-name">烽火千秋</div>
       <div class="mc-desc">7 大朝代 · 80+ 關<br>正史 · 支線 · 隱藏<br>從周到清</div>
     </div>
     <div class="mode-card" data-mode="ai">
@@ -1089,7 +1196,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 
 <!-- ══ CAMPAIGN — Chapter Select ════════════════════════ -->
 <section class="screen" id="scr-chapters">
-  <div class="ch-title">中國全史</div>
+  <div class="ch-title">烽火千秋</div>
   <div class="ch-sub">七大朝代 ‧ 兵法推演</div>
   <div class="ch-grid" id="ch-grid"></div>
 </section>
@@ -1125,6 +1232,9 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   </div>
   <!-- Narrative panel (visual-novel) -->
   <div class="wl-narrative" id="wl-narrative" style="display:none">
+    <div class="wl-scene-bg show" id="wl-scene-bg" data-ch="zhou"></div>
+    <div class="wl-scene-particles mood-war" id="wl-scene-particles"></div>
+    <div class="wl-scene-rays"></div>
     <div class="wl-narr-portrait" id="wl-narr-portrait" data-name="—"><img id="wl-narr-img" alt=""></div>
     <div class="wl-narr-body">
       <div class="wl-narr-speaker" id="wl-narr-speaker">旁白</div>
@@ -1868,7 +1978,7 @@ const TUTORIAL_SUGGEST = {
 const TUTORIAL_MSG = [
   // 0: player bans king × 1
   {hint:'【第一階段·甲方禁主帥】先手封禁最忌憚的主公！',
-   msg:'歡迎進入兵法推演！本教學以「對戰」介紹 BP 流程；完成後可至大廳「中國全史」打 80+ 關劇情。\n\n你是甲方，先手封禁一名主帥。秦始皇/曹操/李世民都是頂級主公。先手禁掉對手最依賴的選項，是 BP 戰術的精髓！'},
+   msg:'歡迎進入兵法推演！本教學以「對戰」介紹 BP 流程；完成後可至大廳「烽火千秋」打 80+ 關劇情。\n\n你是甲方，先手封禁一名主帥。秦始皇/曹操/李世民都是頂級主公。先手禁掉對手最依賴的選項，是 BP 戰術的精髓！'},
   // 1: enemy bans king × 2
   {hint:'🤖 乙方（AI）正在連禁 2 名主帥…',
    msg:'乙方擁有 2 個禁位，將連續封禁兩名主帥——這意味敵方對主公威脅判斷更廣。觀察 AI 禁掉哪些主公，能反推它打算選什麼風格的主帥！'},
@@ -2312,7 +2422,7 @@ const LEVEL_DETAILS = {
         '紂王自焚於鹿台，商朝國祚已絕。',
         '太公望——這一戰，是天下歸心之戰，更是仁政之始。',
         '吾必行寬政、廢苛稅，永絕暴虐！',
-        '【你已完成新手教學。中國全史，自此開啟。】',
+        '【你已完成新手教學。烽火千秋，自此開啟。】',
       ]
     },
     scenarios: [
@@ -2525,16 +2635,10 @@ function getLevelDetails(lv){
 let curChapter = null, curLevel = null, curChoice = null;
 
 /* ── Render Chapter Select ── */
-/* Check if a chapter's first level is unlocked
-   (requires previous chapter's last main-line level cleared) */
+/* Each dynasty's first level is always unlocked.
+   Within each chapter, sequential lock still applies. */
 function isChapterStartUnlocked(chapterIdx, progress){
-  if(chapterIdx === 0) return true;  // 第一章永遠可玩
-  const prevCh = CAMPAIGN[chapterIdx - 1];
-  if(!prevCh) return true;
-  const prevMains = prevCh.levels.filter(l => l.type === 'main');
-  const prevLast = prevMains[prevMains.length - 1];
-  if(!prevLast) return true;
-  return !!progress[prevLast.id];
+  return true;
 }
 
 function renderChapters(){
@@ -2614,7 +2718,7 @@ function openChapter(ch, idx){
     if(lv.type !== 'hidden') prevDone = isDone;
   });
   showScreen('scr-levels');
-  tx('top-title', '中國全史 · ' + ch.name);
+  tx('top-title', '烽火千秋 · ' + ch.name);
 }
 
 function openLevel(lv){
@@ -2714,6 +2818,40 @@ function showNarrative(){
     if(h){
       attachPortrait(imgEl, heroPortraitUrl(h), heroPortraitFallbackUrl(h), h);
     }
+  }
+  // Scene background — chapter-themed
+  const chId = curChapter?.id || 'sanguo';
+  const sceneBg = document.getElementById('wl-scene-bg');
+  if(sceneBg){
+    sceneBg.setAttribute('data-ch', chId);
+    sceneBg.classList.remove('show');
+    void sceneBg.offsetWidth;
+    sceneBg.classList.add('show');
+  }
+  // Scene mood (war/peace/court) — opening uses court, choice uses war
+  const mood = _wlState.phase === 'opening' || _wlState.phase === 'ending' ? 'court' :
+               _wlState.phase === 'epilogue' && _wlState.pendingOption?.opt?.value < 0 ? 'war' :
+               'war';
+  const partEl = document.getElementById('wl-scene-particles');
+  if(partEl){
+    partEl.className = 'wl-scene-particles mood-'+mood;
+    spawnParticles(partEl, 12);
+  }
+}
+
+function spawnParticles(container, count){
+  if(!container) return;
+  container.innerHTML = '';
+  for(let i=0; i<count; i++){
+    const s = document.createElement('span');
+    const size = 2 + Math.random()*3;
+    s.style.width  = size+'px';
+    s.style.height = size+'px';
+    s.style.left   = (Math.random()*100)+'%';
+    s.style.bottom = '-10px';
+    s.style.animationDuration = (8 + Math.random()*8)+'s';
+    s.style.animationDelay = (Math.random()*-12)+'s';
+    container.appendChild(s);
   }
 }
 
@@ -3791,7 +3929,7 @@ function startGame(mode){
   stopTimers();
   G = makeState(mode);
   pickedT = [null,null]; roleFilter = '';
-  const titles={tutorial:'新手教學',ai:'自由對戰',rank:'排位天梯',campaign:curLevel?curLevel.name:'中國全史'};
+  const titles={tutorial:'新手教學',ai:'自由對戰',rank:'排位天梯',campaign:curLevel?curLevel.name:'烽火千秋'};
   tx('top-title', titles[mode]||'兵法推演');
   showScreen('scr-bp');
   if(mode==='tutorial'){
@@ -4289,9 +4427,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(m === 'campaign'){
         renderChapters();
         showScreen('scr-chapters');
-        tx('top-title','中國全史');
+        tx('top-title','烽火千秋');
       } else if(m === 'tutorial'){
-        // 新手教學 = 中國全史第 1 章 · 第 1 關「牧野之戰」帶教學註解
+        // 新手教學 = 烽火千秋第 1 章 · 第 1 關「牧野之戰」帶教學註解
         const zhou = CAMPAIGN.find(c=>c.id==='zhou');
         const muye = zhou?.levels.find(l=>l.id==='mu_ye');
         if(muye){
@@ -4318,7 +4456,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Campaign nav
   $('lv-back')?.addEventListener('click', ()=>{
     showScreen('scr-chapters');
-    tx('top-title','中國全史');
+    tx('top-title','烽火千秋');
   });
   $('intro-back')?.addEventListener('click', ()=>{
     if(curChapter) openChapter(curChapter);
