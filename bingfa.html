@@ -342,6 +342,66 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   text-shadow:0 1px 2px rgba(0,0,0,.5);
 }
 
+/* ═══ Visual-novel narrative overlay ═══ */
+.wl-narrative{
+  position:relative;
+  background:linear-gradient(180deg,rgba(13,8,32,.96),rgba(26,15,46,.85));
+  border:2px solid rgba(201,168,76,.55);border-radius:12px;
+  padding:18px 22px 14px;margin-bottom:14px;
+  min-height:220px;display:flex;gap:18px;
+  animation:narrIn .55s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 4px 18px rgba(0,0,0,.5),inset 0 0 30px rgba(156,109,214,.1);
+  overflow:hidden;
+}
+@keyframes narrIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.wl-narrative::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 8% 50%,rgba(156,109,214,.18) 0%,transparent 40%),
+    radial-gradient(circle at 92% 50%,rgba(201,168,76,.1) 0%,transparent 40%);
+}
+.wl-narr-portrait{
+  flex-shrink:0;width:120px;height:160px;
+  background:linear-gradient(160deg,rgba(91,58,138,.5),rgba(20,10,38,.8));
+  border:2px solid rgba(201,168,76,.5);border-radius:8px;overflow:hidden;
+  position:relative;z-index:1;
+  box-shadow:0 4px 12px rgba(0,0,0,.4),inset 0 0 18px rgba(156,109,214,.2);
+}
+@media(max-width:600px){.wl-narr-portrait{width:80px;height:108px}}
+.wl-narr-portrait img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
+.wl-narr-portrait img.loaded{opacity:1}
+.wl-narr-portrait::before{
+  content:attr(data-name);position:absolute;inset:0;z-index:0;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(232,208,168,.5);font-size:22px;font-weight:900;letter-spacing:2px;
+  text-shadow:0 0 12px rgba(201,168,76,.4);
+}
+.wl-narr-body{flex:1;display:flex;flex-direction:column;position:relative;z-index:1;min-width:0}
+.wl-narr-speaker{
+  font-size:14px;letter-spacing:4px;color:var(--gold);font-weight:900;
+  padding:4px 14px;background:linear-gradient(90deg,rgba(201,168,76,.25),transparent);
+  border-left:3px solid var(--gold);align-self:flex-start;margin-bottom:10px;
+}
+.wl-narr-text{
+  flex:1;font-size:15px;line-height:2.0;color:#fff;letter-spacing:1.5px;
+  min-height:90px;padding:6px 0;text-shadow:0 1px 2px rgba(0,0,0,.5);
+}
+.wl-narr-cursor{display:inline-block;width:8px;height:18px;background:var(--gold);
+  margin-left:3px;animation:cursorBlink 1s steps(2) infinite;vertical-align:-3px}
+@keyframes cursorBlink{50%{opacity:0}}
+.wl-narr-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.wl-narr-progress{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:2px}
+.wl-narr-next{
+  font-family:'Noto Serif TC',serif;font-size:13px;letter-spacing:3px;
+  background:linear-gradient(135deg,var(--gold),#7a6030);color:#1a1208;
+  border:1.5px solid var(--gold2);border-radius:6px;padding:6px 18px;
+  cursor:pointer;font-weight:700;
+  animation:nextPulse 1.8s ease infinite;
+  box-shadow:0 2px 8px rgba(201,168,76,.4);
+}
+.wl-narr-next:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(201,168,76,.6)}
+@keyframes nextPulse{0%,100%{box-shadow:0 2px 8px rgba(201,168,76,.4)}50%{box-shadow:0 2px 18px rgba(255,232,168,.8)}}
+
 /* Tutorial hint banner */
 .wl-tut-hint{
   background:linear-gradient(135deg,rgba(255,232,168,.15),rgba(201,168,76,.08));
@@ -1063,7 +1123,20 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
     <div class="wl-prog-stars" id="wl-prog-stars"></div>
     <div class="wl-prog-loss" id="wl-prog-loss"></div>
   </div>
-  <div class="wl-scenario" id="wl-scenario-card">
+  <!-- Narrative panel (visual-novel) -->
+  <div class="wl-narrative" id="wl-narrative" style="display:none">
+    <div class="wl-narr-portrait" id="wl-narr-portrait" data-name="—"><img id="wl-narr-img" alt=""></div>
+    <div class="wl-narr-body">
+      <div class="wl-narr-speaker" id="wl-narr-speaker">旁白</div>
+      <div class="wl-narr-text" id="wl-narr-text">…</div>
+      <div class="wl-narr-foot">
+        <span class="wl-narr-progress" id="wl-narr-progress">1 / 1</span>
+        <button class="wl-narr-next" id="wl-narr-next">繼續 ▶</button>
+      </div>
+    </div>
+  </div>
+  <!-- Choice card -->
+  <div class="wl-scenario" id="wl-scenario-card" style="display:none">
     <div class="wl-step-num" id="wl-step">局勢 1</div>
     <div class="wl-situation" id="wl-situation">…</div>
     <div id="wl-tut-hint-wrap"></div>
@@ -2221,35 +2294,95 @@ const LEVEL_DETAILS = {
     recommendedHeroes: ['h_jiang_sh'],
     reward: '解鎖陣法「太公六韜」+ 姜尚信物',
     isTutorial: true,
+    // 開場過場
+    opening: {
+      speaker: '姜尚（太公望）',
+      portrait: 'h_jiang_sh',
+      lines: [
+        '主上，商紂無道——剖比干心，囚箕子，焚林木，築鹿台......天怒人怨啊。',
+        '今日我等八百諸侯，誓師於牧野。對岸即是紂王七十萬大軍。',
+        '紂王雖眾，多為奴隸臨時編成；他們的家人正在朝歌受苦。',
+        '主上，這一戰，不僅是兵法之爭，更是天下民心之爭——請決斷！',
+      ]
+    },
+    ending: {
+      speaker: '周武王',
+      portrait: 'h_jiang_sh',
+      lines: [
+        '紂王自焚於鹿台，商朝國祚已絕。',
+        '太公望——這一戰，是天下歸心之戰，更是仁政之始。',
+        '吾必行寬政、廢苛稅，永絕暴虐！',
+        '【你已完成新手教學。中國全史，自此開啟。】',
+      ]
+    },
     scenarios: [
       {
+        prologue: {
+          speaker: '探馬',
+          portrait: null,
+          lines: [
+            '報——商軍前陣已成！',
+            '七十萬大軍黑壓壓壓向我軍......但他們多為奴隸，刀槍生鏽，眼神迷茫。',
+            '紂王親率衛隊壓陣，我軍三千精銳如何破敵？主上請令！',
+          ]
+        },
         situation: '清晨兩軍對峙。商軍雖眾，多為奴隸臨時編成；周軍三千精銳壓陣。姜尚請令——你如何發起首戰？',
         tutorialHint: '商軍主力是被迫上戰場的奴隸，士氣低落且不願為紂王賣命。利用「大義名分」動搖敵心，是孫子兵法「上兵伐謀」的精髓。',
         options: [
-          {text:'以「伐紂弔民」為號，陣前宣告大義',         value:+1, log:'商軍奴隸動搖，前排紛紛倒戈', note:'★ 最佳解 — 史實如此', good:true},
-          {text:'集中精銳衝擊紂王中軍',                       value:+1, log:'中軍受衝擊，紂王陣腳大亂', note:'良策 — 直擊敵核', good:true},
-          {text:'分兵三路包抄商軍兩翼',                       value:0,  log:'兵力分散，戰況膠著',     note:'中性 — 兵分有險'},
-          {text:'按兵不動，等候敵軍疲憊',                     value:-1, log:'錯失先機，紂王重整旗鼓', note:'✗ 失策 — 商軍只會愈打愈狠', bad:true},
+          {text:'以「伐紂弔民」為號，陣前宣告大義',         value:+1, log:'商軍奴隸動搖，前排紛紛倒戈', note:'★ 最佳解 — 史實如此', good:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['主上英明！「順天應人」之大義震撼商軍——','看哪，商軍前排已開始倒戈，紛紛丟下武器跑來歸順！','紂王陣腳大亂，臉色慘白......','我軍士氣如虹，正是擴大戰果之機！']}},
+          {text:'集中精銳衝擊紂王中軍',                       value:+1, log:'中軍受衝擊，紂王陣腳大亂', note:'良策 — 直擊敵核', good:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['三千精銳如利刃般刺入商軍中央！','紂王衛隊抵擋不住，節節後退......','商軍兩翼見中軍受挫，士氣大跌。','此為「擒賊先擒王」之策——奏效了！']}},
+          {text:'分兵三路包抄商軍兩翼',                       value:0,  log:'兵力分散，戰況膠著',     note:'中性 — 兵分有險',
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['三路分兵......主上，我軍本就兵力懸殊。','左路被商軍纏住，右路推進緩慢。','戰局陷入膠著，未見決定性突破。']}},
+          {text:'按兵不動，等候敵軍疲憊',                     value:-1, log:'錯失先機，紂王重整旗鼓', note:'✗ 失策 — 商軍只會愈打愈狠', bad:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['主上......商軍見我軍按兵不動，反而以為我軍怯戰！','紂王趁機重整旗鼓，並調動殘餘精銳！','商軍士氣回升，我軍錯失先機......這不妙啊！']}},
         ]
       },
       {
+        prologue: {
+          speaker: '探馬',
+          portrait: null,
+          lines: [
+            '報——商軍前排倒戈，紂王退至丹山下！',
+            '紂王命令最後的精銳衛隊死守，並斬殺逃兵以儆效尤。',
+            '主上，下一步如何？',
+          ]
+        },
         situation: '商軍前排倒戈，紂王見勢不妙，命衛隊死戰於丹山下。眼前是紂王的精銳衛隊——下一步？',
         tutorialHint: '敵軍主力崩潰、衛隊孤立無援，正是「窮寇勿迫，速戰速決」之時。乘勝追擊可斷紂王退路；勸降衛隊則直接瓦解抵抗。',
         options: [
-          {text:'乘勝追擊，斷其退路',                         value:+1, log:'衛隊潰散，紂王退守朝歌', note:'★ 最佳解 — 兵貴神速', good:true},
-          {text:'勸降紂王衛隊將領',                           value:+1, log:'部分衛隊倒戈，紂王孤立', note:'良策 — 不戰而屈人之兵', good:true},
-          {text:'撤退鞏固陣地，避其鋒銳',                     value:-1, log:'紂王得以重整旗鼓',     note:'✗ 失策 — 放虎歸山', bad:true},
-          {text:'縱兵搶掠商營物資',                           value:-1, log:'軍紀渙散，士氣下降',   note:'✗ 失策 — 失去民心', bad:true},
+          {text:'乘勝追擊，斷其退路',                         value:+1, log:'衛隊潰散，紂王退守朝歌', note:'★ 最佳解 — 兵貴神速', good:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['主上下令乘勝追擊——「兵貴神速」！','我軍如潮水般席捲商軍衛隊......','紂王在亂軍中倉皇逃離，狼狽不堪地退守朝歌！','主上，下一步該如何處置朝歌？']}},
+          {text:'勸降紂王衛隊將領',                           value:+1, log:'部分衛隊倒戈，紂王孤立', note:'良策 — 不戰而屈人之兵', good:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['妙計！「不戰而屈人之兵」——','數名衛隊將領思考後，竟陣前倒戈！','紂王身邊只剩死忠百人，惶恐逃離戰場......','朝歌已成孤城，主上請決斷下一步。']}},
+          {text:'撤退鞏固陣地，避其鋒銳',                     value:-1, log:'紂王得以重整旗鼓',     note:'✗ 失策 — 放虎歸山', bad:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['主上......為何撤退？','紂王見我軍後撤，重整旗鼓並命衛隊反撲！','我軍士氣下降，前功盡棄......','錯失了一鼓而下的時機，後悔莫及！']}},
+          {text:'縱兵搶掠商營物資',                           value:-1, log:'軍紀渙散，士氣下降',   note:'✗ 失策 — 失去民心', bad:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['主上！您忘了「弔民伐罪」的旗號嗎？','士兵爭搶商營物資，軍紀大亂！','民心散去，「仁政」的名號蒙塵......','這不僅失了戰機，更失了天下！']}},
         ]
       },
       {
+        prologue: {
+          speaker: '探馬',
+          portrait: null,
+          lines: [
+            '報——紂王已退守朝歌！',
+            '朝歌城高池深，宮中尚有死忠之士......',
+            '主上，是一鼓而下，還是圍而困之？',
+          ]
+        },
         situation: '紂王退守朝歌。城高池深，宮中尚有死忠。一鼓而下還是圍而困之？',
         tutorialHint: '紂王已是甕中之鱉。「圍城斷糧」可避免巷戰傷亡；「派使勸降」則展現王者風範。兩者皆為上策，視情況而定。',
         options: [
-          {text:'立即圍城，斷糧斷水',                         value:+1, log:'朝歌陷入恐慌，紂王自焚於鹿台', note:'★ 最佳解 — 圍三闕一', good:true},
-          {text:'派姜尚為使，勸紂王投降',                     value:+1, log:'紂王拒降但軍心已散',       note:'良策 — 攻心為上', good:true},
-          {text:'分兵清剿商軍殘部',                           value:0,  log:'殘部被肅清，但延誤主攻',   note:'中性 — 延誤主攻'},
-          {text:'轉而攻打商朝諸侯',                           value:-1, log:'戰線拉長，後勤吃緊',       note:'✗ 失策 — 主次顛倒', bad:true},
+          {text:'立即圍城，斷糧斷水',                         value:+1, log:'朝歌陷入恐慌，紂王自焚於鹿台', note:'★ 最佳解 — 圍三闕一', good:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['主上下令圍城——「圍三闕一」之計！','朝歌斷糧斷水，城中人心惶惶......','三日後，紂王自焚於鹿台，火光照亮夜空。','商朝國祚已絕！主上，這一戰結束了。']}},
+          {text:'派姜尚為使，勸紂王投降',                     value:+1, log:'紂王拒降但軍心已散',       note:'良策 — 攻心為上', good:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['老臣親自入朝歌——「攻心為上」也！','紂王雖拒降，但城中軍心已散......','宮人紛紛開門迎接我軍。紂王走投無路，自焚鹿台。','戰事告終，天下太平在望！']}},
+          {text:'分兵清剿商軍殘部',                           value:0,  log:'殘部被肅清，但延誤主攻',   note:'中性 — 延誤主攻',
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['主上......雖然商軍殘部被肅清，','但紂王在朝歌喘息之機，竟組織了一支反撲！','我軍主力延誤攻城時機，付出更多代價......']}},
+          {text:'轉而攻打商朝諸侯',                           value:-1, log:'戰線拉長，後勤吃緊',       note:'✗ 失策 — 主次顛倒', bad:true,
+            epilogue:{speaker:'姜尚',portrait:'h_jiang_sh',lines:['主上！「主次顛倒」啊！','紂王在朝歌得以喘息，並向諸侯求援！','我軍戰線拉長，後勤吃緊，疲於奔命......','這一戰若不能速勝，恐生變故！']}},
         ]
       },
     ],
@@ -2527,23 +2660,138 @@ function enterWarLoop(){
     loseTarget: det.loseTarget || 3,
     log: [],
     isTutorial: !!det.isTutorial,
+    phase: 'opening',     // 'opening' | 'prologue' | 'choice' | 'epilogue' | 'ending'
+    narrLines: [],
+    narrSpeaker: '',
+    narrPortrait: null,
+    narrIdx: 0,
+    narrTypingTO: null,
+    narrTyping: false,
+    pendingOption: null,  // option chosen, used when epilogue done
   };
   tx('wl-title', det.title);
   tx('wl-era', det.era);
   tx('wl-prog-tgt', _wlState.winTarget);
   tx('wl-loss-tgt', _wlState.loseTarget);
-  // Header icon from chapter or default
   const chIcon = curChapter?.icon || det.icon || '⚔️';
   tx('wl-title-icon', chIcon);
   showScreen('scr-warloop');
-  renderWarLoop();
+
+  // Start with opening if exists, else prologue
+  if(det.opening){
+    enterNarrative('opening', det.opening);
+  } else {
+    advanceToNextPrologue();
+  }
+  renderProgress();
 }
 
-function renderWarLoop(){
-  if(!_wlState) return;
-  const {det, idx, score, losses, winTarget, loseTarget, isTutorial} = _wlState;
+/* ── Narrative phase ── */
+function enterNarrative(phase, beat){
+  if(!_wlState || !beat) { renderChoice(); return; }
+  _wlState.phase = phase;
+  _wlState.narrLines = beat.lines || [];
+  _wlState.narrSpeaker = beat.speaker || '旁白';
+  _wlState.narrPortrait = beat.portrait || null;
+  _wlState.narrIdx = 0;
+  showNarrative();
+  startTypewriter();
+}
 
-  // Star-based progress
+function showNarrative(){
+  document.getElementById('wl-narrative').style.display = '';
+  document.getElementById('wl-scenario-card').style.display = 'none';
+  // Speaker
+  tx('wl-narr-speaker', _wlState.narrSpeaker);
+  // Portrait
+  const portEl = document.getElementById('wl-narr-portrait');
+  const imgEl  = document.getElementById('wl-narr-img');
+  portEl.setAttribute('data-name', _wlState.narrSpeaker.slice(0,2));
+  imgEl.classList.remove('loaded');
+  imgEl.removeAttribute('src');
+  if(_wlState.narrPortrait){
+    const h = HEROES_IDX[_wlState.narrPortrait];
+    if(h){
+      attachPortrait(imgEl, heroPortraitUrl(h), heroPortraitFallbackUrl(h), h);
+    }
+  }
+}
+
+function startTypewriter(){
+  if(!_wlState) return;
+  const lineIdx = _wlState.narrIdx;
+  const line = _wlState.narrLines[lineIdx] || '';
+  const txtEl = document.getElementById('wl-narr-text');
+  txtEl.innerHTML = '<span class="wl-narr-cursor"></span>';
+  tx('wl-narr-progress', `${lineIdx+1} / ${_wlState.narrLines.length}`);
+  _wlState.narrTyping = true;
+  let i = 0;
+  const step = ()=>{
+    if(!_wlState || !_wlState.narrTyping) return;
+    if(i < line.length){
+      i++;
+      txtEl.innerHTML = line.slice(0, i) + '<span class="wl-narr-cursor"></span>';
+      _wlState.narrTypingTO = setTimeout(step, 38);
+    } else {
+      _wlState.narrTyping = false;
+      txtEl.innerHTML = line + '<span class="wl-narr-cursor"></span>';
+    }
+  };
+  step();
+}
+
+function nextNarrativeLine(){
+  if(!_wlState) return;
+  if(_wlState.narrTyping){
+    // Skip typewriter: show full line instantly
+    clearTimeout(_wlState.narrTypingTO);
+    _wlState.narrTyping = false;
+    const line = _wlState.narrLines[_wlState.narrIdx] || '';
+    document.getElementById('wl-narr-text').innerHTML = line + '<span class="wl-narr-cursor"></span>';
+    return;
+  }
+  _wlState.narrIdx++;
+  if(_wlState.narrIdx >= _wlState.narrLines.length){
+    // Narrative beat finished
+    onNarrativeDone();
+  } else {
+    startTypewriter();
+  }
+}
+
+function onNarrativeDone(){
+  if(!_wlState) return;
+  const p = _wlState.phase;
+  if(p === 'opening'){
+    advanceToNextPrologue();
+  } else if(p === 'prologue'){
+    // Go to choice
+    renderChoice();
+  } else if(p === 'epilogue'){
+    // Apply pending option & check end
+    applyPendingOption();
+  } else if(p === 'ending'){
+    endWarLoop('win');
+  } else if(p === 'lose-ending'){
+    endWarLoop('lose');
+  }
+}
+
+function advanceToNextPrologue(){
+  if(!_wlState) return;
+  const sc = _wlState.det.scenarios[_wlState.idx % _wlState.det.scenarios.length];
+  if(!sc){ endWarLoop('draw'); return; }
+  if(sc.prologue){
+    enterNarrative('prologue', sc.prologue);
+  } else {
+    renderChoice();
+  }
+}
+
+/* Progress only — does not touch scenario/narrative panes */
+function renderProgress(){
+  if(!_wlState) return;
+  const {score, losses, winTarget, loseTarget, idx} = _wlState;
   const starsEl = document.getElementById('wl-prog-stars');
   starsEl.innerHTML = '';
   for(let i=0; i<winTarget; i++){
@@ -2552,7 +2800,6 @@ function renderWarLoop(){
     s.textContent = i < score ? '★' : '☆';
     starsEl.appendChild(s);
   }
-  // Loss dots
   const lossEl = document.getElementById('wl-prog-loss');
   lossEl.innerHTML = '';
   for(let i=0; i<loseTarget; i++){
@@ -2560,16 +2807,24 @@ function renderWarLoop(){
     d.className = 'wl-prog-loss-dot' + (i < losses ? ' lose' : '');
     lossEl.appendChild(d);
   }
-
   tx('wl-prog-num', score);
   tx('wl-loss-num', losses);
   tx('wl-step', '局勢 '+(idx+1));
   tx('wl-step-label', '局勢 '+(idx+1));
+}
 
-  // Pick scenario
+/* Render the 4-choice card */
+function renderChoice(){
+  if(!_wlState) return;
+  _wlState.phase = 'choice';
+  const {det, idx, isTutorial} = _wlState;
+  document.getElementById('wl-narrative').style.display = 'none';
+  document.getElementById('wl-scenario-card').style.display = '';
+
   const sc = det.scenarios[idx % det.scenarios.length];
   if(!sc){ endWarLoop('draw'); return; }
-  // Re-mount scenario card to retrigger animation
+
+  // Retrigger animation
   const card = document.getElementById('wl-scenario-card');
   card.style.animation = 'none';
   void card.offsetWidth;
@@ -2588,12 +2843,10 @@ function renderWarLoop(){
     hintWrap.appendChild(hint);
   }
 
-  // Options with tutorial markers
+  // Options
   const optsEl = document.getElementById('wl-opts');
   optsEl.innerHTML = '';
   const letters = ['A','B','C','D'];
-
-  // Find the highest-value option (for tutorial best-pick highlight)
   let bestIdx = -1, bestVal = -Infinity;
   if(isTutorial){
     sc.options.forEach((o,i)=>{ if((o.value||0) > bestVal){bestVal=o.value||0; bestIdx=i;} });
@@ -2625,6 +2878,20 @@ function renderWarLoop(){
 
 function pickWarLoopOption(opt, letter){
   if(!_wlState) return;
+  _wlState.pendingOption = {opt, letter};
+  // If option has epilogue, show narrative; otherwise apply immediately
+  if(opt.epilogue){
+    enterNarrative('epilogue', opt.epilogue);
+  } else {
+    applyPendingOption();
+  }
+}
+
+function applyPendingOption(){
+  if(!_wlState || !_wlState.pendingOption) return;
+  const {opt, letter} = _wlState.pendingOption;
+  _wlState.pendingOption = null;
+
   const val = opt.value || 0;
   if(val > 0) _wlState.score += val;
   else if(val < 0) _wlState.losses += -val;
@@ -2636,14 +2903,22 @@ function pickWarLoopOption(opt, letter){
   });
 
   _wlState.idx++;
+  renderProgress();
 
   // Check end conditions
   if(_wlState.score >= _wlState.winTarget){
-    setTimeout(()=> endWarLoop('win'), 700);
+    // Show ending narrative if exists
+    if(_wlState.det.ending){
+      _wlState.phase = 'ending';
+      enterNarrative('ending', _wlState.det.ending);
+    } else {
+      endWarLoop('win');
+    }
   } else if(_wlState.losses >= _wlState.loseTarget){
-    setTimeout(()=> endWarLoop('lose'), 700);
+    endWarLoop('lose');
   } else {
-    setTimeout(()=> renderWarLoop(), 700);
+    // Continue to next scenario's prologue
+    advanceToNextPrologue();
   }
 }
 
@@ -4050,6 +4325,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   $('wl-quit')?.addEventListener('click', ()=>{
     if(confirm('確定棄戰？此關進度將遺失。')) toLobby();
+  });
+  $('wl-narr-next')?.addEventListener('click', ()=> nextNarrativeLine());
+  // Click anywhere on narrative panel also advances
+  $('wl-narrative')?.addEventListener('click', (e)=>{
+    if(e.target.id === 'wl-narr-next') return;  // handled
+    nextNarrativeLine();
   });
 
   // Matchmaking cancel
