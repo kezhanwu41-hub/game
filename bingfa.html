@@ -2392,6 +2392,18 @@ function getLevelDetails(lv){
 let curChapter = null, curLevel = null, curChoice = null;
 
 /* ── Render Chapter Select ── */
+/* Check if a chapter's first level is unlocked
+   (requires previous chapter's last main-line level cleared) */
+function isChapterStartUnlocked(chapterIdx, progress){
+  if(chapterIdx === 0) return true;  // 第一章永遠可玩
+  const prevCh = CAMPAIGN[chapterIdx - 1];
+  if(!prevCh) return true;
+  const prevMains = prevCh.levels.filter(l => l.type === 'main');
+  const prevLast = prevMains[prevMains.length - 1];
+  if(!prevLast) return true;
+  return !!progress[prevLast.id];
+}
+
 function renderChapters(){
   const grid = document.getElementById('ch-grid');
   if(!grid) return;
@@ -2400,8 +2412,17 @@ function renderChapters(){
   CAMPAIGN.forEach((ch, idx)=>{
     const done = (ch.levels||[]).filter(l => progress[l.id]).length;
     const total = ch.levels.length;
+    const startUnlocked = isChapterStartUnlocked(idx, progress);
+    const prevCh = idx > 0 ? CAMPAIGN[idx - 1] : null;
+    const prevMains = prevCh ? prevCh.levels.filter(l => l.type === 'main') : [];
+    const prevLast = prevMains[prevMains.length - 1];
+
     const d = document.createElement('div');
-    d.className = 'ch-card';  // 全部開放
+    d.className = 'ch-card';
+    let lockHint = '';
+    if(!startUnlocked && prevLast){
+      lockHint = `<div style="margin-top:10px;font-size:11px;color:#ef9090;letter-spacing:1px;border-top:1px dashed rgba(239,83,80,.3);padding-top:8px">🔒 通過《${prevCh.name}·${prevLast.name}》解鎖</div>`;
+    }
     d.innerHTML = `
       <div class="ch-num">第 ${idx+1} 章</div>
       <div class="ch-name">${ch.icon} ${ch.name}</div>
@@ -2410,40 +2431,53 @@ function renderChapters(){
         <span class="done">已通 ${done}</span>
         <span class="total">/ ${total} 關</span>
         ${done === total && total > 0 ? '<span style="color:#ffe8a8">★ 全通</span>' : ''}
-      </div>`;
-    d.addEventListener('click', ()=> openChapter(ch));
+        ${!startUnlocked ? '<span style="color:#ef5350">🔒 待解鎖</span>' : ''}
+      </div>
+      ${lockHint}`;
+    d.addEventListener('click', ()=> openChapter(ch, idx));
     grid.appendChild(d);
   });
 }
 
-function openChapter(ch){
+function openChapter(ch, idx){
   curChapter = ch;
+  // Find chapter index if not provided
+  if(typeof idx !== 'number') idx = CAMPAIGN.findIndex(c => c.id === ch.id);
   document.getElementById('lv-chapter-title').textContent = ch.icon + ' ' + ch.name;
   document.getElementById('lv-chapter-sub').textContent = ch.era;
   const list = document.getElementById('lv-list');
   list.innerHTML = '';
   const progress = JSON.parse(localStorage.getItem('bf_camp')||'{}');
-  // Compute sequential unlock: a level is unlocked if it's the first un-done one,
-  // or all preceding main-line levels are done.
-  let prevDone = true;  // first level always unlocked
+
+  // Chapter start unlock check (inter-chapter dependency)
+  const chapterStartUnlocked = isChapterStartUnlocked(idx, progress);
+
+  // Sequential within-chapter unlock starts from chapter-start state
+  let prevDone = chapterStartUnlocked;
   ch.levels.forEach((lv, i)=>{
     const d = document.createElement('div');
     const isDone = !!progress[lv.id];
-    // Sequential lock: must complete previous level (regardless of type)
     const seqLocked = !prevDone && !isDone;
     const isLocked = (lv.locked === true) || seqLocked;
     d.className = 'lv-card' + (isDone ? ' done' : '') + (isLocked ? ' locked' : '');
     const tagLabel = lv.type==='main' ? '正史' : lv.type==='branch' ? '支線' : '隱藏';
+    // First level lock hint for chapters>0
+    let lockNote = '';
+    if(i === 0 && !chapterStartUnlocked && idx > 0){
+      const prevCh = CAMPAIGN[idx-1];
+      const prevMains = prevCh.levels.filter(l => l.type === 'main');
+      const prevLast = prevMains[prevMains.length-1];
+      if(prevLast) lockNote = ` <span style="color:#ef9090;font-size:11px">— 須先通過《${prevCh.name}·${prevLast.name}》</span>`;
+    }
     d.innerHTML = `
       <div class="lv-idx">${i+1}</div>
       <div class="lv-info">
-        <div class="lv-name">${lv.name} <span class="lv-tag ${lv.type}">${tagLabel}</span></div>
+        <div class="lv-name">${lv.name} <span class="lv-tag ${lv.type}">${tagLabel}</span>${lockNote}</div>
         <div class="lv-meta">${lv.desc}</div>
       </div>
       <div class="lv-status">${isDone ? '✓' : isLocked ? '🔒' : '▶'}</div>`;
     if(!isLocked) d.addEventListener('click', ()=> openLevel(lv));
     list.appendChild(d);
-    // Update prevDone — must be done OR it's a hidden level (don't gate on hidden)
     if(lv.type !== 'hidden') prevDone = isDone;
   });
   showScreen('scr-levels');
