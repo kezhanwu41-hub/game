@@ -244,6 +244,61 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 .lv-tag.hidden{background:rgba(186,104,200,.2);color:#ba68c8;border:1px solid rgba(186,104,200,.5)}
 .lv-status{font-size:18px;min-width:30px;text-align:center}
 
+/* War Loop — sequential 4-choice scenarios after BP */
+#scr-warloop{display:none;flex-direction:column;align-items:center;padding:20px}
+#scr-warloop.active{display:flex}
+.wl-header{
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+  max-width:900px;width:100%;margin-bottom:14px;
+  padding:10px 16px;
+  background:rgba(91,58,138,.18);border:1px solid rgba(201,168,76,.4);border-radius:8px;
+}
+.wl-title{font-size:18px;font-weight:900;letter-spacing:4px;color:var(--gold2)}
+.wl-era{font-size:11px;color:var(--text2);letter-spacing:2px}
+.wl-progress{
+  max-width:900px;width:100%;margin-bottom:14px;
+  background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:8px;padding:10px 16px;
+}
+.wl-prog-row{display:flex;justify-content:space-between;font-size:12px;letter-spacing:2px;margin-bottom:6px}
+.wl-prog-row .ok{color:#66bb6a}
+.wl-prog-row .bad{color:#ef5350}
+.wl-prog-bar{height:10px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;display:flex;gap:1px}
+.wl-prog-seg{flex:1;background:rgba(255,255,255,.06);transition:all .4s}
+.wl-prog-seg.win{background:linear-gradient(90deg,#66bb6a,#ffe8a8);box-shadow:0 0 8px rgba(255,232,168,.6)}
+.wl-prog-seg.lose{background:#ef5350;box-shadow:0 0 6px rgba(239,83,80,.6)}
+.wl-scenario{
+  max-width:900px;width:100%;margin-bottom:14px;
+  background:linear-gradient(160deg,rgba(91,58,138,.35),rgba(13,8,32,.9));
+  border:2px solid rgba(201,168,76,.45);border-radius:12px;padding:22px;
+}
+.wl-step-num{font-size:11px;letter-spacing:4px;color:var(--gold);margin-bottom:10px}
+.wl-situation{font-size:15px;line-height:1.9;color:var(--text);letter-spacing:1px;margin-bottom:18px;padding-left:12px;border-left:3px solid var(--gold)}
+.wl-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:700px){.wl-opts{grid-template-columns:1fr}}
+.wl-opt{
+  background:linear-gradient(135deg,rgba(91,58,138,.35),rgba(20,10,38,.7));
+  border:1.5px solid rgba(156,109,214,.45);border-radius:8px;
+  padding:12px 14px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.wl-opt:hover:not(.disabled){transform:translateY(-2px);border-color:var(--gold);box-shadow:0 4px 14px rgba(201,168,76,.2)}
+.wl-opt.disabled{opacity:.5;cursor:not-allowed}
+.wl-opt-letter{display:inline-block;width:24px;height:24px;border-radius:50%;
+  background:var(--gold);color:#1a1208;font-weight:900;text-align:center;line-height:24px;
+  font-size:13px;flex-shrink:0;margin-top:2px}
+.wl-opt-text{flex:1;font-size:13px;line-height:1.6;color:#e8d0ff}
+.wl-log{
+  max-width:900px;width:100%;
+  background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:8px;padding:12px 16px;
+  max-height:200px;overflow-y:auto;
+}
+.wl-log-h{font-size:12px;letter-spacing:3px;color:var(--gold);margin-bottom:8px}
+.wl-log-line{font-size:13px;line-height:1.7;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+.wl-log-line.good{color:#81c784}
+.wl-log-line.neutral{color:rgba(255,255,255,.6)}
+.wl-log-line.bad{color:#ef9090}
+.wl-log-line .ts{font-size:10px;color:rgba(255,255,255,.4);margin-right:6px}
+
 /* Level intro (historical choice) */
 #scr-intro{display:none;flex-direction:column;align-items:center;padding:24px 20px}
 #scr-intro.active{display:flex}
@@ -852,6 +907,33 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   <div class="ch-title" id="lv-chapter-title">章節</div>
   <div class="ch-sub" id="lv-chapter-sub"></div>
   <div class="lv-list" id="lv-list"></div>
+</section>
+
+<!-- ══ CAMPAIGN — War Loop (Post-BP Decision Phase) ════ -->
+<section class="screen" id="scr-warloop">
+  <div class="wl-header">
+    <div>
+      <div class="wl-title" id="wl-title">戰局推演</div>
+      <div class="wl-era" id="wl-era"></div>
+    </div>
+    <button class="lv-back" id="wl-quit" style="margin:0">⊗ 棄戰</button>
+  </div>
+  <div class="wl-progress">
+    <div class="wl-prog-row">
+      <span class="ok">▲ 戰果 <span id="wl-prog-num">0</span> / <span id="wl-prog-tgt">3</span></span>
+      <span class="bad">▼ 損失 <span id="wl-loss-num">0</span> / <span id="wl-loss-tgt">3</span></span>
+    </div>
+    <div class="wl-prog-bar" id="wl-prog-bar"></div>
+  </div>
+  <div class="wl-scenario">
+    <div class="wl-step-num" id="wl-step">局勢 1</div>
+    <div class="wl-situation" id="wl-situation">…</div>
+    <div class="wl-opts" id="wl-opts"></div>
+  </div>
+  <div class="wl-log">
+    <div class="wl-log-h">📜 戰報</div>
+    <div id="wl-log-content"></div>
+  </div>
 </section>
 
 <!-- ══ CAMPAIGN — Level Intro (Historical Choice) ══════ -->
@@ -1984,49 +2066,184 @@ const CAMPAIGN = [
   ]},
 ];
 
-/* Per-level detailed configs (only featured levels have full data; others fallback to generic) */
+/* Per-level detailed configs.
+   New structure: BP first → then `scenarios` (sequential 4-choice decisions).
+   Each option has `value`: +1 (good move), 0 (neutral), -1 (bad move).
+   Win when cumulative score reaches `winTarget`; lose if losses reach `loseTarget`. */
 const LEVEL_DETAILS = {
-  // === 牧野之戰：教學用第一關 ===
+  // ════════ 周朝 ════════
   'mu_ye': {
     title: '牧野之戰',
     era: '前 1046 年 · 周武王伐紂',
-    background: '商紂王暴虐無道，諸侯共怒。周武王姬發聯合八百諸侯，於牧野（今河南淇縣）誓師，與紂王七十萬大軍對峙。商軍多為奴隸臨時編成，士氣低落。姜尚（太公望）為軍師，建議「先聲奪人」。',
-    question: '你是周武王，姜尚進言。如何開戰？',
-    options: [
-      {label:'A', text:'依姜尚計：清晨突襲，伐紂大義為號', fx:'士氣 +20% · 商軍奴隸倒戈（敵方 -30% 戰力）', morale:0.20, event:'slave_defect', enemyDebuff:0.30},
-      {label:'B', text:'按禮列陣，正面決戰', fx:'士氣 +5% · 陣法契合 +10%（傳統陣型）', morale:0.05, fit:0.10},
-      {label:'C', text:'分兵迂迴，斷紂王退路', fx:'情報 +1 · 但兵力分散風險', intel:1, risk:0.2},
-    ],
-    playerSide: 'zhou',
-    enemySide: 'shang',
-    recommendedHeroes: ['h_jiang_sh'],  // 姜尚必選
+    background: '商紂王暴虐，諸侯共怒。周武王與姜尚率八百諸侯誓師牧野，與紂王七十萬商軍對峙。',
+    winTarget: 2,   // 第 1 關門檻最低
+    loseTarget: 3,
+    recommendedHeroes: ['h_jiang_sh'],
     reward: '解鎖陣法「太公六韜」+ 姜尚信物',
     isTutorial: true,
-    tutorialHints: {
-      intro: '【教學】這是中國全史的第一關。每關開場都有歷史選擇題，影響後續戰鬥。\n建議選 A——歷史最佳解，士氣大幅提升！',
-      bp: '【教學】進入禁選階段：雙方輪流禁選/選擇將領，分主帥/謀臣/武將三階段。\n姜尚是太公望，必選軍師！',
-      battle: '【教學】戰鬥用兩個陣法（先鋒+後援）對拼五行。\n建議第一陣選「金陣」（白虎陣）破商軍。',
-    },
+    scenarios: [
+      {
+        situation: '清晨兩軍對峙。商軍雖眾，多為奴隸臨時編成；周軍三千精銳壓陣。姜尚請令——你如何發起首戰？',
+        options: [
+          {text:'以「伐紂弔民」為號，陣前宣告大義',         value:+1, log:'商軍奴隸動搖，前排紛紛倒戈'},
+          {text:'集中精銳衝擊紂王中軍',                       value:+1, log:'中軍受衝擊，紂王陣腳大亂'},
+          {text:'分兵三路包抄商軍兩翼',                       value:0,  log:'兵力分散，戰況膠著'},
+          {text:'按兵不動，等候敵軍疲憊',                     value:-1, log:'錯失先機，紂王重整旗鼓'},
+        ]
+      },
+      {
+        situation: '商軍前排倒戈，紂王見勢不妙，命衛隊死戰於丹山下。眼前是紂王的精銳衛隊——下一步？',
+        options: [
+          {text:'乘勝追擊，斷其退路',                         value:+1, log:'衛隊潰散，紂王退守朝歌'},
+          {text:'勸降紂王衛隊將領',                           value:+1, log:'部分衛隊倒戈，紂王孤立'},
+          {text:'撤退鞏固陣地，避其鋒銳',                     value:-1, log:'紂王得以重整旗鼓'},
+          {text:'縱兵搶掠商營物資',                           value:-1, log:'軍紀渙散，士氣下降'},
+        ]
+      },
+      {
+        situation: '紂王退守朝歌。城高池深，宮中尚有死忠。一鼓而下還是圍而困之？',
+        options: [
+          {text:'立即圍城，斷糧斷水',                         value:+1, log:'朝歌陷入恐慌，紂王自焚於鹿台'},
+          {text:'派姜尚為使，勸紂王投降',                     value:+1, log:'紂王拒降但軍心已散'},
+          {text:'分兵清剿商軍殘部',                           value:0,  log:'殘部被肅清，但延誤主攻'},
+          {text:'轉而攻打商朝諸侯',                           value:-1, log:'戰線拉長，後勤吃緊'},
+        ]
+      },
+    ],
   },
 
-  // === 赤壁之戰：完整範例 ===
+  'chang_shao': {
+    title: '長勺之戰',
+    era: '前 684 年 · 春秋',
+    background: '齊桓公伐魯。曹劌進見魯莊公，論「夫戰，勇氣也。一鼓作氣，再而衰，三而竭」。',
+    winTarget: 2, loseTarget: 3,
+    scenarios: [
+      {situation:'齊軍鳴鼓進攻。是否反擊？',
+       options:[
+         {text:'按兵不動，靜待齊軍三鼓力竭',         value:+1, log:'曹劌曰「未可」，齊軍士氣漸衰'},
+         {text:'立即出戰，迎頭痛擊',                 value:-1, log:'齊軍正盛，我軍折損'},
+         {text:'佯敗誘敵深入',                       value:0,  log:'敵軍未上當'},
+         {text:'分兵迂迴齊軍後方',                   value:-1, log:'兵力分散'},
+       ]},
+      {situation:'齊軍三鼓，士氣已竭。出兵時機？',
+       options:[
+         {text:'一鼓作氣，全軍突擊',                 value:+1, log:'齊軍大敗，潰逃北方'},
+         {text:'試探性接敵',                         value:0,  log:'錯失最佳時機'},
+         {text:'等待齊軍撤退時追擊',                 value:-1, log:'齊軍從容撤退'},
+         {text:'據守要塞不出',                       value:-1, log:'消極避戰'},
+       ]},
+      {situation:'齊軍敗退。曹劌察其旗靡馬亂後方下令追擊。',
+       options:[
+         {text:'視其轍亂，望其旗靡，乃逐之',         value:+1, log:'追擊大勝，齊軍潰不成軍'},
+         {text:'徐徐追擊以防詐敗',                   value:+1, log:'穩妥取勝'},
+         {text:'全軍急追不留',                       value:0,  log:'部分齊軍逃脫'},
+         {text:'據守不追',                           value:-1, log:'放走齊軍主力'},
+       ]},
+    ]
+  },
+
+  // ════════ 三國 ════════
   'chi_bi': {
     title: '赤壁之戰',
     era: '208 年 · 三國',
-    background: '建安十三年，曹操率二十萬大軍南下，欲一舉吞併江東。孫權與劉備結盟，由周瑜統帥三萬聯軍於赤壁迎戰。曹軍久居北方，水土不服且不擅水戰，遂以鐵索連環船陣。黃蓋獻火攻計，需先行詐降。',
-    question: '你是周瑜，黃蓋獻火攻計需假投降並借東風。你的決定？',
-    options: [
-      {label:'A', text:'採納火攻：親率黃蓋詐降', fx:'士氣 +15% · 陣法契合 +20%（火攻）· 觸發「東風助陣」', morale:0.15, fit:0.20, event:'east_wind'},
-      {label:'B', text:'正面水戰：堂堂之師', fx:'士氣 +5% · 資源 +10% · 觸發「曹軍連環船」', morale:0.05, resource:0.10, event:'chained_ships'},
-      {label:'C', text:'派人刺殺曹操：奇襲斬首', fx:'情報 +2 · 失敗風險高', intel:2, risk:0.3},
-      {label:'D', text:'（虛構）請諸葛亮借三昧真火', fx:'需八卦陣 + 火神咒 · 傷害翻倍但耗盡資源', dmgMult:2.0, resource:-0.99, requireFmt:'bagua'},
-    ],
-    playerSide: 'liu_sun',  // 孫劉聯軍
-    enemySide: 'wei',       // 曹魏
-    recommendedHeroes: ['h_zhou_yu', 'h_zhuge', 'h_huo_qb'],  // 推薦陣容（範例）
+    background: '曹操率二十萬南下。孫劉聯軍三萬於赤壁對峙。曹軍不擅水戰，鐵索連環船陣。',
+    winTarget: 3, loseTarget: 3,
+    recommendedHeroes: ['h_zhou_yu', 'h_zhuge', 'h_huang_zhong'],
     reward: '解鎖「火攻陣」完全體 + 黃蓋信物',
+    scenarios: [
+      {situation:'黃蓋來見，獻火攻計。但需先行詐降，風險極大。',
+       options:[
+         {text:'採納火攻，黃蓋詐降',                 value:+1, log:'曹操中計，準備受降船隊'},
+         {text:'正面水戰',                           value:-1, log:'水軍不敵，潰退'},
+         {text:'拒絕詐降，固守不動',                 value:-1, log:'被曹軍水寨步步進逼'},
+         {text:'派細作刺殺曹操',                     value:0,  log:'刺客被擒，但未洩漏火攻'},
+       ]},
+      {situation:'諸葛亮登壇借東風。當夜東南風起，曹軍水寨在下風口。',
+       options:[
+         {text:'立即發動火攻艦隊',                   value:+1, log:'火船順風直撲曹軍水寨'},
+         {text:'等候風更大些再動手',                 value:0,  log:'錯失最佳時機'},
+         {text:'分兵截斷曹軍陸路退路',               value:+1, log:'切斷退路，加重曹軍損失'},
+         {text:'保留兵力觀望',                       value:-1, log:'火攻效果減半'},
+       ]},
+      {situation:'火勢蔓延，曹營大亂。曹操率殘部從華容道撤退。',
+       options:[
+         {text:'派關羽守華容道',                     value:+1, log:'關羽欲擒故縱，曹軍狼狽逃脫但元氣大傷'},
+         {text:'派趙雲沿江追擊',                     value:+1, log:'追擊有功，曹軍丟盔棄甲'},
+         {text:'全力追殺曹操',                       value:0,  log:'曹軍死戰突圍'},
+         {text:'就地慶功不追',                       value:-1, log:'曹操逃回北方'},
+       ]},
+      {situation:'曹軍大敗北退。荊州歸屬未定，劉備、孫權各懷心思。',
+       options:[
+         {text:'劉備佔據荊南四郡',                   value:+1, log:'劉備得以立足，三分天下成形'},
+         {text:'孫劉平分荊州',                       value:0,  log:'埋下日後紛爭'},
+         {text:'乘勝北伐中原',                       value:-1, log:'戰線過長被反撲'},
+         {text:'撤回江東休整',                       value:0,  log:'錯失擴張時機'},
+       ]},
+    ],
+  },
+
+  'guan_du': {
+    title: '官渡之戰',
+    era: '200 年 · 三國',
+    background: '袁紹十萬眾南下，曹操三萬於官渡相峙。糧草將盡，許攸來投獻計。',
+    winTarget: 3, loseTarget: 3,
+    scenarios: [
+      {situation:'許攸獻計：偷襲烏巢，焚袁軍糧草。',
+       options:[
+         {text:'親率精銳，夜襲烏巢',                 value:+1, log:'烏巢火光燭天，袁軍糧盡'},
+         {text:'派張遼偷襲',                         value:+1, log:'張遼火攻得手'},
+         {text:'固守官渡不動',                       value:-1, log:'糧盡兵疲，士氣低落'},
+         {text:'分兵正面決戰',                       value:-1, log:'兵力懸殊難敵'},
+       ]},
+      {situation:'袁紹聞烏巢失火。是先救糧還是先攻官渡？',
+       options:[
+         {text:'郭圖獻計：圍魏救趙，急攻官渡',       value:0,  log:'反被夏侯惇穩守'},
+         {text:'分兵救烏巢',                         value:-1, log:'兵力分散，兩線潰敗'},
+         {text:'放棄烏巢，全力攻官渡',               value:-1, log:'糧道斷絕士氣崩潰'},
+         {text:'撤退保存實力',                       value:0,  log:'錯失反撲機會'},
+       ]},
+      {situation:'袁軍士氣崩潰，張郃、高覽來降。',
+       options:[
+         {text:'納降並重用張郃',                     value:+1, log:'袁軍離散，曹軍如虎添翼'},
+         {text:'乘勢追擊袁紹本陣',                   value:+1, log:'袁紹倉皇北逃'},
+         {text:'清點戰果固守',                       value:0,  log:'錯失擴大戰果機會'},
+         {text:'懷疑降將不予重用',                   value:-1, log:'寒了降將之心'},
+       ]},
+    ]
+  },
+
+  // === 通用範本（給尚未設計的關卡用）===
+  '_default': {
+    title: '戰役推演',
+    era: '——',
+    background: '兩軍對峙，將領出謀。',
+    winTarget: 2, loseTarget: 3,
+    scenarios: [
+      {situation:'敵軍逼近，主公徵詢眾將。',
+       options:[
+         {text:'採納軍師之計，巧用陣法',             value:+1, log:'陣法奏效'},
+         {text:'武將先鋒衝陣',                       value:+1, log:'先鋒突破敵陣'},
+         {text:'按兵不動觀望',                       value:0,  log:'戰況膠著'},
+         {text:'分兵冒進',                           value:-1, log:'兵力分散受挫'},
+       ]},
+      {situation:'戰局漸明朗，是進是退？',
+       options:[
+         {text:'乘勝追擊',                           value:+1, log:'敵軍潰退'},
+         {text:'穩守陣腳',                           value:0,  log:'維持戰線'},
+         {text:'迂迴包抄',                           value:+1, log:'包圍敵主力'},
+         {text:'撤回休整',                           value:-1, log:'錯失戰機'},
+       ]},
+    ]
   },
 };
+
+function getLevelDetails(lv){
+  return LEVEL_DETAILS[lv?.id] || Object.assign({}, LEVEL_DETAILS._default, {
+    title: lv?.name || '戰役',
+    era: '—',
+    background: lv?.desc || '',
+  });
+}
 
 /* ── State ── */
 let curChapter = null, curLevel = null, curChoice = null;
@@ -2092,50 +2309,142 @@ function openChapter(ch){
 
 function openLevel(lv){
   curLevel = lv;
-  const detail = LEVEL_DETAILS[lv.id];
-  if(!detail){
-    showToast('此關卡尚在開發中，敬請期待', 2400);
+  curChoice = null;
+  // New flow: skip intro → directly into BP
+  const det = getLevelDetails(lv);
+  const isTut = det.isTutorial;
+  startGame(isTut ? 'tutorial' : 'campaign');
+  if(G){
+    G.campaignLevel = lv;
+    G.campaignDetails = det;
+  }
+  // Brief context toast
+  showToast(`【${det.title}】${det.era}`, 3000);
+  if(det.background){
+    setTimeout(()=> showToast(det.background.length > 60 ? det.background.slice(0,55)+'…' : det.background, 4500), 600);
+  }
+}
+
+/* Called after BP completes in campaign mode — enters scenario loop */
+let _wlState = null;
+/* After BP completes — route to war-loop for campaign or normal battle otherwise */
+function enterPostBP(){
+  if(G && (G.mode === 'campaign' || G.mode === 'tutorial') && G.campaignLevel){
+    enterWarLoop();
+  } else {
+    enterBattle();
+  }
+}
+
+function enterWarLoop(){
+  if(!G || !G.campaignLevel) return;
+  const det = getLevelDetails(G.campaignLevel);
+  if(!det.scenarios || !det.scenarios.length){
+    // No scenarios → fallback to normal battle
+    enterBattle();
     return;
   }
-  document.getElementById('intro-title').textContent = detail.title;
-  document.getElementById('intro-era').textContent = detail.era;
-  document.getElementById('intro-bg').textContent = detail.background;
-  document.getElementById('intro-q').textContent = detail.question;
-  const optsEl = document.getElementById('intro-opts');
+  _wlState = {
+    det, idx: 0, score: 0, losses: 0,
+    winTarget: det.winTarget || 2,
+    loseTarget: det.loseTarget || 3,
+    log: [],
+  };
+  tx('wl-title', det.title);
+  tx('wl-era', det.era);
+  tx('wl-prog-tgt', _wlState.winTarget);
+  tx('wl-loss-tgt', _wlState.loseTarget);
+  showScreen('scr-warloop');
+  renderWarLoop();
+}
+
+function renderWarLoop(){
+  if(!_wlState) return;
+  const {det, idx, score, losses, winTarget, loseTarget, log} = _wlState;
+  // Progress bar (winTarget segments lit up by score)
+  const barEl = document.getElementById('wl-prog-bar');
+  barEl.innerHTML = '';
+  for(let i=0; i<winTarget; i++){
+    const seg = document.createElement('div');
+    seg.className = 'wl-prog-seg' + (i < score ? ' win' : '');
+    barEl.appendChild(seg);
+  }
+  tx('wl-prog-num', score);
+  tx('wl-loss-num', losses);
+  tx('wl-step', '局勢 '+(idx+1));
+
+  // Pick scenario (cycle if needed)
+  const sc = det.scenarios[idx % det.scenarios.length];
+  if(!sc){ endWarLoop('draw'); return; }
+  tx('wl-situation', sc.situation);
+
+  const optsEl = document.getElementById('wl-opts');
   optsEl.innerHTML = '';
-  detail.options.forEach(opt=>{
+  const letters = ['A','B','C','D'];
+  sc.options.forEach((opt, i)=>{
     const d = document.createElement('div');
-    d.className = 'intro-opt';
+    d.className = 'wl-opt';
     d.innerHTML = `
-      <span class="intro-opt-letter">${opt.label}</span>
-      <span class="intro-opt-txt">${opt.text}</span>
-      <div class="intro-opt-fx">▸ ${opt.fx}</div>`;
+      <span class="wl-opt-letter">${letters[i]||'•'}</span>
+      <span class="wl-opt-text">${opt.text}</span>`;
     d.addEventListener('click', ()=>{
-      curChoice = opt;
-      showToast('已選擇：'+opt.label+' — 進入禁選階段', 1800);
-      setTimeout(()=> startCampaignBattle(), 700);
+      // Disable all buttons
+      document.querySelectorAll('.wl-opt').forEach(o=>o.classList.add('disabled'));
+      pickWarLoopOption(opt, letters[i]);
     });
     optsEl.appendChild(d);
   });
-  showScreen('scr-intro');
-  tx('top-title', detail.title);
+
+  renderWarLog();
 }
 
-function startCampaignBattle(){
-  // Determine mode: tutorial if level has isTutorial flag
-  const det = LEVEL_DETAILS[curLevel?.id];
-  const isTut = det && det.isTutorial;
-  startGame(isTut ? 'tutorial' : 'campaign');
-  if(G && curChoice){
-    G.campaignChoice = curChoice;
-    G.campaignLevel = curLevel;
-    G.moraleBonus = curChoice.morale || 0;
-    G.fitBonus = curChoice.fit || 0;
+function pickWarLoopOption(opt, letter){
+  if(!_wlState) return;
+  const val = opt.value || 0;
+  if(val > 0) _wlState.score += val;
+  else if(val < 0) _wlState.losses += -val;
+
+  _wlState.log.unshift({
+    type: val>0 ? 'good' : val<0 ? 'bad' : 'neutral',
+    text: `[${letter}] ${opt.log || opt.text}`,
+    delta: val,
+  });
+
+  _wlState.idx++;
+
+  // Check end conditions
+  if(_wlState.score >= _wlState.winTarget){
+    setTimeout(()=> endWarLoop('win'), 700);
+  } else if(_wlState.losses >= _wlState.loseTarget){
+    setTimeout(()=> endWarLoop('lose'), 700);
+  } else {
+    setTimeout(()=> renderWarLoop(), 700);
   }
-  // Show BP tutorial hint
-  if(isTut && det.tutorialHints?.bp){
-    setTimeout(()=> showToast('🎓 '+det.tutorialHints.bp.replace('【教學】',''), 5000), 1200);
+}
+
+function renderWarLog(){
+  const el = document.getElementById('wl-log-content');
+  if(!el || !_wlState) return;
+  el.innerHTML = _wlState.log.map(l=>{
+    const sym = l.delta>0 ? '▲' : l.delta<0 ? '▼' : '–';
+    return `<div class="wl-log-line ${l.type}">${sym} ${l.text}</div>`;
+  }).join('') || '<div class="wl-log-line neutral">（尚無戰報）</div>';
+}
+
+function endWarLoop(outcome){
+  if(!_wlState) return;
+  // Bridge into normal result screen
+  if(!G) G = makeState('campaign');
+  G.phase = 'end';
+  G.warLoopOutcome = outcome;
+  // Save campaign progress
+  if(outcome === 'win' && G.campaignLevel){
+    const camp = JSON.parse(localStorage.getItem('bf_camp')||'{}');
+    camp[G.campaignLevel.id] = {time: Date.now()};
+    localStorage.setItem('bf_camp', JSON.stringify(camp));
   }
+  _wlState = null;
+  showResult(outcome);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2866,6 +3175,7 @@ function toLobby(){
   tutHideAll();
   if(battle3D) battle3D.destroy();
   G = null; pickedT=[null,null]; roleFilter='';
+  _wlState = null; curLevel = null; curChoice = null;
   tx('top-title','兵 法 推 演');
   showScreen('scr-lobby');
   refreshLobby();
@@ -3221,7 +3531,7 @@ function onHeroClick(heroId){
   if(G.mode === 'tutorial') tutUpdate();
   renderBP();
   if(G.phase === 'battle'){
-    setTimeout(()=>enterBattle(), 600);
+    setTimeout(()=>enterPostBP(), 600);
   } else {
     bpLoop();
   }
@@ -3249,7 +3559,7 @@ function bpLoop(){
         doStep(G, 'enemy', id);
         if(G.mode==='tutorial') tutUpdate();
         renderBP();
-        if(G.phase === 'battle') setTimeout(()=>enterBattle(), 600);
+        if(G.phase === 'battle') setTimeout(()=>enterPostBP(), 600);
         else bpLoop();
       }
     }, delay);
@@ -3417,7 +3727,12 @@ function showResult(outcome){
   const bonds = activeBonds(G.picks.player);
   const bondTxt = bonds.length?`「${bonds[0].name}」旗幟高揚，`:'';
   let narr='';
-  if(G.mode==='tutorial'){
+  if(G.campaignLevel){
+    const lv = G.campaignLevel;
+    if(outcome==='win') narr=`【${lv.name}】戰局已定！${bondTxt}你的決策連環得當，敵軍潰敗。${G.campaignDetails?.reward ? '◆ '+G.campaignDetails.reward : ''}`;
+    else if(outcome==='lose') narr=`【${lv.name}】戰局逆轉！失誤過多，敵軍反撲成功。雖敗猶可重來——重整旗鼓，再戰一場！`;
+    else narr=`【${lv.name}】戰局膠著，勝負難分。再試一次，務必把握每個關鍵決策！`;
+  } else if(G.mode==='tutorial'){
     if(outcome==='win') narr=`恭喜完成新手教學！${bondTxt}你的陣容羈絆發揮了決定性作用，以五行相剋之道制敵於先機。水鏡先生曰：「孺子可教也！」`;
     else if(outcome==='lose') narr=`新手教學首戰落敗，但這正是學習的開始！${mk}雖敗，理解了禁選邏輯與五行羈絆，下次必能反敗為勝！`;
     else narr=`勢均力敵，雙方兵力同歸於盡！教學成功，你已掌握禁選核心。水鏡先生曰：「此子天賦異稟！」`;
@@ -3507,6 +3822,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   $('intro-back')?.addEventListener('click', ()=>{
     if(curChapter) openChapter(curChapter);
+  });
+  $('wl-quit')?.addEventListener('click', ()=>{
+    if(confirm('確定棄戰？此關進度將遺失。')) toLobby();
   });
 
   // Matchmaking cancel
