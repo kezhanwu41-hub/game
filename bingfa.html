@@ -1986,6 +1986,29 @@ const CAMPAIGN = [
 
 /* Per-level detailed configs (only featured levels have full data; others fallback to generic) */
 const LEVEL_DETAILS = {
+  // === 牧野之戰：教學用第一關 ===
+  'mu_ye': {
+    title: '牧野之戰',
+    era: '前 1046 年 · 周武王伐紂',
+    background: '商紂王暴虐無道，諸侯共怒。周武王姬發聯合八百諸侯，於牧野（今河南淇縣）誓師，與紂王七十萬大軍對峙。商軍多為奴隸臨時編成，士氣低落。姜尚（太公望）為軍師，建議「先聲奪人」。',
+    question: '你是周武王，姜尚進言。如何開戰？',
+    options: [
+      {label:'A', text:'依姜尚計：清晨突襲，伐紂大義為號', fx:'士氣 +20% · 商軍奴隸倒戈（敵方 -30% 戰力）', morale:0.20, event:'slave_defect', enemyDebuff:0.30},
+      {label:'B', text:'按禮列陣，正面決戰', fx:'士氣 +5% · 陣法契合 +10%（傳統陣型）', morale:0.05, fit:0.10},
+      {label:'C', text:'分兵迂迴，斷紂王退路', fx:'情報 +1 · 但兵力分散風險', intel:1, risk:0.2},
+    ],
+    playerSide: 'zhou',
+    enemySide: 'shang',
+    recommendedHeroes: ['h_jiang_sh'],  // 姜尚必選
+    reward: '解鎖陣法「太公六韜」+ 姜尚信物',
+    isTutorial: true,
+    tutorialHints: {
+      intro: '【教學】這是中國全史的第一關。每關開場都有歷史選擇題，影響後續戰鬥。\n建議選 A——歷史最佳解，士氣大幅提升！',
+      bp: '【教學】進入禁選階段：雙方輪流禁選/選擇將領，分主帥/謀臣/武將三階段。\n姜尚是太公望，必選軍師！',
+      battle: '【教學】戰鬥用兩個陣法（先鋒+後援）對拼五行。\n建議第一陣選「金陣」（白虎陣）破商軍。',
+    },
+  },
+
   // === 赤壁之戰：完整範例 ===
   'chi_bi': {
     title: '赤壁之戰',
@@ -2017,11 +2040,8 @@ function renderChapters(){
   CAMPAIGN.forEach((ch, idx)=>{
     const done = (ch.levels||[]).filter(l => progress[l.id]).length;
     const total = ch.levels.length;
-    const locked = idx > 0 && total>0 && !CAMPAIGN[idx-1].levels.every(l => progress[l.id] || l.type!=='main');
-    // For now: only first 3 chapters unlocked (周/秦漢/三國)
-    const isUnlocked = idx <= 2;
     const d = document.createElement('div');
-    d.className = 'ch-card' + (isUnlocked ? '' : ' locked');
+    d.className = 'ch-card';  // 全部開放
     d.innerHTML = `
       <div class="ch-num">第 ${idx+1} 章</div>
       <div class="ch-name">${ch.icon} ${ch.name}</div>
@@ -2029,11 +2049,9 @@ function renderChapters(){
       <div class="ch-stat">
         <span class="done">已通 ${done}</span>
         <span class="total">/ ${total} 關</span>
-        ${isUnlocked ? '' : '<span style="color:#ef5350">🔒 待解鎖</span>'}
+        ${done === total && total > 0 ? '<span style="color:#ffe8a8">★ 全通</span>' : ''}
       </div>`;
-    if(isUnlocked){
-      d.addEventListener('click', ()=> openChapter(ch));
-    }
+    d.addEventListener('click', ()=> openChapter(ch));
     grid.appendChild(d);
   });
 }
@@ -2045,10 +2063,15 @@ function openChapter(ch){
   const list = document.getElementById('lv-list');
   list.innerHTML = '';
   const progress = JSON.parse(localStorage.getItem('bf_camp')||'{}');
+  // Compute sequential unlock: a level is unlocked if it's the first un-done one,
+  // or all preceding main-line levels are done.
+  let prevDone = true;  // first level always unlocked
   ch.levels.forEach((lv, i)=>{
     const d = document.createElement('div');
     const isDone = !!progress[lv.id];
-    const isLocked = lv.locked;
+    // Sequential lock: must complete previous level (regardless of type)
+    const seqLocked = !prevDone && !isDone;
+    const isLocked = (lv.locked === true) || seqLocked;
     d.className = 'lv-card' + (isDone ? ' done' : '') + (isLocked ? ' locked' : '');
     const tagLabel = lv.type==='main' ? '正史' : lv.type==='branch' ? '支線' : '隱藏';
     d.innerHTML = `
@@ -2060,6 +2083,8 @@ function openChapter(ch){
       <div class="lv-status">${isDone ? '✓' : isLocked ? '🔒' : '▶'}</div>`;
     if(!isLocked) d.addEventListener('click', ()=> openLevel(lv));
     list.appendChild(d);
+    // Update prevDone — must be done OR it's a hidden level (don't gate on hidden)
+    if(lv.type !== 'hidden') prevDone = isDone;
   });
   showScreen('scr-levels');
   tx('top-title', '中國全史 · ' + ch.name);
@@ -2097,14 +2122,19 @@ function openLevel(lv){
 }
 
 function startCampaignBattle(){
-  // Convert choice modifiers and start BP with campaign mode
-  startGame('campaign');
-  // Apply morale/fit modifiers from choice
+  // Determine mode: tutorial if level has isTutorial flag
+  const det = LEVEL_DETAILS[curLevel?.id];
+  const isTut = det && det.isTutorial;
+  startGame(isTut ? 'tutorial' : 'campaign');
   if(G && curChoice){
     G.campaignChoice = curChoice;
     G.campaignLevel = curLevel;
     G.moraleBonus = curChoice.morale || 0;
     G.fitBonus = curChoice.fit || 0;
+  }
+  // Show BP tutorial hint
+  if(isTut && det.tutorialHints?.bp){
+    setTimeout(()=> showToast('🎓 '+det.tutorialHints.bp.replace('【教學】',''), 5000), 1200);
   }
 }
 
@@ -3368,6 +3398,13 @@ function confirmBattle(){
 function showResult(outcome){
   stopTimers();
   if(!G) return;
+  // Save campaign progress on win
+  if(outcome === 'win' && G.campaignLevel){
+    const camp = JSON.parse(localStorage.getItem('bf_camp')||'{}');
+    camp[G.campaignLevel.id] = {time: Date.now(), choice: G.campaignChoice?.label};
+    localStorage.setItem('bf_camp', JSON.stringify(camp));
+    showToast('✓ 已記錄通關：'+G.campaignLevel.name, 2500);
+  }
   const title = $('result-title');
   if(outcome==='win'){title.textContent='勝';title.className='result-title win'}
   else if(outcome==='lose'){title.textContent='敗';title.className='result-title lose'}
@@ -3438,6 +3475,23 @@ document.addEventListener('DOMContentLoaded',()=>{
         renderChapters();
         showScreen('scr-chapters');
         tx('top-title','中國全史');
+      } else if(m === 'tutorial'){
+        // 新手教學 = 中國全史第 1 章 · 第 1 關「牧野之戰」帶教學註解
+        const zhou = CAMPAIGN.find(c=>c.id==='zhou');
+        const muye = zhou?.levels.find(l=>l.id==='mu_ye');
+        if(muye){
+          curChapter = zhou;
+          openLevel(muye);
+          // Show tutorial intro toast
+          setTimeout(()=>{
+            const det = LEVEL_DETAILS['mu_ye'];
+            if(det && det.tutorialHints){
+              showToast('🎓 教學模式：'+det.tutorialHints.intro.split('\n')[0], 4500);
+            }
+          }, 600);
+        } else {
+          startGame('tutorial');  // fallback
+        }
       } else if(m === 'rank' || m === 'match'){
         startMatchmaking(m);
       } else {
