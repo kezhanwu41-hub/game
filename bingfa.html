@@ -1128,6 +1128,125 @@ HEROES.forEach(h=>{ if(!h.role) h.role = h.roles[0]; });
 const HEROES_IDX = Object.fromEntries(HEROES.map(h=>[h.id,h]));
 
 /* ───────────────────────────────────────────────────────
+   PORTRAIT PLACEHOLDER — Canvas-drawn 武將印 (instant display)
+─────────────────────────────────────────────────────── */
+const _phCache = new Map();
+function makePortraitPlaceholder(h){
+  if(!h) return '';
+  if(_phCache.has(h.id)) return _phCache.get(h.id);
+
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 340;
+  const ctx = c.getContext('2d');
+
+  const elemPalette = {
+    '木':['#1f3a1f','#81c784','rgba(129,199,132,'],
+    '火':['#3a1414','#ef5350','rgba(239,83,80,'],
+    '土':['#3a2a14','#ffca28','rgba(255,202,40,'],
+    '金':['#2a2a3a','#cfd8dc','rgba(207,216,220,'],
+    '水':['#142a3a','#42a5f5','rgba(66,165,245,'],
+  };
+  const [dark, accent, rgba] = elemPalette[h.elem] || ['#2a1f3a','#c9a4ff','rgba(201,164,255,'];
+
+  // Backdrop gradient
+  const g = ctx.createLinearGradient(0,0,0,340);
+  g.addColorStop(0, dark);
+  g.addColorStop(0.5, '#0d0820');
+  g.addColorStop(1, dark);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,256,340);
+
+  // Concentric ring decoration (faint)
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 1;
+  for(let r=40; r<180; r+=18){
+    ctx.beginPath();
+    ctx.arc(128, 165, r, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Radial glow behind name
+  const rg = ctx.createRadialGradient(128,170,10,128,170,120);
+  rg.addColorStop(0, rgba + '0.35)');
+  rg.addColorStop(1, rgba + '0)');
+  ctx.fillStyle = rg;
+  ctx.fillRect(0,0,256,340);
+
+  // Outer + inner border
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2.5;
+  ctx.strokeRect(6,6,244,328);
+  ctx.strokeStyle = rgba + '0.5)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(13,13,230,314);
+
+  // Corner ornaments (L-shapes)
+  ctx.fillStyle = accent;
+  const cornerLen = 26;
+  [[6,6,1,1],[250,6,-1,1],[6,334,1,-1],[250,334,-1,-1]].forEach(([cx,cy,sx,sy])=>{
+    ctx.fillRect(cx, cy, cornerLen*sx, 2.5);
+    ctx.fillRect(cx, cy, 2.5, cornerLen*sy);
+  });
+
+  // Role badge at top
+  const roleLabel = h.role==='king' ? '主公' :
+                    ['strategist','chancellor','minister'].includes(h.role) ? '謀士' : '武將';
+  ctx.font = 'bold 14px "Noto Serif TC",serif';
+  ctx.fillStyle = accent;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('「'+roleLabel+'」', 128, 38);
+
+  // Element symbol large
+  ctx.font = 'bold 22px "Noto Serif TC",serif';
+  ctx.fillStyle = accent;
+  ctx.globalAlpha = 0.65;
+  ctx.fillText('— '+h.elem+' —', 128, 64);
+  ctx.globalAlpha = 1;
+
+  // Hero name — large calligraphy with glow
+  const nameLen = h.name.length;
+  const nameSize = nameLen <= 2 ? 70 : nameLen === 3 ? 52 : 42;
+  ctx.font = `900 ${nameSize}px "Noto Serif TC",serif`;
+  ctx.shadowColor = accent;
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(h.name, 128, 175);
+  ctx.shadowBlur = 0;
+
+  // Subtle inner stroke on name
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 0.8;
+  ctx.globalAlpha = 0.7;
+  ctx.strokeText(h.name, 128, 175);
+  ctx.globalAlpha = 1;
+
+  // Faction
+  ctx.font = 'bold 16px "Noto Serif TC",serif';
+  ctx.fillStyle = accent;
+  ctx.globalAlpha = 0.85;
+  ctx.fillText('▸ '+h.faction+' ◂', 128, 244);
+  ctx.globalAlpha = 1;
+
+  // Power bar at bottom
+  const pct = Math.max(0, Math.min(1, (h.pow-60)/40));
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(30, 282, 196, 4);
+  ctx.fillStyle = accent;
+  ctx.fillRect(30, 282, 196*pct, 4);
+  ctx.font = 'bold 11px "Noto Serif TC",serif';
+  ctx.fillStyle = '#ffe8a8';
+  ctx.fillText('戰力 '+h.pow, 128, 304);
+
+  const url = c.toDataURL('image/jpeg', 0.7);
+  _phCache.set(h.id, url);
+  return url;
+}
+
+/* ───────────────────────────────────────────────────────
    PORTRAIT LOADER — queue + retry + intersection observer
    防止同時 30+ 張圖塞爆 Pollinations 而全失敗
 ─────────────────────────────────────────────────────── */
@@ -1141,39 +1260,54 @@ const PORTRAIT_TIMEOUT = 60000;  // 60s 給 Pollinations 充裕時間
 function _processPortraitQ(){
   while(_portraitActive.size < PORTRAIT_MAX && _portraitQ.length){
     const img = _portraitQ.shift();
-    if(!img || !img.isConnected || img._loaded) continue;
-    const src = img.dataset.src;
-    if(!src) continue;
+    if(!img || !img.isConnected || img._realLoaded) continue;
+    const realSrc = img.dataset.realSrc;
+    if(!realSrc) continue;
     _portraitActive.add(img);
     let resolved = false;
-    const done = ok=>{
+    // Use a separate Image() object to test loading without disturbing display
+    const probe = new Image();
+    const done = (ok, url)=>{
       if(resolved) return;
       resolved = true;
       _portraitActive.delete(img);
-      if(ok){
-        img._loaded = true;
-        img.classList.add('loaded');
-        _portraitDone.add(src);
-      } else if((img._retry=(img._retry||0)+1) < PORTRAIT_RETRY_MAX){
-        setTimeout(()=>{
-          if(img.isConnected && !img._loaded){
-            // Force new attempt by switching seed (some seeds randomly fail)
-            const u = new URL(img.dataset.src);
-            const oldSeed = +u.searchParams.get('seed')||0;
-            u.searchParams.set('seed', (oldSeed + 7919*img._retry) % 99999);
-            img.dataset.src = u.toString();
-            img.src = '';
-            _portraitQ.push(img);
-            _processPortraitQ();
-          }
-        }, 1200*img._retry);
+      if(ok && img.isConnected){
+        // Swap displayed image to real one
+        img.src = url;
+        img._realLoaded = true;
+        _portraitDone.add(url);
+      } else if(!ok){
+        // Try fallback if available
+        const fb = img.dataset.fallback;
+        if(fb && !img._usedFallback){
+          img._usedFallback = true;
+          img.dataset.realSrc = fb;
+          img._queued = false;
+          _portraitQ.push(img);
+        } else if((img._retry=(img._retry||0)+1) < PORTRAIT_RETRY_MAX && fb){
+          // Final retry with seed shuffle on fallback
+          setTimeout(()=>{
+            if(img.isConnected && !img._realLoaded){
+              try{
+                const u = new URL(img.dataset.realSrc);
+                const oldSeed = +u.searchParams.get('seed')||0;
+                u.searchParams.set('seed', (oldSeed + 7919*img._retry) % 99999);
+                img.dataset.realSrc = u.toString();
+              }catch(e){}
+              img._queued = false;
+              _portraitQ.push(img);
+              _processPortraitQ();
+            }
+          }, 1500*img._retry);
+        }
       }
       _processPortraitQ();
     };
-    img.onload  = ()=>done(true);
-    img.onerror = ()=>done(false);
-    img.src = src;
-    setTimeout(()=>{ if(!resolved) done(false); }, PORTRAIT_TIMEOUT);
+    probe.onload  = ()=>done(true, realSrc);
+    probe.onerror = ()=>done(false);
+    probe.src = realSrc;
+    const isLocal = realSrc.startsWith('assets/');
+    setTimeout(()=>{ if(!resolved) done(false); }, isLocal ? 3000 : PORTRAIT_TIMEOUT);
   }
 }
 
@@ -1191,50 +1325,61 @@ const _portraitIO = (typeof IntersectionObserver!=='undefined') ? new Intersecti
   });
 }, {rootMargin:'160px'}) : null;
 
-/** Attach lazy-loaded portrait to an <img>. Pass actual URL via src param. */
-function attachPortrait(img, src){
+/** Attach portrait — instantly shows Canvas placeholder, queues real image upgrade. */
+function attachPortrait(img, src, fallback, hero){
   if(!img || !src) return;
-  img.dataset.src = src;
-  // Always enqueue immediately — IntersectionObserver doesn't reliably
-  // detect visibility inside scrollable containers (pool-box).
-  // The queue's MAX=3 concurrency is enough throttling.
-  if(!img._queued && !img._loaded){
+  // STEP 1: Instant Canvas placeholder so card never looks blank
+  if(hero){
+    const ph = makePortraitPlaceholder(hero);
+    img.src = ph;
+    img.classList.add('loaded');
+    img._placeholder = ph;
+  }
+  // STEP 2: Queue real image; on success swap src
+  img.dataset.realSrc = src;
+  if(fallback) img.dataset.fallback = fallback;
+  if(!img._queued && !img._realLoaded){
     img._queued = true;
     _portraitQ.push(img);
     _processPortraitQ();
   }
 }
 
-/* ── Hero portrait URL (free Pollinations.ai AI image generation) ── */
+/* ── Hero portrait URL: local pre-downloaded image (秒載入)
+       Local 404 時，queue loader 會自動 fallback 到 live Pollinations URL ── */
 function heroPortraitUrl(h){
   if(!h) return '';
-  let role;
-  if(h.role==='king') role = 'emperor in dragon robes';
-  else if(['strategist','chancellor','minister'].includes(h.role)) role = 'scholar in silk robes with fan';
-  else if(h.role==='vanguard') role = 'fierce warrior in armor';
-  else if(h.role==='commandant') role = 'cavalry general';
-  else if(h.role==='marshal') role = 'grand marshal in heavy armor';
-  else role = 'general with halberd';
-  // Very short prompt → faster Pollinations response
-  const prompt = `${h.name}, Chinese ancient ${role}, ink painting portrait, half body, ${h.faction} dynasty`;
-  let seed = 0;
-  for(let i=0;i<h.id.length;i++) seed = (seed*31 + h.id.charCodeAt(i)) >>> 0;
-  // No model=flux → uses default 'turbo' which is 5-10× faster
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=340&nologo=true&seed=${seed%99999}`;
+  return `assets/portraits/${h.id}.jpg`;
 }
 
-/* ── Generic unit-type image for 3D battlefield ── */
+/* ── Fallback: live Pollinations URL if local file missing ── */
+function heroPortraitFallbackUrl(h){
+  if(!h) return '';
+  let role;
+  if(h.role==='king') role = 'emperor dragon robes';
+  else if(['strategist','chancellor','minister'].includes(h.role)) role = 'scholar silk robes fan';
+  else if(h.role==='vanguard') role = 'fierce warrior armor';
+  else if(h.role==='commandant') role = 'cavalry general';
+  else if(h.role==='marshal') role = 'grand marshal armor';
+  else role = 'general halberd';
+  const prompt = `${h.name}, Chinese ancient ${role}, ink painting, half body`;
+  let seed = 0;
+  for(let i=0;i<h.id.length;i++) seed = ((seed*31) + h.id.charCodeAt(i)) % 99999;
+  if(seed<0) seed += 99999;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=256&height=340&nologo=true&seed=${seed}`;
+}
+
+/* ── Generic unit-type image for 3D battlefield: local pre-downloaded ── */
 function unitTypeUrl(type, side){
+  return `assets/units/${side}_${type}.jpg`;
+}
+function unitTypeFallbackUrl(type, side){
   const team = side==='player' ? 'blue armor' : 'red armor';
-  const prompts = {
-    'infantry':`Chinese ancient infantry, ${team}, spear and shield, full body, ink painting`,
-    'archer':  `Chinese ancient archer, ${team}, drawing bow, full body, ink painting`,
-    'cavalry': `Chinese ancient cavalry on horse, ${team}, long lance, full body, ink painting`,
-    'general': `Chinese ancient general, ${team}, plumed helmet, full body, ink painting`,
-    'advisor': `Chinese ancient scholar strategist, ${team} robes, folding fan, full body, ink painting`,
-    'warrior': `Chinese ancient warrior, ${team}, halberd, full body, ink painting`,
+  const map = {
+    infantry:'infantry spear shield', archer:'archer drawing bow', cavalry:'cavalry on horse lance',
+    general:'general plumed helmet', advisor:'scholar strategist fan', warrior:'warrior halberd'
   };
-  const prompt = prompts[type] || prompts.infantry;
+  const prompt = `Chinese ancient ${map[type]||'soldier'}, ${team}, full body, ink painting`;
   const seed = (side==='player' ? 4321 : 8765) + type.length*17 + type.charCodeAt(0);
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=200&height=320&nologo=true&seed=${seed}`;
 }
@@ -1634,18 +1779,101 @@ function resolveBattle(state, ourT){
 ═══════════════════════════════════════════════════════════ */
 /* ── Texture cache (shared by all sprite units) ── */
 const _texCache = new Map();
-function getUnitTexture(url){
-  if(_texCache.has(url)) return _texCache.get(url);
-  const loader = new THREE.TextureLoader();
-  loader.crossOrigin = 'anonymous';
-  const tex = loader.load(url,
-    t=>{ t.needsUpdate = true; },
-    undefined,
-    err=>{ console.warn('texture load failed', url); }
-  );
+
+/** Canvas placeholder for unit sprite (instant — never shows blank) */
+function makeUnitPlaceholder(type, side, hero){
+  const c = document.createElement('canvas');
+  c.width = 200; c.height = 320;
+  const ctx = c.getContext('2d');
+  const accent = side==='player' ? '#6ab2ff' : '#ff8a8a';
+  const dark   = side==='player' ? '#1a2a4a' : '#3a1414';
+  // Background
+  const g = ctx.createLinearGradient(0,0,0,320);
+  g.addColorStop(0, dark);
+  g.addColorStop(1, '#0d0820');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,200,320);
+  // Border
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(4,4,192,312);
+  // Decorative arcs
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 1;
+  for(let r=20; r<160; r+=15){
+    ctx.beginPath();
+    ctx.arc(100, 160, r, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // Unit type symbol
+  const typeLabel = {
+    infantry:'步兵', archer:'弓手', cavalry:'騎兵',
+    general:'將軍', advisor:'軍師', warrior:'武將'
+  }[type] || '兵';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if(hero){
+    // Hero name large
+    const ns = hero.name.length <= 2 ? 56 : hero.name.length===3 ? 44 : 36;
+    ctx.font = `900 ${ns}px "Noto Serif TC",serif`;
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(hero.name, 100, 145);
+    ctx.shadowBlur = 0;
+    // Small role
+    ctx.font = 'bold 16px "Noto Serif TC",serif';
+    ctx.fillStyle = accent;
+    ctx.fillText('【'+typeLabel+'】', 100, 210);
+    ctx.font = 'bold 14px "Noto Serif TC",serif';
+    ctx.globalAlpha = 0.7;
+    ctx.fillText(hero.faction, 100, 245);
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.font = '900 56px "Noto Serif TC",serif';
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(typeLabel, 100, 160);
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 14px "Noto Serif TC",serif';
+    ctx.fillStyle = accent;
+    ctx.globalAlpha = 0.6;
+    ctx.fillText(side==='player' ? '我軍' : '敵軍', 100, 220);
+    ctx.globalAlpha = 1;
+  }
+  return c;
+}
+
+function getUnitTexture(url, fallback, type, side, hero){
+  const key = url+'|'+(hero?hero.id:type+'_'+side);
+  if(_texCache.has(key)) return _texCache.get(key);
+
+  // Start with Canvas placeholder texture so sprite never appears blank
+  const phCanvas = makeUnitPlaceholder(type, side, hero);
+  const tex = new THREE.CanvasTexture(phCanvas);
   tex.minFilter = THREE.LinearFilter;
   tex.magFilter = THREE.LinearFilter;
-  _texCache.set(url, tex);
+  _texCache.set(key, tex);
+
+  // Async: try to upgrade to real image
+  const tryLoad = (u, onFail)=>{
+    const probe = new Image();
+    probe.crossOrigin = 'anonymous';
+    probe.onload = ()=>{
+      tex.image = probe;
+      tex.needsUpdate = true;
+    };
+    probe.onerror = ()=>{ if(onFail) onFail(); };
+    probe.src = u;
+  };
+  tryLoad(url, ()=>{
+    if(fallback) tryLoad(fallback);
+  });
+
   return tex;
 }
 
@@ -1655,7 +1883,8 @@ function makeSoldierSprite(type, side, hero){
   const teamColHex = side==='player' ? 0x6ab2ff : 0xff6868;
   const teamColCSS = side==='player' ? '#6ab2ff' : '#ff6868';
   const url = hero ? heroPortraitUrl(hero) : unitTypeUrl(type, side);
-  const tex = getUnitTexture(url);
+  const fbUrl = hero ? heroPortraitFallbackUrl(hero) : unitTypeFallbackUrl(type, side);
+  const tex = getUnitTexture(url, fbUrl, type, side, hero);
 
   const isHero = !!hero;
   const W = isHero ? 1.5 : (type==='cavalry'?1.4:1.0);
@@ -2520,7 +2749,7 @@ function renderOneSide(side){
   // Attach slot portraits via queue
   pickEl.querySelectorAll('img[data-hero]').forEach(img=>{
     const h = HEROES_IDX[img.dataset.hero];
-    if(h) attachPortrait(img, heroPortraitUrl(h));
+    if(h) attachPortrait(img, heroPortraitUrl(h), heroPortraitFallbackUrl(h), h);
   });
 
   /* ── Bond hint ──────────────────────────── */
@@ -2602,7 +2831,7 @@ function renderPool(){
   // Attach portraits via queue loader (so they load in order, not all at once)
   el.querySelectorAll('img[data-hero]').forEach(img=>{
     const h = HEROES_IDX[img.dataset.hero];
-    if(h) attachPortrait(img, heroPortraitUrl(h));
+    if(h) attachPortrait(img, heroPortraitUrl(h), heroPortraitFallbackUrl(h), h);
   });
 
   // Scroll to first suggestion on player tutorial turn
