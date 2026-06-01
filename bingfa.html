@@ -817,6 +817,22 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 .hc.used{opacity:.4;cursor:not-allowed;filter:grayscale(.7)}
 .hc.enemy-turn{opacity:.55;cursor:not-allowed}
 .hc.ban-highlight{border-color:#ef5350;box-shadow:0 0 10px rgba(239,83,80,.3)}
+.hc.campaign-rec{
+  border-color:#ffe8a8!important;
+  box-shadow:0 0 18px rgba(255,232,168,.5),inset 0 0 12px rgba(255,232,168,.1)!important;
+  animation:recPulse 2.2s ease infinite;
+}
+@keyframes recPulse{
+  0%,100%{box-shadow:0 0 14px rgba(255,232,168,.4),inset 0 0 10px rgba(255,232,168,.08)}
+  50%{box-shadow:0 0 28px rgba(255,232,168,.85),inset 0 0 18px rgba(255,232,168,.2)}
+}
+.hc-rec-badge{
+  position:absolute;top:4px;right:4px;z-index:5;
+  background:linear-gradient(135deg,#ffe8a8,var(--gold));
+  color:#1a1208;font-size:9px;font-weight:900;letter-spacing:1px;
+  padding:2px 6px;border-radius:8px;
+  box-shadow:0 2px 4px rgba(0,0,0,.4);
+}
 .hc-portrait{
   width:100%;aspect-ratio:3/4;
   background:linear-gradient(160deg,rgba(91,58,138,.3),rgba(20,10,38,.7));
@@ -2569,31 +2585,371 @@ const LEVEL_DETAILS = {
   },
 
   'guan_du': {
-    title: '官渡之戰',
-    era: '200 年 · 三國',
+    title: '官渡之戰', icon:'⚔️', era: '200 年 · 三國',
     background: '袁紹十萬眾南下，曹操三萬於官渡相峙。糧草將盡，許攸來投獻計。',
     winTarget: 3, loseTarget: 3,
-    scenarios: [
-      {situation:'許攸獻計：偷襲烏巢，焚袁軍糧草。',
+    recommendedHeroes:['h_caocao','h_guo_jia','h_zhang_liao'],
+    reward:'解鎖陣法「火攻陣」基礎版',
+    opening:{speaker:'許攸',portrait:'h_guo_jia',lines:[
+      '主公！袁紹輕慢於我，許攸特來投奔！',
+      '袁軍糧草皆屯於烏巢，由淳于瓊看守。淳于瓊好酒，防備鬆懈......',
+      '主公若以精兵夜襲烏巢，焚其糧草——袁軍十萬之眾，不戰自潰！',
+    ]},
+    scenarios:[
+      {prologue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['主公，許攸所言甚是。袁紹糧道是其命脈......','只是夜襲深入敵境，風險極高。','主公請決——派誰偷襲烏巢？']},
+       situation:'許攸獻計偷襲烏巢，焚袁軍糧草。如何執行？',
+       tutorialHint:'袁軍糧草是命脈，「以奇兵勝」是兵法精髓。親率精銳更顯決心，士氣大振。',
        options:[
-         {text:'親率精銳，夜襲烏巢',                 value:+1, log:'烏巢火光燭天，袁軍糧盡'},
-         {text:'派張遼偷襲',                         value:+1, log:'張遼火攻得手'},
-         {text:'固守官渡不動',                       value:-1, log:'糧盡兵疲，士氣低落'},
-         {text:'分兵正面決戰',                       value:-1, log:'兵力懸殊難敵'},
+         {text:'親率精銳，夜襲烏巢',value:+1,log:'烏巢火光燭天，袁軍糧盡',note:'★ 最佳 — 親率破釜沉舟',good:true,
+           epilogue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['主公親率五千精銳，星夜疾馳烏巢！','淳于瓊喝得爛醉，毫無防備......','大火沖天！袁軍糧草盡焚，消息傳回時，袁紹大營一片驚惶！']}},
+         {text:'派張遼偷襲',value:+1,log:'張遼火攻得手',note:'良策 — 善用名將',good:true,
+           epilogue:{speaker:'張遼',portrait:'h_zhang_liao',lines:['末將領命！','張遼率精騎奔襲烏巢，火攻得手！','袁軍糧道斷絕，軍心動搖！']}},
+         {text:'固守官渡不動',value:-1,log:'糧盡兵疲，士氣低落',note:'✗ 失策 — 坐困',bad:true,
+           epilogue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['主公......袁軍糧足，我軍糧盡。','再守下去，將不戰自敗啊！']}},
+         {text:'分兵正面決戰',value:-1,log:'兵力懸殊難敵',note:'✗ 失策 — 以少對多',bad:true,
+           epilogue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['主公！三萬對十萬，正面決戰必敗！','此非用兵之道......']}},
        ]},
-      {situation:'袁紹聞烏巢失火。是先救糧還是先攻官渡？',
+      {prologue:{speaker:'探馬',lines:['報——袁紹聞烏巢失火，臉色慘白！','謀士郭圖獻計：圍魏救趙，急攻官渡！','袁紹現正調兵猛攻我軍主寨！']},
+       situation:'袁紹分兵：一邊救烏巢、一邊強攻官渡。如何應對？',
+       tutorialHint:'袁紹此舉是兩面受敵的賭博。我軍若守住官渡，烏巢就是死局。',
        options:[
-         {text:'郭圖獻計：圍魏救趙，急攻官渡',       value:0,  log:'反被夏侯惇穩守'},
-         {text:'分兵救烏巢',                         value:-1, log:'兵力分散，兩線潰敗'},
-         {text:'放棄烏巢，全力攻官渡',               value:-1, log:'糧道斷絕士氣崩潰'},
-         {text:'撤退保存實力',                       value:0,  log:'錯失反撲機會'},
+         {text:'夏侯惇死守官渡，等烏巢燒透',value:+1,log:'夏侯惇穩如泰山，袁軍攻勢無功',note:'★ 最佳 — 以靜制動',good:true,
+           epilogue:{speaker:'夏侯惇',portrait:'h_xh_dun',lines:['末將寧死不退！','末將拔矢啖睛之軀，豈會讓袁紹過此關？','官渡城頭，旌旗不倒！']}},
+         {text:'分兵救烏巢',value:-1,log:'兵力分散兩線潰敗',note:'✗ 失策 — 中計',bad:true,
+           epilogue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['主公！袁紹就是要我們分兵！','我軍本就兵少，再分豈非必敗？']}},
+         {text:'放棄烏巢全力攻官渡',value:-1,log:'糧道斷絕士氣崩潰',note:'✗ 失策 — 自斷後路',bad:true,
+           epilogue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['主公！沒有烏巢，我們的糧草也沒了......','這是自殺啊！']}},
+         {text:'放火燒袁軍器械',value:0,log:'袁軍攻城器械受損',note:'中性',
+           epilogue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['雖然燒了攻城器械......','但這只是拖延，不能扭轉戰局。']}},
        ]},
-      {situation:'袁軍士氣崩潰，張郃、高覽來降。',
+      {prologue:{speaker:'探馬',lines:['報——袁軍士氣崩潰！','大將張郃、高覽棄械來降！','袁紹本人帶八百親兵倉皇北逃！']},
+       situation:'袁軍崩潰，張郃、高覽來降。如何擴大戰果？',
+       tutorialHint:'戰勝之時的處置決定後續格局。「重用降將」展現霸主胸襟，亦得人才。',
        options:[
-         {text:'納降並重用張郃',                     value:+1, log:'袁軍離散，曹軍如虎添翼'},
-         {text:'乘勢追擊袁紹本陣',                   value:+1, log:'袁紹倉皇北逃'},
-         {text:'清點戰果固守',                       value:0,  log:'錯失擴大戰果機會'},
-         {text:'懷疑降將不予重用',                   value:-1, log:'寒了降將之心'},
+         {text:'納降並重用張郃',value:+1,log:'袁軍離散，曹軍如虎添翼',note:'★ 最佳 — 廣納英才',good:true,
+           epilogue:{speaker:'張郃',portrait:'h_zhang_liao',lines:['末將張郃，誓死效忠丞相！','袁紹猜忌賢能，丞相寬厚——末將願為馬前卒！']}},
+         {text:'乘勝追擊袁紹本陣',value:+1,log:'袁紹倉皇北逃',note:'良策 — 兵貴神速',good:true,
+           epilogue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['主公決斷！袁紹只剩八百親兵......','此戰之後，河北諸郡望風而降！']}},
+         {text:'清點戰果固守',value:0,log:'錯失擴大戰果機會',note:'中性',epilogue:null},
+         {text:'懷疑降將不予重用',value:-1,log:'寒了降將之心',note:'✗ 失策 — 失人心',bad:true,
+           epilogue:{speaker:'郭嘉',portrait:'h_guo_jia',lines:['主公......張郃高覽見您不信任，又起異心。','袁紹餘部得以喘息......']}},
+       ]},
+    ]
+  },
+
+  'yi_ling': {
+    title:'夷陵之戰', icon:'⚔️', era:'222 年 · 三國',
+    background:'劉備為關羽復仇，傾國伐吳。陸遜以年少受任都督，於夷陵連營七百里相持。',
+    winTarget:3, loseTarget:3,
+    recommendedHeroes:['h_liubei','h_zhuge','h_zhao_yun'],
+    opening:{speaker:'諸葛亮',portrait:'h_zhuge',lines:[
+      '主公，臣懇請三思！',
+      '關公已逝，仇深似海，但傾國伐吳，置北方曹魏於何地？',
+      '此戰若敗，蜀漢國運休矣......請主公冷靜啊！',
+    ]},
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——陸遜避戰退守夷道！','我軍深入吳境七百里，連營而設。','已是六月，盛暑難當......']},
+       situation:'吳軍避戰不出，我軍盛暑連營七百里。如何破敵？',
+       tutorialHint:'「連營」是兵家大忌。盛暑七百里連營等於把火種堆滿前線——陸遜正等這一刻。',
+       options:[
+         {text:'分兵駐紮山林，避暑得勢',value:-1,log:'山林連營，正中陸遜下懷',note:'✗ 失策 — 火攻陷阱',bad:true,
+           epilogue:{speaker:'陸遜',portrait:null,lines:['天助我也——蜀軍連營山林，正可火攻！','令各部備好引火之物，待夜風起，便動手！']}},
+         {text:'回軍重整陣形',value:+1,log:'退出險地，避免被火攻',note:'★ 最佳 — 識破陷阱',good:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['主公明智！陸遜這是引我軍入死地！','回軍重整，再尋戰機。']}},
+         {text:'急攻夷道，逼陸遜決戰',value:0,log:'陸遜堅守，攻勢受挫',note:'中性 — 進攻不順',epilogue:null},
+         {text:'派趙雲守後路',value:+1,log:'後路無虞，可從容用兵',note:'良策 — 穩固後援',good:true,
+           epilogue:{speaker:'趙雲',portrait:'h_zhao_yun',lines:['末將領命，必守住歸路！','主公請放心進兵。']}},
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——陸遜命人攜火種突襲！','風勢大盛，我軍連營已起大火！','請主公速決！']},
+       situation:'吳軍突然火攻，七百里連營起火！',
+       tutorialHint:'危機關頭，能否快速止損是關鍵。「收縮防線」優於拼死硬撐。',
+       options:[
+         {text:'命趙雲斷後，主力突圍',value:+1,log:'趙雲斷後，主力得救',note:'★ 最佳 — 留得青山',good:true,
+           epilogue:{speaker:'趙雲',portrait:'h_zhao_yun',lines:['末將斷後，主公速走！','吳軍若敢來追——讓他們嚐嚐七進七出的滋味！']}},
+         {text:'死守連營與火博命',value:-1,log:'火勢失控，全軍崩潰',note:'✗ 失策 — 玉石俱焚',bad:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['主公......大火吞噬連營，數萬將士......','蜀軍精銳，毀於一旦！']}},
+         {text:'集中精銳衝吳軍中軍',value:0,log:'局部反擊，傷亡慘重',note:'中性 — 困獸之鬥',epilogue:null},
+         {text:'向諸葛亮求救',value:+1,log:'諸葛亮空城疑兵，吳軍不敢追',note:'良策 — 智者之援',good:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['主公脫險即可。','臣於白帝城設八陣圖，陸遜不敢深追。']}},
+       ]},
+      {prologue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['主公已退入白帝城。','陸遜追擊至此，臣已布八陣圖......','請主公穩住軍心，後續從長計議。']},
+       situation:'退入白帝城。陸遜追兵已至，如何穩定殘軍？',
+       tutorialHint:'敗中求穩，重整旗鼓。八陣圖能阻追兵，但內政民心才是根本。',
+       options:[
+         {text:'託孤諸葛亮，安定內政',value:+1,log:'諸葛亮輔佐後主，蜀漢得以延續',note:'★ 最佳 — 識人善任',good:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['臣......鞠躬盡瘁，死而後已！','蜀漢未亡，臣便不敢稍懈！']}},
+         {text:'死守白帝城圖反撲',value:0,log:'勉強撐住，但元氣大傷',note:'中性 — 強撐',epilogue:null},
+         {text:'撤回成都圖再戰',value:+1,log:'回師休整，國本得保',note:'良策 — 保存實力',good:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['主公回成都修養，是上策。','臣即刻調整軍政，為蜀漢未來鋪路。']}},
+         {text:'割地求和於吳',value:-1,log:'喪權辱國，三國格局變',note:'✗ 失策 — 國威大損',bad:true,
+           epilogue:null},
+       ]},
+    ]
+  },
+
+  'jie_ting': {
+    title:'街亭之戰', icon:'⚔️', era:'228 年 · 三國',
+    background:'諸葛亮一出祁山，街亭乃漢中咽喉。馬謖自薦守街亭，違反軍令當道紮營而非當山據險。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_zhuge','h_zhao_yun','h_ma_chao'],
+    scenarios:[
+      {prologue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['街亭乃漢中咽喉，得之則祁山可圖。','馬謖自薦守街亭，但他從未獨領大軍......','此事關係北伐成敗，丞相必須慎重！']},
+       situation:'誰守街亭？馬謖自薦但無實戰；魏延、王平皆是老將。',
+       tutorialHint:'用人是兵法首要。「實戰經驗」比「自薦慷慨」更重要——這是諸葛亮終生的教訓。',
+       options:[
+         {text:'命魏延與王平共守',value:+1,log:'魏延王平守得穩固',note:'★ 最佳 — 用實戰老將',good:true,
+           epilogue:{speaker:'王平',portrait:null,lines:['末將領命！','末將與魏將軍當山據險，曹軍縱有十萬，難越雷池！']}},
+         {text:'命馬謖為主將，王平副之',value:-1,log:'馬謖違令當道紮營，街亭失守',note:'✗ 失策 — 用人不察',bad:true,
+           epilogue:{speaker:'馬謖',portrait:null,lines:['丞相放心，謖熟讀兵書！','......（後來：當山紮營，被張郃斷水源，全軍潰散）']}},
+         {text:'親自坐鎮街亭',value:0,log:'分身乏術，主攻祁山受阻',note:'中性 — 重點分散',epilogue:null},
+         {text:'放棄街亭走別路',value:-1,log:'失去戰略要地',note:'✗ 失策 — 軍事盲',bad:true,epilogue:null},
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——張郃率精騎五萬，已抵街亭！','曹魏動作之快，超乎想像！','街亭守軍如何應對？']},
+       situation:'張郃精騎五萬抵街亭。是當道據險還是當山紮營？',
+       tutorialHint:'地形決定戰術。「當道據險」可斷敵糧道、阻其進；「當山紮營」雖看似居高臨下，但易被斷水！',
+       options:[
+         {text:'當道紮營，依水據險',value:+1,log:'守軍穩固，張郃難進',note:'★ 最佳 — 兵書原則',good:true,
+           epilogue:{speaker:'王平',portrait:null,lines:['依山傍水，當道紮營！','張郃騎兵衝不破我陣，糧道也斷不了我水源！']}},
+         {text:'當山紮營，居高臨下',value:-1,log:'被張郃斷水源，全軍崩潰',note:'✗ 失策 — 紙上談兵',bad:true,
+           epilogue:{speaker:'馬謖',portrait:null,lines:['居高臨下，曹軍必敗！','......（張郃斷水三日，蜀軍渴極潰散，街亭失！）']}},
+         {text:'分兵兩處互為犄角',value:0,log:'兵力分散，難擋曹魏精騎',note:'中性 — 兵分有險',epilogue:null},
+         {text:'死戰至最後一兵',value:-1,log:'徒然犧牲',note:'✗ 失策 — 不知變通',bad:true,epilogue:null},
+       ]},
+    ]
+  },
+
+  'wu_zhang': {
+    title:'五丈原', icon:'⚔️', era:'234 年 · 三國',
+    background:'諸葛亮第五次北伐，屯田五丈原，與司馬懿百日相持。星墜五丈原，丞相將終。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_zhuge','h_zhao_yun','h_ma_chao'],
+    opening:{speaker:'諸葛亮',portrait:'h_zhuge',lines:[
+      '吾自先帝託孤，鞠躬盡瘁......',
+      '五出祁山，今屯田於五丈原。司馬懿堅守不戰，欲耗我糧道。',
+      '吾命已不久，務必在最後時光，為蜀漢拼出一線生機！',
+    ]},
+    scenarios:[
+      {prologue:{speaker:'姜維',portrait:null,lines:['丞相，司馬懿百日不戰......','糧草將盡，丞相身體日衰，將士憂心忡忡！','丞相，您必須做出決斷！']},
+       situation:'司馬懿堅守不戰，欲耗我糧道。如何破局？',
+       tutorialHint:'司馬懿在等諸葛亮病逝。激將法可能引他出戰，屯田則持久消耗。',
+       options:[
+         {text:'屯田自給，與魏軍持久',value:+1,log:'蜀軍糧草不再憂',note:'★ 最佳 — 諸葛屯田',good:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['吾命將士屯田於五丈原。','百畝良田，可支半年糧草。','司馬懿想耗我？看誰耗得過誰！']}},
+         {text:'贈司馬懿婦人衣物激將',value:+1,log:'司馬懿不為所動，但軍心可用',note:'良策 — 攻心試膽',good:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['吾遣使送司馬懿婦人衣物......','他若敢戴，便是匹夫之勇；不戴，則是知兵之將。','......司馬懿冷笑收下，魏軍將士憤怒——這已是勝利！']}},
+         {text:'急攻長安，圍魏救趙',value:-1,log:'攻堅失敗，元氣大傷',note:'✗ 失策 — 急功近利',bad:true,epilogue:null},
+         {text:'撤兵回漢中',value:-1,log:'功敗垂成',note:'✗ 失策 — 棄前功',bad:true,epilogue:null},
+       ]},
+      {prologue:{speaker:'姜維',portrait:null,lines:['丞相病重......','五丈原上空，一星墜於營中......','丞相......','姜維泣血——丞相，您的最後一計呢？']},
+       situation:'丞相病危。後事如何安排？',
+       tutorialHint:'死後布局比生前更重要。「死諸葛走生仲達」是千古絕響。',
+       options:[
+         {text:'安排撤軍計，木雕嚇司馬',value:+1,log:'死諸葛走生仲達，蜀軍全身而退',note:'★ 最佳 — 死後智謀',good:true,
+           epilogue:{speaker:'姜維',portrait:null,lines:['丞相果然神算！','司馬懿見木雕諸葛亮，嚇得倉皇後退！','「死諸葛走生仲達」——千古佳話！']}},
+         {text:'指定姜維為繼承人',value:+1,log:'姜維承志，北伐不絕',note:'良策 — 傳承衣缽',good:true,
+           epilogue:{speaker:'姜維',portrait:null,lines:['丞相對維說：「光復漢室，重任在卿......」','維誓死銘記！九伐中原，不負丞相！']}},
+         {text:'命大軍立即進攻',value:-1,log:'倉促進攻失敗',note:'✗ 失策 — 違背兵理',bad:true,epilogue:null},
+         {text:'解散軍隊各自為政',value:-1,log:'蜀漢核心崩潰',note:'✗ 失策 — 散兵敗政',bad:true,epilogue:null},
+       ]},
+    ]
+  },
+
+  'fei_shui': {
+    title:'淝水之戰', icon:'⚔️', era:'383 年 · 東晉 vs 前秦',
+    background:'苻堅百萬大軍南下滅晉。謝玄率北府兵八萬於淝水迎戰，「投鞭斷流」對「草木皆兵」。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_sun_wu','h_huo_qb','h_zhang_l'],
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——苻堅百萬大軍逼近淝水！','對岸旌旗蔽日，鋪天蓋地......','謝玄將軍，我軍八萬如何應對？']},
+       situation:'苻堅百萬之眾隔淝水對峙。如何破敵？',
+       tutorialHint:'敵眾我寡時「以詐取勝」是兵法精髓。「請敵半渡而擊」是經典戰術。',
+       options:[
+         {text:'請苻堅後退讓我軍渡河決戰',value:+1,log:'苻堅軍後退失序，自相踐踏',note:'★ 最佳 — 「八公山上」之計',good:true,
+           epilogue:{speaker:'謝玄',portrait:null,lines:['妙！苻堅以為佔便宜，便下令後退！','百萬之眾後退，前軍以為敗了，軍心大亂！','正是擊敵之時——衝啊！']}},
+         {text:'依水堅守不渡',value:0,log:'敵眾我寡，難以持久',note:'中性 — 消極',epilogue:null},
+         {text:'分兵迂迴渡河',value:-1,log:'兵力分散被各個擊破',note:'✗ 失策 — 自尋死路',bad:true,epilogue:null},
+         {text:'投降前秦',value:-1,log:'晉室名存實亡',note:'✗ 失策 — 失節',bad:true,epilogue:null},
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——前秦軍大亂！','「秦軍敗了！」三字傳開，全軍崩潰！','苻堅中箭逃往北方——草木皆兵啊！']},
+       situation:'前秦軍崩潰，苻堅倉皇北逃。如何擴大戰果？',
+       tutorialHint:'乘勝追擊是兵法常理，但「窮寇勿迫」可避免反撲。',
+       options:[
+         {text:'追擊三十里即止',value:+1,log:'戰果穩固，軍威大振',note:'★ 最佳 — 度而後動',good:true,
+           epilogue:{speaker:'謝玄',portrait:null,lines:['追到三十里便止——','留條生路給敵兵，自家也不深入北地險境。','此戰已是奇蹟，謝家威名千古！']}},
+         {text:'盡力追殺苻堅',value:0,log:'戰果擴大但兵力疲憊',note:'中性 — 有得有失',epilogue:null},
+         {text:'就地慶功不追',value:-1,log:'錯失擴大戰果',note:'✗ 失策 — 安逸',bad:true,epilogue:null},
+         {text:'北伐長安',value:-1,log:'戰線過長，被反撲',note:'✗ 失策 — 貪功',bad:true,epilogue:null},
+       ]},
+    ]
+  },
+
+  'yu_bi': {
+    title:'玉壁之戰', icon:'⚔️', era:'546 年 · 北朝',
+    background:'高歡率二十萬大軍圍攻玉壁，韋孝寬以八千守軍守城六十日，高歡氣憤而亡。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_sun_wu','h_zhao_yun','h_yue_fei'],
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——高歡二十萬大軍將至！','玉壁城內只有八千守軍......','韋將軍，如何守城？']},
+       situation:'高歡二十萬攻玉壁，我軍八千。如何死守？',
+       tutorialHint:'守城戰要的是隨機應變。每一招圍城手段，都要有對應破解。',
+       options:[
+         {text:'敵築土山，我加高城牆',value:+1,log:'高歡土山失效',note:'★ 最佳 — 兵來將擋',good:true,
+           epilogue:{speaker:'韋孝寬',portrait:null,lines:['敵築土山，我便加高城牆！','他想登城？休想！']}},
+         {text:'死守不變',value:-1,log:'被高歡多種戰術耗死',note:'✗ 失策 — 不知變通',bad:true,epilogue:null},
+         {text:'夜襲敵營',value:0,log:'局部勝利但消耗兵力',note:'中性',epilogue:null},
+         {text:'開城投降',value:-1,log:'城破國亡',note:'✗ 失策 — 失節',bad:true,epilogue:null},
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——高歡用地道、火攻、各種計策......','韋將軍——他改用反間計，污衊您背叛！','請將軍應對！']},
+       situation:'高歡使盡圍城手段，又用反間計。如何破解？',
+       tutorialHint:'守城最忌軍心動搖。「明示忠心」可斷反間之計。',
+       options:[
+         {text:'公開反間信，斷敵離間',value:+1,log:'將士忠心如鐵，敵計破',note:'★ 最佳 — 攻心戰',good:true,
+           epilogue:{speaker:'韋孝寬',portrait:null,lines:['將反間信公示於眾！','我韋孝寬若有二心，何必死守？','將士看完，更是齊心！']}},
+         {text:'追查反間細作',value:+1,log:'抓出細作，警示眾人',note:'良策',good:true,epilogue:null},
+         {text:'不予理會',value:0,log:'敵計未發但軍心隱憂',note:'中性',epilogue:null},
+         {text:'處決疑似奸細',value:-1,log:'冤殺忠良，軍心動搖',note:'✗ 失策 — 自亂陣腳',bad:true,epilogue:null},
+       ]},
+    ]
+  },
+
+  'he_yin': {
+    title:'河陰之變', icon:'⚔️', era:'528 年 · 北魏末',
+    background:'爾朱榮藉口為孝明帝報仇，率軍入洛陽。在河陰大屠殺王公大臣兩千餘人，史稱河陰之變。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_caocao','h_sima','h_lvbu'],
+    scenarios:[
+      {prologue:{speaker:'幕僚',lines:['主公，洛陽王公大臣盡聚河陰......','此乃千載難逢之機！','是否動手清洗朝堂？']},
+       situation:'爾朱榮入河陰，是否大清洗？',
+       tutorialHint:'武力與政治平衡。「全殲不留」雖能掌權，但失去人心則統治不穩。',
+       options:[
+         {text:'適度清洗反對派，留用能臣',value:+1,log:'掌權但留人才',note:'★ 最佳 — 寬嚴並濟',good:true,
+           epilogue:null},
+         {text:'盡屠王公大臣',value:-1,log:'失去人心，朝堂為墟',note:'✗ 失策 — 暴政',bad:true,epilogue:null},
+         {text:'單擒首惡',value:+1,log:'目標明確，民心歸附',note:'良策',good:true,epilogue:null},
+         {text:'按兵不動觀望',value:0,log:'錯失時機',note:'中性',epilogue:null},
+       ]},
+      {prologue:{speaker:'幕僚',lines:['主公已掌權。但人心未穩......','北魏各地軍閥蠢蠢欲動。','下一步如何？']},
+       situation:'掌權後人心未穩，如何穩固？',
+       tutorialHint:'政變後的穩定比奪權更重要。',
+       options:[
+         {text:'廣行善政收人心',value:+1,log:'人心歸附',note:'★ 最佳',good:true,epilogue:null},
+         {text:'分封親信掌軍政',value:+1,log:'根基穩固',note:'良策',good:true,epilogue:null},
+         {text:'繼續清洗異己',value:-1,log:'人人自危',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'自立為帝',value:-1,log:'激起各地反抗',note:'✗ 失策 — 過早',bad:true,epilogue:null},
+       ]},
+    ]
+  },
+
+  // === 三國支線 ===
+  'jie_dong': {
+    title:'借東風', icon:'🌬️', era:'208 年 · 三國（赤壁分支）',
+    background:'赤壁前夕，曹軍水寨在西北。冬季只有西北風，東吳火攻計劃難以實施。諸葛亮登壇借東風。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_zhuge','h_zhou_yu','h_huang_zhong'],
+    scenarios:[
+      {prologue:{speaker:'周瑜',portrait:'h_zhou_yu',lines:['火攻計成，但天時不對——','時值隆冬，只有西北風！','我軍在下風口，火攻反燒自己！']},
+       situation:'冬季西北風阻火攻。如何破局？',
+       tutorialHint:'天時是兵法的重要考量。諸葛亮通天文知地理，能算出短暫東南風。',
+       options:[
+         {text:'請諸葛亮借東風',value:+1,log:'三日後東南風大起',note:'★ 最佳 — 通天文',good:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['亮觀星象，三日後必有東南風起！','請大都督備好火船——天時、地利、人和，皆在我方！']}},
+         {text:'等天氣改變',value:-1,log:'時機已失，曹軍已加防',note:'✗ 失策 — 坐待天命',bad:true,epilogue:null},
+         {text:'改用其他戰術',value:0,log:'放棄火攻優勢',note:'中性',epilogue:null},
+         {text:'撤退另尋戰機',value:-1,log:'前功盡棄',note:'✗ 失策',bad:true,epilogue:null},
+       ]},
+      {prologue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['東南風起！','黃蓋已備二十艘火船，浸滿油脂！','大都督——出擊吧！']},
+       situation:'東南風大作。如何出擊？',
+       tutorialHint:'機會稍縱即逝。「全力一擊」勝過保留實力。',
+       options:[
+         {text:'黃蓋率火船衝鋒',value:+1,log:'火船順風直撲曹軍水寨',note:'★ 最佳 — 史實之策',good:true,
+           epilogue:{speaker:'黃蓋',portrait:'h_huang_zhong',lines:['末將率火船衝鋒！','二十艘火船順風而下，曹軍水寨頓成火海！']}},
+         {text:'保留火船待後續',value:-1,log:'錯失最佳時機',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'分批出擊',value:0,log:'火力分散',note:'中性',epilogue:null},
+         {text:'觀望風勢',value:-1,log:'風向變化錯失良機',note:'✗ 失策',bad:true,epilogue:null},
+       ]},
+    ]
+  },
+
+  'kong_cheng': {
+    title:'空城計', icon:'🏯', era:'228 年 · 三國',
+    background:'街亭失守後，諸葛亮退至西城。司馬懿率十五萬大軍將至，城中只有兩千五百老弱殘兵。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_zhuge','h_zhao_yun','h_xu_huang'],
+    scenarios:[
+      {prologue:{speaker:'部將',lines:['丞相！司馬懿十五萬大軍將至！','西城只有兩千五百老弱殘兵，糧草將盡......','丞相，撤退已來不及了！']},
+       situation:'十五萬敵軍將至，城中只有兩千五百人。如何應對？',
+       tutorialHint:'絕境中「攻心」勝於「動兵」。司馬懿生性多疑，這正是破局之鑰。',
+       options:[
+         {text:'大開城門，諸葛亮城上撫琴',value:+1,log:'司馬懿疑有伏兵，引軍退去',note:'★ 最佳 — 空城計',good:true,
+           epilogue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['吾命人大開四門，掃地灑水！','吾於城樓撫琴——琴音不亂，司馬懿必疑！','果然，司馬懿引兵退去，西城得保。']}},
+         {text:'死守城牆',value:-1,log:'兵力懸殊，城破人亡',note:'✗ 失策 — 螳臂當車',bad:true,epilogue:null},
+         {text:'突圍逃跑',value:-1,log:'被司馬懿騎兵追上',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'集中兵力一處',value:0,log:'拖延時間但結局已定',note:'中性',epilogue:null},
+       ]},
+      {prologue:{speaker:'部將',lines:['丞相神算！司馬懿果然撤兵！','但......我們贏不了下次了啊。','丞相，下一步如何？']},
+       situation:'司馬懿撤退。如何鞏固戰果？',
+       tutorialHint:'絕境脫困後，當立即整頓。',
+       options:[
+         {text:'即刻撤回漢中，重整北伐',value:+1,log:'軍力得保，再圖大舉',note:'★ 最佳',good:true,epilogue:null},
+         {text:'追擊司馬懿',value:-1,log:'反被識破，慘敗',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'據守西城',value:0,log:'糧盡兵疲',note:'中性',epilogue:null},
+         {text:'派使勸降司馬懿',value:-1,log:'被嘲笑',note:'✗ 失策',bad:true,epilogue:null},
+       ]},
+    ]
+  },
+
+  'chen_qz': {
+    title:'白袍將軍陳慶之', icon:'🏹', era:'529 年 · 南北朝',
+    background:'陳慶之率七千白袍軍北伐，十四個月攻陷北魏三十二城，戰勝四十七陣，所向無前。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_huo_qb','h_sun_wu','h_li_jing'],
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['將軍——前方梁國！','我軍七千，魏軍二十萬！','「名師大將莫自牢，千兵萬馬避白袍」——將軍，請令！']},
+       situation:'七千對二十萬。如何破敵？',
+       tutorialHint:'兵法「奇正相生」。以少敵眾，必須出其不意。',
+       options:[
+         {text:'急行軍直撲敵心臟',value:+1,log:'速戰速決，魏軍措手不及',note:'★ 最佳 — 速度為王',good:true,
+           epilogue:{speaker:'陳慶之',portrait:null,lines:['白袍如雪，呼嘯而至——','魏軍尚未列陣，已被我軍鑿穿！','「避白袍」——這是他們唯一的選擇！']}},
+         {text:'步步為營慢慢推進',value:-1,log:'失去速度優勢',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'圍而不打消耗敵糧',value:0,log:'消耗時間但魏軍援軍將至',note:'中性',epilogue:null},
+         {text:'求援梁帝增兵',value:-1,log:'戰機已失',note:'✗ 失策',bad:true,epilogue:null},
+       ]},
+      {prologue:{speaker:'探馬',lines:['將軍勢如破竹！','十四個月，三十二城，四十七陣全勝！','洛陽就在眼前......請令！']},
+       situation:'兵抵洛陽。攻或退？',
+       tutorialHint:'勝勢之中當思風險。「見好就收」常常比「貪功冒進」更明智。',
+       options:[
+         {text:'攻陷洛陽，名垂青史',value:+1,log:'白袍入洛陽，傳奇成型',note:'★ 最佳',good:true,epilogue:null},
+         {text:'佔據洛陽周邊據點',value:+1,log:'戰果穩固',note:'良策',good:true,epilogue:null},
+         {text:'繼續北上',value:-1,log:'孤軍深入被圍',note:'✗ 失策 — 貪功',bad:true,epilogue:null},
+         {text:'撤回梁國',value:0,log:'保存實力但失最大戰機',note:'中性',epilogue:null},
+       ]},
+    ]
+  },
+
+  'lan_ling': {
+    title:'蘭陵王入陣曲', icon:'🎭', era:'564 年 · 北齊',
+    background:'蘭陵王高長恭面美如婦，戴鬼面具入陣，於邙山之戰大破北周十萬大軍。',
+    winTarget:2, loseTarget:3,
+    recommendedHeroes:['h_huo_qb','h_yu_chi','h_xue_rg'],
+    scenarios:[
+      {prologue:{speaker:'高長恭',portrait:null,lines:['北周十萬圍金墉城，城內危急！','吾欲率五百精騎，殺入敵陣！','將士見我面美如婦，恐難服眾......須戴此鬼面具！']},
+       situation:'蘭陵王戴鬼面具殺入敵陣。如何配合？',
+       tutorialHint:'「個人英雄」與「全軍協作」並重。先鋒衝陣最危險，後續必須跟上。',
+       options:[
+         {text:'蘭陵王五百騎衝鋒，主力跟進',value:+1,log:'破陣救城，邙山大捷',note:'★ 最佳 — 史實',good:true,
+           epilogue:{speaker:'高長恭',portrait:null,lines:['五百騎如雷霆貫穿敵陣！','摘下鬼面具——「是蘭陵王！」城上將士歡呼震天！','北周大軍崩潰，金墉城圍解！']}},
+         {text:'王不入陣，遣偏將',value:-1,log:'將士無王不肯死戰',note:'✗ 失策 — 失士氣',bad:true,epilogue:null},
+         {text:'圍金墉久守待援',value:0,log:'城內糧盡',note:'中性',epilogue:null},
+         {text:'撤退保存實力',value:-1,log:'金墉淪陷',note:'✗ 失策',bad:true,epilogue:null},
+       ]},
+      {prologue:{speaker:'樂師',lines:['王得勝歸來，將士為王作《入陣曲》！','曲調激越，傳唱千古......','王，您的英姿，已成傳奇！']},
+       situation:'《蘭陵王入陣曲》流傳。如何處置功業？',
+       tutorialHint:'功高震主常招忌恨。明哲保身比逞強更重要。',
+       options:[
+         {text:'功成不居，謙退避嫌',value:+1,log:'保住性命',note:'★ 最佳',good:true,epilogue:null},
+         {text:'居功自傲',value:-1,log:'招來君主猜忌',note:'✗ 失策 — 史實悲劇',bad:true,epilogue:null},
+         {text:'低調掌兵',value:+1,log:'軍威猶在',note:'良策',good:true,epilogue:null},
+         {text:'隱退山林',value:0,log:'保命但失影響力',note:'中性',epilogue:null},
        ]},
     ]
   },
@@ -4088,6 +4444,8 @@ function renderPool(){
   const tutMode = G && G.mode === 'tutorial';
   const tutTgt  = tutMode ? tutTarget(G) : null;           // scripted enemy pick
   const suggestIds = tutMode ? tutSuggest(G) : [];          // player suggestions
+  // Campaign recommended heroes (★ 推薦) — visible in campaign or tutorial
+  const campRecs = (G && (G.campaignDetails?.recommendedHeroes || [])) || [];
 
   HEROES.filter(h=>{
     if(!roleFilter) return true;
@@ -4117,7 +4475,11 @@ function renderPool(){
     const pct = Math.round((h.pow-60)/(100-60)*100);
     const dispRoles = (h.roles||[h.role]).map(r=>ROLE_NAME[r]).join('/');
     const primaryRoleIcon = ROLE_ICON[(h.roles||[h.role])[0]] || '';
+    const isCampaignRec = campRecs.includes(h.id);
+    if(isCampaignRec && !isUsed) cls += ' campaign-rec';
+    d.className = cls;
     d.innerHTML = `
+      ${isCampaignRec ? '<div class="hc-rec-badge">★ 推薦</div>' : ''}
       <div class="hc-portrait" data-name="${h.name}">
         <img alt="${h.name}" data-hero="${h.id}">
         <div class="hc-portrait-vig"></div>
