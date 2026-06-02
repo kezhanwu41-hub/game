@@ -1667,6 +1667,59 @@ const HEROES = [
   {id:'h_qin_qiong', name:'秦瓊',   roles:['vanguard','marshal','general'],              elem:'金',faction:'唐', pow:84,desc:'凌煙閣武將，可任破陣先鋒／大司馬／大將軍'},
   {id:'h_ran_min',   name:'冉閔',   roles:['vanguard','general','king'],                 elem:'金',faction:'後趙',pow:92,desc:'冉魏天王，可任破陣先鋒／大將軍／主公（殺胡令）'},
   {id:'h_huang_zhong',name:'黃忠',  roles:['vanguard','general','marshal'],              elem:'火',faction:'蜀', pow:88,desc:'蜀後將軍五虎上將，可任破陣先鋒／大將軍／大司馬'},
+
+  // ═══════════════════════ 周朝 / 春秋戰國 ═══════════════════════
+  {id:'h_zhou_wu',   name:'周武王', roles:['king','marshal'],                            elem:'木',faction:'周', pow:88,desc:'周朝開國武王，可任主公／大司馬（牧野誓師）'},
+  {id:'h_qi_hg',     name:'齊桓公', roles:['king'],                                      elem:'金',faction:'齊', pow:84,desc:'春秋五霸之首，尊王攘夷'},
+  {id:'h_gou_jian',  name:'勾踐',   roles:['king','general'],                            elem:'水',faction:'越', pow:86,desc:'越王，臥薪嘗膽，可任主公／大將軍'},
+  {id:'h_chu_zw',    name:'楚莊王', roles:['king','general'],                            elem:'火',faction:'楚', pow:85,desc:'春秋五霸，一鳴驚人，可任主公／大將軍',eras:['zhou']},
+  {id:'h_shang_y',   name:'商鞅',   roles:['chancellor','minister'],                     elem:'金',faction:'秦', pow:80,desc:'秦商君，變法強秦，可任臣相／大司農',eras:['zhou']},
+  {id:'h_sun_bin',   name:'孫臏',   roles:['strategist','commandant'],                   elem:'木',faction:'齊', pow:90,desc:'兵法家，可任軍師／行軍總管（圍魏救趙、馬陵減灶）'},
+  {id:'h_wu_qi',     name:'吳起',   roles:['strategist','general','marshal'],            elem:'金',faction:'楚', pow:88,desc:'兵聖弟子，《吳子兵法》，可任軍師／大將軍／大司馬',eras:['zhou']},
+  {id:'h_wang_jian', name:'王翦',   roles:['marshal','general','commandant'],            elem:'土',faction:'秦', pow:92,desc:'戰國四大名將，可任大司馬／大將軍／行軍總管（滅楚滅趙）',eras:['zhou','qinhan']},
+  {id:'h_lian_po',   name:'廉頗',   roles:['general','marshal'],                         elem:'金',faction:'趙', pow:88,desc:'戰國四大名將，可任大將軍／大司馬（廉頗老矣尚能飯否）'},
+  {id:'h_li_mu',     name:'李牧',   roles:['general','commandant','marshal'],            elem:'水',faction:'趙', pow:90,desc:'戰國四大名將，可任大將軍／行軍總管／大司馬（北擊匈奴）'},
+  {id:'h_tian_dan',  name:'田單',   roles:['general','strategist'],                      elem:'火',faction:'齊', pow:82,desc:'齊國名將，可任大將軍／軍師（火牛陣破燕）'},
+  {id:'h_zhao_kuo',  name:'趙括',   roles:['general','strategist'],                      elem:'木',faction:'趙', pow:70,desc:'紙上談兵，可任大將軍／軍師（長平慘敗）'},
+
+  // ═══════════════════════ 隋唐 ═══════════════════════
+  {id:'h_yang_jian', name:'楊堅',   roles:['king'],                                      elem:'土',faction:'隋', pow:88,desc:'隋文帝，統一南北朝開盛世'},
+  {id:'h_du_rh',     name:'杜如晦', roles:['chancellor','minister','strategist'],        elem:'土',faction:'唐', pow:80,desc:'唐朝宰相，房謀杜斷，可任臣相／大司農／軍師'},
+  {id:'h_di_rj',     name:'狄仁傑', roles:['chancellor','minister','strategist'],        elem:'水',faction:'唐', pow:82,desc:'唐朝宰相神探，可任臣相／大司農／軍師'},
+  {id:'h_guo_zy',    name:'郭子儀', roles:['marshal','general','commandant'],            elem:'土',faction:'唐', pow:90,desc:'唐汾陽王，安史中興，可任大司馬／大將軍／行軍總管'},
+  {id:'h_cheng_yj',  name:'程咬金', roles:['vanguard','general'],                        elem:'土',faction:'唐', pow:80,desc:'凌煙閣武將盧國公，可任破陣先鋒／大將軍'},
+  {id:'h_su_dingfang',name:'蘇定方',roles:['general','commandant'],                      elem:'金',faction:'唐', pow:84,desc:'唐邢國公，可任大將軍／行軍總管（平西突厥）'},
+
+  // ═══════════════════════ 宋 ═══════════════════════
+  {id:'h_zhao_kuangyin',name:'趙匡胤',roles:['king','general','marshal'],                elem:'土',faction:'宋', pow:88,desc:'宋太祖，陳橋兵變黃袍加身，可任主公／大將軍／大司馬'},
+  {id:'h_kou_zhun',  name:'寇準',   roles:['chancellor','strategist'],                   elem:'金',faction:'宋', pow:80,desc:'宋萊國公，可任臣相／軍師（澶淵之盟）'},
+  {id:'h_wang_az',   name:'王安石', roles:['chancellor','minister'],                     elem:'木',faction:'宋', pow:78,desc:'宋荊國公，可任臣相／大司農（熙寧變法）'},
+  {id:'h_yang_ye',   name:'楊業',   roles:['general','marshal'],                         elem:'金',faction:'宋', pow:88,desc:'宋楊家將令公，可任大將軍／大司馬（陳家谷殉國）'},
+  {id:'h_wen_tx',    name:'文天祥', roles:['chancellor','general','strategist'],         elem:'木',faction:'宋', pow:84,desc:'宋丞相文山，可任臣相／大將軍／軍師（正氣歌）'},
+  {id:'h_yu_yw',     name:'虞允文', roles:['commandant','strategist','general'],         elem:'水',faction:'宋', pow:86,desc:'宋雍國公，可任行軍總管／軍師／大將軍（采石磯）'},
+  {id:'h_mu_gy',     name:'穆桂英', roles:['vanguard','general'],                        elem:'木',faction:'宋', pow:86,desc:'楊家將女帥，可任破陣先鋒／大將軍（大破天門陣）'},
+
+  // ═══════════════════════ 元明 ═══════════════════════
+  {id:'h_chinggis',  name:'成吉思汗',roles:['king','general','marshal'],                 elem:'金',faction:'元', pow:96,desc:'元太祖鐵木真，可任主公／大將軍／大司馬（橫掃歐亞）'},
+  {id:'h_kublai',    name:'忽必烈', roles:['king','general'],                            elem:'土',faction:'元', pow:88,desc:'元世祖，可任主公／大將軍（滅宋一統）'},
+  {id:'h_wang_ym',   name:'王陽明', roles:['strategist','chancellor','general'],         elem:'木',faction:'明', pow:86,desc:'明心學大師，可任軍師／臣相／大將軍（南贛剿匪）'},
+  {id:'h_yu_qian',   name:'于謙',   roles:['general','chancellor','marshal'],            elem:'金',faction:'明', pow:86,desc:'明少保，可任大將軍／臣相／大司馬（北京保衛戰）'},
+  {id:'h_yuan_ch',   name:'袁崇煥', roles:['general','marshal','commandant'],            elem:'金',faction:'明', pow:88,desc:'明薊遼督師，可任大將軍／大司馬／行軍總管（寧遠擊潰努爾哈赤）'},
+  {id:'h_zheng_he',  name:'鄭和',   roles:['vanguard','commandant'],                     elem:'水',faction:'明', pow:80,desc:'明三寶太監，可任破陣先鋒／行軍總管（七下西洋）'},
+
+  // ═══════════════════════ 清 ═══════════════════════
+  {id:'h_nurhaci',   name:'努爾哈赤',roles:['king','general','marshal'],                 elem:'水',faction:'清', pow:90,desc:'清太祖，可任主公／大將軍／大司馬（八旗建國）'},
+  {id:'h_huang_tj',  name:'皇太極', roles:['king','general'],                            elem:'土',faction:'清', pow:88,desc:'清太宗，可任主公／大將軍（改國號為清）'},
+  {id:'h_kangxi',    name:'康熙',   roles:['king','general','strategist'],               elem:'金',faction:'清', pow:90,desc:'清聖祖玄燁，可任主公／大將軍／軍師（平三藩、收台灣）'},
+  {id:'h_dorgon',    name:'多爾袞', roles:['general','marshal','commandant'],            elem:'金',faction:'清', pow:88,desc:'清攝政睿親王，可任大將軍／大司馬／行軍總管（入關問鼎）'},
+  {id:'h_wu_sg',     name:'吳三桂', roles:['general','marshal','commandant'],            elem:'火',faction:'明', pow:84,desc:'明清交界平西王，可任大將軍／大司馬／行軍總管（衝冠一怒為紅顏）',eras:['yuanming','qing']},
+  {id:'h_shi_lang',  name:'施琅',   roles:['commandant','general'],                      elem:'水',faction:'清', pow:82,desc:'清靖海侯，可任行軍總管／大將軍（澎湖海戰收台灣）'},
+  {id:'h_zeng_gf',   name:'曾國藩', roles:['chancellor','general','strategist'],         elem:'土',faction:'清', pow:86,desc:'清湘軍主帥，可任臣相／大將軍／軍師（剿滅太平天國）'},
+  {id:'h_zuo_zt',    name:'左宗棠', roles:['general','commandant','marshal'],            elem:'金',faction:'清', pow:88,desc:'清恪靖侯，可任大將軍／行軍總管／大司馬（收復新疆）'},
+  {id:'h_lin_zx',    name:'林則徐', roles:['chancellor','minister'],                     elem:'水',faction:'清', pow:78,desc:'清欽差大臣，可任臣相／大司農（虎門銷煙）'},
+  {id:'h_li_hz',     name:'李鴻章', roles:['chancellor','strategist'],                   elem:'土',faction:'清', pow:80,desc:'清北洋大臣，可任臣相／軍師（洋務運動）'},
+  {id:'h_deng_sc',   name:'鄧世昌', roles:['vanguard','commandant'],                     elem:'水',faction:'清', pow:82,desc:'清致遠艦管帶，可任破陣先鋒／行軍總管（黃海撞敵艦壯烈殉國）'},
+  {id:'h_guan_tp',   name:'關天培', roles:['general','vanguard'],                        elem:'金',faction:'清', pow:80,desc:'清水師提督，可任大將軍／破陣先鋒（虎門血戰殉國）'},
 ];
 
 // Backward-compat: synthesize `.role` from `.roles[0]` for legacy code paths
@@ -1987,6 +2040,18 @@ const BONDS = [
   {ids:['h_qin_qiong','h_xue_rg','h_yu_chi'],     name:'唐初三傑',  bonus:{atk:12,def:8}},
   {ids:['h_ran_min','h_bai_qi'],                  name:'屠戮之神',  bonus:{atk:20}},
   {ids:['h_guan_yu','h_zhang_fei','h_zhao_yun','h_ma_chao','h_huang_zhong'], name:'五虎上將', bonus:{atk:25,def:15,hp:20}},
+  // ─── 新增朝代主題羈絆 ───
+  {ids:['h_bai_qi','h_wang_jian','h_lian_po','h_li_mu'],name:'戰國四將', bonus:{atk:20,def:10}},
+  {ids:['h_jiang_sh','h_zhou_wu'],                name:'牧野誓師',  bonus:{atk:15,hp:15}},
+  {ids:['h_qin_qiong','h_xue_rg','h_yu_chi','h_cheng_yj'],name:'凌煙閣武將',bonus:{atk:14,def:10}},
+  {ids:['h_yang_ye','h_mu_gy'],                   name:'楊家忠烈',  bonus:{atk:12,def:12,hp:15}},
+  {ids:['h_yue_fei','h_han_szh','h_yang_zx'],     name:'南宋中興',  bonus:{atk:15,def:8}},
+  {ids:['h_chinggis','h_kublai'],                 name:'蒙古鐵騎',  bonus:{atk:25,hp:10}},
+  {ids:['h_zhu_yz','h_xu_da','h_chang_yc','h_liu_bw'],name:'洪武開國', bonus:{atk:18,def:10,hp:15}},
+  {ids:['h_nurhaci','h_huang_tj','h_dorgon'],     name:'清初三祖',  bonus:{atk:18,def:8}},
+  {ids:['h_zeng_gf','h_li_hz','h_zuo_zt'],        name:'清末三傑',  bonus:{atk:12,def:14,hp:10}},
+  {ids:['h_sun_bin','h_tian_dan'],                name:'齊國雙謀',  bonus:{atk:10,def:8}},
+  {ids:['h_shang_y','h_wang_jian'],               name:'秦法兼武',  bonus:{atk:14,def:6}},
 ];
 
 function activeBonds(picks){
@@ -2171,10 +2236,7 @@ function poolFor(state, jf){
   let p = HEROES.filter(h => !used.has(h.id));
   // 烽火千秋朝代限定：只能用該朝代武將
   if(state.campaignChapterId){
-    const factions = CHAPTER_FACTIONS[state.campaignChapterId];
-    if(factions && factions.length){
-      p = p.filter(h => factions.includes(h.faction));
-    }
+    p = p.filter(h => getHeroEras(h).includes(state.campaignChapterId));
   }
   if(jf === 'advisor') p = p.filter(h => heroFitsGroup(h,'advisor'));
   else if(jf === 'warrior') p = p.filter(h => heroFitsGroup(h,'warrior'));
@@ -2377,16 +2439,26 @@ function resolveBattle(state, ourT){
 /* ═══════════════════════════════════════════════════════════
    CAMPAIGN DATA — 七大朝代 · 82 關
 ═══════════════════════════════════════════════════════════ */
-// 各朝代僅可使用該時代的武將（依 faction 過濾）
-const CHAPTER_FACTIONS = {
-  zhou:     ['周','齊','越','楚'],          // 春秋戰國諸侯（楚含早期）
-  qinhan:   ['秦','楚','漢'],                // 秦末漢初
-  sanguo:   ['蜀','魏','吳','後趙','漢'],    // 三國至南北朝（含漢末/楚漢遺臣可借用）
-  suitang:  ['隋','唐'],
-  song:     ['宋','遼','金','夏'],
-  yuanming: ['元','明'],
-  qing:     ['清','明'],                    // 含明末清初過渡
+/* === 朝代過濾系統 ===
+   烽火千秋各朝代只可用該時代武將。每個 faction 對應預設可出現的章節；
+   個別武將可在 eras 屬性覆蓋默認規則（如戰國秦名將跨周朝/秦漢）。 */
+const FACTION_TO_ERAS = {
+  '周':['zhou'], '齊':['zhou'], '越':['zhou'], '晉':['zhou'],
+  '趙':['zhou'], '燕':['zhou'], '韓國':['zhou'],
+  '楚':['zhou','qinhan'],       // 楚有春秋戰國 + 楚漢
+  '秦':['qinhan'],              // 默認秦朝；戰國秦名將用 eras 覆蓋
+  '漢':['qinhan'],
+  '蜀':['sanguo'], '魏':['sanguo'], '吳':['sanguo'], '後趙':['sanguo'],
+  '隋':['suitang'], '唐':['suitang'],
+  '宋':['song'], '遼':['song'], '金':['song'], '夏':['song'],
+  '元':['yuanming'], '明':['yuanming'],
+  '清':['qing'],
 };
+
+function getHeroEras(h){
+  if(h && h.eras) return h.eras;
+  return FACTION_TO_ERAS[h?.faction] || [];
+}
 
 const CAMPAIGN = [
   {id:'zhou', name:'周朝', era:'前1046 - 前256', icon:'🏛️', levels:[
@@ -4562,10 +4634,10 @@ function renderPool(){
   const campRecs = (G && (G.campaignDetails?.recommendedHeroes || [])) || [];
 
   // 烽火千秋：只顯示該朝代武將
-  const chapterFactions = G.campaignChapterId ? CHAPTER_FACTIONS[G.campaignChapterId] : null;
+  const chapterId = G.campaignChapterId;
   HEROES.filter(h=>{
     // 朝代限定
-    if(chapterFactions && !chapterFactions.includes(h.faction)) return false;
+    if(chapterId && !getHeroEras(h).includes(chapterId)) return false;
     // 職位過濾
     if(!roleFilter) return true;
     if(roleFilter==='king') return heroFitsGroup(h,'king');
