@@ -753,7 +753,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 .bp-slots{display:flex;flex-direction:column;gap:4px}
 .bp-slot{
   background:rgba(0,0,0,.4);border:1.5px dashed rgba(156,109,214,.3);
-  border-radius:6px;padding:7px 9px;min-height:50px;
+  border-radius:6px;padding:5px 8px;min-height:42px;
   display:flex;flex-direction:column;justify-content:center;
   transition:all .2s;
 }
@@ -1466,7 +1466,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
   <div class="ta-avatar">🧙</div>
   <div class="ta-body" id="tut-msg">歡迎進入新手教學！我將一步步引導你完成禁選，學習兵法精髓。</div>
   <div class="ta-progress">
-    <span id="tut-prog-lbl">0 / 12</span>
+    <span id="tut-prog-lbl">0 / 16</span>
     <div class="ta-bar"><div class="ta-bar-fill" id="tut-bar-fill" style="width:0%"></div></div>
   </div>
 </div>
@@ -1591,13 +1591,13 @@ function heroFitsGroup(hero, group){
 
 // roles[]: 多職位 — 依正史所任官職分配，部分角色可跨組(軍師⇄武將)
 const HEROES = [
-  // ─── 主公 (6) ─────────────────────────
+  // ─── 主公 (6) — 標 ★ 者可兼任大將軍 ─────────────────────────
   {id:'h_liubei',    name:'劉備',   roles:['king'],                       elem:'土',faction:'蜀',pow:88,desc:'蜀漢昭烈帝，仁德之主，臣相效果+10%'},
-  {id:'h_caocao',    name:'曹操',   roles:['king'],                       elem:'水',faction:'魏',pow:92,desc:'魏武帝，魏武揮鞭，全軍+3攻'},
-  {id:'h_li_shimin', name:'李世民', roles:['king'],                       elem:'金',faction:'唐',pow:90,desc:'唐太宗，天策上將，破陣+5傷'},
+  {id:'h_caocao',    name:'曹操',   roles:['king','general'],             elem:'水',faction:'魏',pow:92,desc:'★ 魏武帝，可兼任大將軍。魏武揮鞭，全軍+3攻'},
+  {id:'h_li_shimin', name:'李世民', roles:['king','general'],             elem:'金',faction:'唐',pow:90,desc:'★ 唐太宗天策上將，可兼任大將軍。破陣+5傷'},
   {id:'h_qin',       name:'秦始皇', roles:['king'],                       elem:'土',faction:'秦',pow:95,desc:'始皇帝，王道霸業，主公HP+10'},
   {id:'h_liubang',   name:'劉邦',   roles:['king'],                       elem:'土',faction:'漢',pow:82,desc:'漢高祖，布衣天子，全軍士氣+5'},
-  {id:'h_zhu_yz',    name:'朱元璋', roles:['king'],                       elem:'火',faction:'明',pow:88,desc:'明太祖，洪武大帝，主公反擊+10傷'},
+  {id:'h_zhu_yz',    name:'朱元璋', roles:['king','general'],             elem:'火',faction:'明',pow:88,desc:'★ 明太祖開國武將，可兼任大將軍。主公反擊+10傷'},
 
   // ─── 軍師類（軍師/臣相/大司農）依正史 ──────
   {id:'h_zhuge',     name:'諸葛亮', roles:['strategist','chancellor'],    elem:'木',faction:'蜀',pow:92,desc:'蜀漢丞相，臥龍出山，雙陣加成+10%'},
@@ -1965,7 +1965,7 @@ function activeBonds(picks){
 const TUTORIAL_ENEMY = {};
 
 // Suggested highlights for player steps (stepIdx → heroIds)
-// New step layout (16 actions across 12 steps):
+// 16-step layout (5 人陣容: 主公+軍師+3 武將):
 //   0  player ban king × 1
 //   1  enemy  ban king × 2
 //   2  player pick king
@@ -1974,17 +1974,23 @@ const TUTORIAL_ENEMY = {};
 //   5  enemy  ban advisor × 2
 //   6  enemy  pick advisor
 //   7  player pick advisor
-//   8  player ban warrior × 2
-//   9  enemy  ban warrior × 1
-//   10 player pick warrior
-//   11 enemy  pick warrior
+//   8  player ban warrior × 3
+//   9  enemy  ban warrior × 3
+//   10 player pick warrior 1
+//   11 enemy  pick warrior 1
+//   12 player pick warrior 2
+//   13 enemy  pick warrior 2
+//   14 player pick warrior 3
+//   15 enemy  pick warrior 3
 const TUTORIAL_SUGGEST = {
-  0: ['h_qin','h_caocao','h_zhu_yz','h_li_shimin'],     // ban king
-  2: ['h_liubei','h_li_shimin','h_liubang'],            // pick king
-  4: ['h_zhuge','h_sima','h_zhou_yu','h_guo_jia'],      // ban advisor x2
-  7: ['h_liu_bw','h_zhang_l','h_fan_li'],               // pick advisor
-  8: ['h_lvbu','h_han_xin','h_bai_qi','h_xiang_yu'],    // ban warrior x2
-  10:['h_guan_yu','h_zhao_yun','h_yue_fei'],            // pick warrior
+  0: ['h_qin','h_caocao','h_zhu_yz','h_li_shimin'],
+  2: ['h_liubei','h_li_shimin','h_liubang'],
+  4: ['h_zhuge','h_sima','h_zhou_yu','h_guo_jia'],
+  7: ['h_liu_bw','h_zhang_l','h_fan_li'],
+  8: ['h_lvbu','h_han_xin','h_bai_qi','h_xiang_yu'],
+  10:['h_guan_yu','h_zhao_yun','h_yue_fei'],
+  12:['h_ma_chao','h_huang_zhong','h_zhang_fei'],
+  14:['h_huo_qb','h_li_jing','h_xue_rg'],
 };
 
 // Per-step educational messages — aligned to new asymmetric BP
@@ -2022,9 +2028,21 @@ const TUTORIAL_MSG = [
   // 10: player picks warrior
   {hint:'【選武將】金色高亮為建議，完成你的核心三人陣！',
    msg:'關羽「揭露敵雙陣其一」掌握情報；趙雲「金系減傷10」應對破甲；岳飛「主公+8防」護主。考慮羈絆組合——選對武將可觸發「桃園結義」「五虎上將」等強力羈絆！'},
-  // 11: enemy picks warrior
-  {hint:'🤖 乙方（AI）挑選最後一名武將…',
-   msg:'乙方完成陣容。觀察敵方完整三人組——五行配置和潛在羈絆，幫你規劃即將到來的雙陣兵法。準備迎接五行博弈和 3D 古戰場！'},
+  // 11: enemy picks warrior 1
+  {hint:'🤖 乙方（AI）挑選第一武將…',
+   msg:'乙方完成第一名武將。陣容才完成 3/5，還有兩名武將待選——下一步要思考五行與羈絆組合！'},
+  // 12: player picks warrior 2
+  {hint:'【選武將 2】考慮羈絆組合！',
+   msg:'第二名武將。如果第一個選了關羽，可考慮選張飛+趙雲觸發桃園/五虎羈絆。若需要平衡陣容，選五行剋制敵方的武將。'},
+  // 13: enemy picks warrior 2
+  {hint:'🤖 乙方（AI）挑選第二武將…',
+   msg:'乙方繼續組陣。觀察敵方武將屬性，準備你的最後一名武將反制。'},
+  // 14: player picks warrior 3
+  {hint:'【選武將 3】完成最後一名武將！',
+   msg:'最後一名武將。檢查整體陣容：五行平衡？是否有羈絆？選擇後即進入歷史劇情！'},
+  // 15: enemy picks warrior 3
+  {hint:'🤖 乙方（AI）挑選最後武將…',
+   msg:'乙方完成陣容。觀察敵方完整五人陣容——五行配置和潛在羈絆，幫你規劃即將到來的戰局推演！'},
 ];
 
 // Enemy scripted pick: returns heroId for enemy steps, null for player steps
@@ -2064,27 +2082,30 @@ function elemRel(a,b){
    GAME ENGINE
 ═══════════════════════════════════════════════════════════ */
 
-// BP: 12 steps (16 actions) — 3 phases, asymmetric ban counts
-//   Phase 1 主帥: 甲禁1 → 乙禁2 → 甲選 → 乙選
-//   Phase 2 謀臣: 甲禁2 → 乙禁2 → 乙選 → 甲選
-//   Phase 3 武將: 甲禁2 → 乙禁1 → 甲選 → 乙選
-//   Total bans: 5 vs 5 ; Total picks: 3 vs 3
+// BP: 16 steps — 5 人陣容（主公+軍師+3 武將）
+//   Phase 1 主公:   甲禁1 → 乙禁2 → 甲選 → 乙選
+//   Phase 2 軍師:   甲禁2 → 乙禁2 → 乙選 → 甲選（乙先選）
+//   Phase 3 武將:   甲禁3 → 乙禁3 → 三輪交替選將（P/E/P/E/P/E）
 const BP_STEPS = [
-  // 第一階段：主帥
-  {phase:'ban',  side:'player', cnt:1, jf:'king',    label:'主帥禁選'},
-  {phase:'ban',  side:'enemy',  cnt:2, jf:'king',    label:'主帥禁選'},
-  {phase:'pick', side:'player', cnt:1, jf:'king',    label:'選主帥'},
-  {phase:'pick', side:'enemy',  cnt:1, jf:'king',    label:'選主帥'},
-  // 第二階段：謀臣
-  {phase:'ban',  side:'player', cnt:2, jf:'advisor', label:'謀臣禁選'},
-  {phase:'ban',  side:'enemy',  cnt:2, jf:'advisor', label:'謀臣禁選'},
-  {phase:'pick', side:'enemy',  cnt:1, jf:'advisor', label:'選謀臣'},
-  {phase:'pick', side:'player', cnt:1, jf:'advisor', label:'選謀臣'},
-  // 第三階段：武將
-  {phase:'ban',  side:'player', cnt:2, jf:'warrior', label:'武將禁選'},
-  {phase:'ban',  side:'enemy',  cnt:1, jf:'warrior', label:'武將禁選'},
-  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將'},
-  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將'},
+  // 第一階段：主公
+  {phase:'ban',  side:'player', cnt:1, jf:'king',    label:'主公禁選'},
+  {phase:'ban',  side:'enemy',  cnt:2, jf:'king',    label:'主公禁選'},
+  {phase:'pick', side:'player', cnt:1, jf:'king',    label:'選主公'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'king',    label:'選主公'},
+  // 第二階段：軍師
+  {phase:'ban',  side:'player', cnt:2, jf:'advisor', label:'軍師禁選'},
+  {phase:'ban',  side:'enemy',  cnt:2, jf:'advisor', label:'軍師禁選'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'advisor', label:'選軍師'},
+  {phase:'pick', side:'player', cnt:1, jf:'advisor', label:'選軍師'},
+  // 第三階段：武將 × 3
+  {phase:'ban',  side:'player', cnt:3, jf:'warrior', label:'武將禁選'},
+  {phase:'ban',  side:'enemy',  cnt:3, jf:'warrior', label:'武將禁選'},
+  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將 1'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將 1'},
+  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將 2'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將 2'},
+  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將 3'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將 3'},
 ];
 
 function makeState(mode){
@@ -4116,7 +4137,7 @@ function tutHideAll(){
 function tutUpdate(){
   if(!G || G.mode!=='tutorial') return;
   const flat = tutFlatIdx(G);
-  const total = 12;
+  const total = 16;
   const step = curStep(G);
   if(!step){
     tutShowBanner('🎉 禁選完成！準備進入戰場…','完成');
@@ -4375,12 +4396,14 @@ function renderOneSide(side){
     }
   }
 
-  /* ── Pick slots (3 groups by pick order — slot 0=主帥, 1=謀臣, 2=武將) ── */
+  /* ── Pick slots: 5 人陣容（主公 + 軍師 + 武將×3）── */
   pickEl.innerHTML = '';
   const groups = [
-    {label:'主帥', icon:'👑'},
-    {label:'謀臣', icon:'🪶'},
-    {label:'武將', icon:'⚔️'},
+    {label:'主公',   icon:'👑', slotRole:'king'},
+    {label:'軍師',   icon:'🪶', slotRole:'advisor'},
+    {label:'武將 1', icon:'⚔️', slotRole:'warrior'},
+    {label:'武將 2', icon:'🗡️', slotRole:'warrior'},
+    {label:'武將 3', icon:'🏹', slotRole:'warrior'},
   ];
   const picks = G.picks[side];
 
@@ -4390,11 +4413,9 @@ function renderOneSide(side){
     d.className = 'bp-slot'+(hero?' filled':'');
     if(hero){
       const col = ELEM_COL[hero.elem]||'#9c6dd6';
-      const slotRole = idx===0?'king':idx===1?'advisor':'warrior';
-      // Pick the most fitting display sub-role
       const subRole = (hero.roles||[hero.role]).find(r =>
-        slotRole==='king' ? r==='king'
-        : slotRole==='advisor' ? ADVISOR_ROLES.includes(r)
+        group.slotRole==='king' ? r==='king'
+        : group.slotRole==='advisor' ? ADVISOR_ROLES.includes(r)
         : WARRIOR_ROLES.includes(r)
       ) || hero.role;
       d.innerHTML = `<div class="sl-portrait" data-name="${hero.name}"><img alt="${hero.name}" data-hero="${hero.id}"></div>
