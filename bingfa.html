@@ -1720,6 +1720,17 @@ const HEROES = [
   {id:'h_li_hz',     name:'李鴻章', roles:['chancellor','strategist'],                   elem:'土',faction:'清', pow:80,desc:'清北洋大臣，可任臣相／軍師（洋務運動）'},
   {id:'h_deng_sc',   name:'鄧世昌', roles:['vanguard','commandant'],                     elem:'水',faction:'清', pow:82,desc:'清致遠艦管帶，可任破陣先鋒／行軍總管（黃海撞敵艦壯烈殉國）'},
   {id:'h_guan_tp',   name:'關天培', roles:['general','vanguard'],                        elem:'金',faction:'清', pow:80,desc:'清水師提督，可任大將軍／破陣先鋒（虎門血戰殉國）'},
+  // ── 補足各朝代君主（每代本有多位君主可選）──
+  {id:'h_liu_xiu',   name:'劉秀',   roles:['king','general'],                            elem:'火',faction:'漢', pow:88,desc:'東漢光武帝，可任主公／大將軍（昆陽以少勝多）'},
+  {id:'h_zhang_han', name:'章邯',   roles:['general','marshal'],                         elem:'金',faction:'秦', pow:82,desc:'秦末名將，可任大將軍／大司馬（一度橫掃義軍）'},
+  {id:'h_sun_quan',  name:'孫權',   roles:['king'],                                      elem:'水',faction:'吳', pow:85,desc:'吳大帝，坐斷東南'},
+  {id:'h_li_yuan',   name:'李淵',   roles:['king'],                                      elem:'土',faction:'唐', pow:80,desc:'唐高祖，太原起兵'},
+  {id:'h_yang_g',    name:'楊廣',   roles:['king','general'],                            elem:'水',faction:'隋', pow:78,desc:'隋煬帝，可任主公／大將軍（開運河征高麗）'},
+  {id:'h_zhao_ky',   name:'趙光義', roles:['king'],                                      elem:'土',faction:'宋', pow:78,desc:'宋太宗，高梁河之戰'},
+  {id:'h_wanyan_a',  name:'完顏阿骨打',roles:['king','general'],                         elem:'金',faction:'金', pow:85,desc:'金太祖，可任主公／大將軍（女真起兵滅遼）'},
+  {id:'h_li_yh',     name:'李元昊', roles:['king','general'],                            elem:'火',faction:'夏', pow:82,desc:'西夏景宗，可任主公／大將軍（好水川大破宋軍）'},
+  {id:'h_zhu_di',    name:'朱棣',   roles:['king','general'],                            elem:'火',faction:'明', pow:88,desc:'明成祖永樂帝，可任主公／大將軍（五征漠北）'},
+  {id:'h_qianlong',  name:'乾隆',   roles:['king'],                                      elem:'土',faction:'清', pow:80,desc:'清高宗，十全武功'},
 ];
 
 // Backward-compat: synthesize `.role` from `.roles[0]` for legacy code paths
@@ -2189,20 +2200,21 @@ function elemRel(a,b){
 //   Phase 1 主公:   甲禁1 → 乙禁2 → 甲選 → 乙選
 //   Phase 2 軍師:   甲禁2 → 乙禁2 → 乙選 → 甲選（乙先選）
 //   Phase 3 武將:   甲禁3 → 乙禁3 → 三輪交替選將（P/E/P/E/P/E）
+// 禁選數量降低以配合朝代限定（每朝代需 4 主公 / 4 軍師 / 10 武將即可運作）
 const BP_STEPS = [
-  // 第一階段：主公
+  // 第一階段：主公（各禁1選1）
   {phase:'ban',  side:'player', cnt:1, jf:'king',    label:'主公禁選'},
-  {phase:'ban',  side:'enemy',  cnt:2, jf:'king',    label:'主公禁選'},
+  {phase:'ban',  side:'enemy',  cnt:1, jf:'king',    label:'主公禁選'},
   {phase:'pick', side:'player', cnt:1, jf:'king',    label:'選主公'},
   {phase:'pick', side:'enemy',  cnt:1, jf:'king',    label:'選主公'},
-  // 第二階段：軍師
-  {phase:'ban',  side:'player', cnt:2, jf:'advisor', label:'軍師禁選'},
-  {phase:'ban',  side:'enemy',  cnt:2, jf:'advisor', label:'軍師禁選'},
+  // 第二階段：軍師（各禁1，乙先選）
+  {phase:'ban',  side:'player', cnt:1, jf:'advisor', label:'軍師禁選'},
+  {phase:'ban',  side:'enemy',  cnt:1, jf:'advisor', label:'軍師禁選'},
   {phase:'pick', side:'enemy',  cnt:1, jf:'advisor', label:'選軍師'},
   {phase:'pick', side:'player', cnt:1, jf:'advisor', label:'選軍師'},
-  // 第三階段：武將 × 3
-  {phase:'ban',  side:'player', cnt:3, jf:'warrior', label:'武將禁選'},
-  {phase:'ban',  side:'enemy',  cnt:3, jf:'warrior', label:'武將禁選'},
+  // 第三階段：武將 × 3（各禁1，三輪交替選）
+  {phase:'ban',  side:'player', cnt:1, jf:'warrior', label:'武將禁選'},
+  {phase:'ban',  side:'enemy',  cnt:1, jf:'warrior', label:'武將禁選'},
   {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將 1'},
   {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將 1'},
   {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將 2'},
@@ -2456,8 +2468,9 @@ const FACTION_TO_ERAS = {
 };
 
 function getHeroEras(h){
-  if(h && h.eras) return h.eras;
-  return FACTION_TO_ERAS[h?.faction] || [];
+  if(!h) return [];
+  if(h.eras) return h.eras;        // 顯式多朝代覆寫（如王翦 zhou+qinhan）
+  return FACTION_TO_ERAS[h.faction] || [];
 }
 
 const CAMPAIGN = [
