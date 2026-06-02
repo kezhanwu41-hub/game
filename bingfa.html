@@ -1898,6 +1898,22 @@ function heroPortraitFallbackUrl(h){
 function unitTypeUrl(type, side){
   return `assets/units/${side}_${type}.jpg`;
 }
+
+/* ── Narrator portraits for non-hero speakers (探馬/部將/樂師/幕僚) ── */
+function narratorImageUrl(speaker){
+  if(!speaker) return null;
+  const map = {
+    '探馬':'scout', '探子':'scout', '斥候':'scout',
+    '部將':'officer', '副將':'officer',
+    '幕僚':'staff', '謀士':'staff',
+    '樂師':'musician',
+  };
+  // Match if speaker contains a known keyword
+  for(const key in map){
+    if(speaker.includes(key)) return 'assets/narrators/'+map[key]+'.jpg';
+  }
+  return null;
+}
 function unitTypeFallbackUrl(type, side){
   const team = side==='player' ? 'blue armor' : 'red armor';
   const map = {
@@ -2435,7 +2451,7 @@ const LEVEL_DETAILS = {
     background: '商紂王暴虐，諸侯共怒。周武王與姜尚率八百諸侯誓師牧野，與紂王七十萬商軍對峙。',
     winTarget: 2,
     loseTarget: 3,
-    recommendedHeroes: ['h_jiang_sh'],
+    recommendedHeroes: ['h_liubang','h_jiang_sh','h_han_xin','h_wei_qing','h_huo_qb'],
     reward: '解鎖陣法「太公六韜」+ 姜尚信物',
     isTutorial: true,
     // 開場過場
@@ -3188,9 +3204,18 @@ function showNarrative(){
   imgEl.classList.remove('loaded');
   imgEl.removeAttribute('src');
   if(_wlState.narrPortrait){
+    // Hero portrait (full system with placeholder + retry)
     const h = HEROES_IDX[_wlState.narrPortrait];
     if(h){
       attachPortrait(imgEl, heroPortraitUrl(h), heroPortraitFallbackUrl(h), h);
+    }
+  } else {
+    // Try narrator-type generic portrait (探馬/部將/...)
+    const narrUrl = narratorImageUrl(_wlState.narrSpeaker);
+    if(narrUrl){
+      imgEl.onload = ()=> imgEl.classList.add('loaded');
+      imgEl.onerror = ()=>{};  // fall back to canvas placeholder
+      imgEl.src = narrUrl;
     }
   }
   // Scene background — chapter-themed
