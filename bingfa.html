@@ -3185,12 +3185,8 @@ function openLevel(lv){
   // New flow: skip intro → directly into BP
   const det = getLevelDetails(lv);
   const isTut = det.isTutorial;
+  // 章節資訊在 startGame 內注入 G（renderBP 之前），確保朝代過濾立即生效
   startGame(isTut ? 'tutorial' : 'campaign');
-  if(G){
-    G.campaignLevel = lv;
-    G.campaignDetails = det;
-    G.campaignChapterId = curChapter?.id || null;
-  }
   // Brief context toast
   showToast(`【${det.title}】${det.era}`, 3000);
   if(det.background){
@@ -4370,12 +4366,17 @@ function startGame(mode){
   stopTimers();
   G = makeState(mode);
   pickedT = [null,null]; roleFilter = '';
+  // 烽火千秋（含教學牧野關）：先注入章節資訊，renderBP/poolFor 才能拿到 chapterId
+  if((mode==='campaign' || mode==='tutorial') && curLevel){
+    G.campaignLevel = curLevel;
+    G.campaignDetails = getLevelDetails(curLevel);
+    G.campaignChapterId = curChapter?.id || null;
+  }
   const titles={tutorial:'新手教學',ai:'自由對戰',rank:'排位天梯',campaign:curLevel?curLevel.name:'烽火千秋'};
   tx('top-title', titles[mode]||'兵法推演');
   showScreen('scr-bp');
   if(mode==='tutorial'){
     tutUpdate();
-    // Setup draggable assistant
     tutSetupDrag();
   } else {
     tutHideAll();
