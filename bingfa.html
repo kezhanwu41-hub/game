@@ -1235,7 +1235,10 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
         <div class="wl-era" id="wl-era"></div>
       </div>
     </div>
-    <button class="lv-back" id="wl-quit" style="margin:0">⊗ 棄戰</button>
+    <div style="display:flex;gap:6px">
+      <button class="lv-back" id="wl-bonds" style="margin:0;background:rgba(201,168,76,.4);color:var(--gold2);border-color:rgba(201,168,76,.6)">⚡ 羈絆</button>
+      <button class="lv-back" id="wl-quit" style="margin:0">⊗ 棄戰</button>
+    </div>
   </div>
   <div class="wl-progress">
     <div class="wl-prog-row">
@@ -1331,7 +1334,11 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
     <div class="bp-pips" id="bp-pips"></div>
     <div class="bp-status">
       <div class="bp-status-txt" id="bp-status-txt">準備中…</div>
-      <div class="bp-turn-badge" id="bp-turn-badge"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="tb-btn" id="btn-bp-undo" title="撤回上一個禁/選">↶ 上一步</button>
+        <button class="tb-btn gold" id="btn-bonds" title="檢視所有可觸發羈絆">⚡ 羈絆</button>
+        <div class="bp-turn-badge" id="bp-turn-badge"></div>
+      </div>
     </div>
     <div class="bp-cols">
       <!-- Player panel (左) -->
@@ -1435,6 +1442,16 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
     </div>
   </div>
 </section>
+
+<!-- ══ BONDS MODAL — 羈絆檢視 ════════════════════════ -->
+<div class="modal-bg" id="modal-bonds">
+  <div class="modal-box" style="max-width:680px;max-height:80vh;overflow-y:auto">
+    <h2>⚡ 羈絆圖鑑</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;text-align:center">綠色 = 已觸發 · 灰色 = 條件未達</p>
+    <div id="bonds-list"></div>
+    <button class="btn" style="width:100%;margin-top:18px;letter-spacing:6px" id="btn-close-bonds">明 白 了</button>
+  </div>
+</div>
 
 <!-- ══ HELP MODAL ══════════════════════════════════════ -->
 <div class="modal-bg" id="modal-help">
@@ -2135,6 +2152,7 @@ function makeState(mode){
     stepProg: Array(BP_STEPS.length).fill(0),
     bans:  {player:[], enemy:[]},
     picks: {player:[], enemy:[]},
+    actionHistory: [],   // 上一步用：每次 doStep 推一筆 {side,phase,heroId,stepIdx,prog}
     round: 1,
     hp:    {player:100, enemy:100},
     maxHp: 100,
@@ -2177,6 +2195,14 @@ function doStep(state, side, heroId){
     return {ok:false, err:'本步需選非主公/軍師'};
   if(step.jf && !['advisor','warrior','king','special','any'].includes(step.jf) && !(hero.roles||[hero.role]).includes(step.jf))
     return {ok:false, err:`本步需選 ${ROLE_NAME[step.jf]}`};
+
+  // 記錄歷史（在實際修改 state 之前）
+  if(!state.actionHistory) state.actionHistory = [];
+  state.actionHistory.push({
+    side, phase: step.phase, heroId,
+    stepIdx: state.stepIdx,
+    prog: state.stepProg[state.stepIdx] || 0,
+  });
 
   if(step.phase === 'ban') state.bans[side].push(heroId);
   else state.picks[side].push(heroId);
@@ -4389,6 +4415,14 @@ function renderBPStatus(){
   txt.innerHTML = `${isPlayerTurn?'<strong>你的回合</strong>':'<strong>敵方回合</strong>'} — ${phaseLabel}（${jfLabel}）`;
   badge.className = 'bp-turn-badge '+(isPlayerTurn?'mine':'enemy');
   badge.textContent = isPlayerTurn?'▶ 我方行動':'⏳ 敵方思考';
+  // 上一步按鈕：有歷史紀錄時可用
+  const undoBtn = $('btn-bp-undo');
+  if(undoBtn){
+    const canUndo = G.actionHistory && G.actionHistory.length > 0;
+    undoBtn.disabled = !canUndo;
+    undoBtn.style.opacity = canUndo ? '1' : '.4';
+    undoBtn.style.cursor  = canUndo ? 'pointer' : 'not-allowed';
+  }
 }
 
 function renderPanels(){
@@ -4578,6 +4612,65 @@ function renderPool(){
 function hexToRgb(hex){
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return r ? `${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}` : null;
+}
+
+/* 上一步：撤回最後一筆禁/選；可多次點，逐次回溯。
+   只在 BP 階段有效；戰局推演開始後不可使用。 */
+/* 渲染羈絆檢視 modal — 顯示所有羈絆、已觸發狀態、所需武將 */
+function renderBondsModal(){
+  const el = document.getElementById('bonds-list');
+  if(!el) return;
+  const myPicks = (G && G.picks?.player) || [];
+  const enPicks = (G && G.picks?.enemy)  || [];
+  const myActive = activeBonds(myPicks).map(b=>b.name);
+  const enActive = activeBonds(enPicks).map(b=>b.name);
+
+  el.innerHTML = BONDS.map(b=>{
+    const myOn = myActive.includes(b.name);
+    const enOn = enActive.includes(b.name);
+    const names = b.ids.map(id => HEROES_IDX[id]?.name || id).join(' · ');
+    const have  = b.ids.filter(id => myPicks.includes(id)).length;
+    const bonusStr = Object.entries(b.bonus||{}).map(([k,v])=>{
+      const lbl = k==='atk'?'攻':k==='def'?'防':k==='hp'?'HP':k;
+      return `${lbl}+${v}`;
+    }).join(' / ');
+    const color = myOn ? '#66bb6a' : enOn ? '#ef5350' : 'rgba(255,255,255,.4)';
+    const bg    = myOn ? 'rgba(102,187,106,.12)' : enOn ? 'rgba(239,83,80,.08)' : 'rgba(255,255,255,.03)';
+    const stat  = myOn ? '✓ 我方已觸發' : enOn ? '⚠ 敵方已觸發' : `${have}/${b.ids.length}`;
+    return `
+      <div style="background:${bg};border:1px solid ${color}40;border-radius:8px;padding:10px 14px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:900;letter-spacing:3px;color:${color};font-size:15px">${b.name}</span>
+          <span style="font-size:11px;color:${color}">${stat}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">${names}</div>
+        ${bonusStr ? `<div style="font-size:11px;color:var(--gold2);margin-top:4px;letter-spacing:1px">⚡ ${bonusStr}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function undoLastBP(){
+  if(!G || G.phase !== 'bp'){
+    showToast('遊戲已進入戰局，無法上一步'); return;
+  }
+  if(!G.actionHistory || !G.actionHistory.length){
+    showToast('已是最初狀態'); return;
+  }
+  stopTimers();
+  const last = G.actionHistory.pop();
+  const arr = G[last.phase === 'ban' ? 'bans' : 'picks'][last.side];
+  const idx = arr.lastIndexOf(last.heroId);
+  if(idx >= 0) arr.splice(idx, 1);
+  G.stepIdx = last.stepIdx;
+  G.stepProg[last.stepIdx] = last.prog;
+  G.phase = 'bp';
+  // 教學模式同步更新提示
+  if(G.mode === 'tutorial') tutUpdate();
+  renderBP();
+  // 若回到的這一步是敵方回合，AI 會自動再走（重新觸發 bpLoop）；
+  // 若是玩家回合，bpLoop 會啟動計時器。
+  bpLoop();
+  showToast('↶ 已回到上一步');
 }
 
 function onHeroClick(heroId){
@@ -4885,6 +4978,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('wl-quit')?.addEventListener('click', ()=>{
     if(confirm('確定棄戰？此關進度將遺失。')) toLobby();
   });
+  $('wl-bonds')?.addEventListener('click', ()=>{
+    renderBondsModal();
+    $('modal-bonds')?.classList.add('show');
+  });
   $('wl-narr-next')?.addEventListener('click', ()=> nextNarrativeLine());
   // Click anywhere on narrative panel also advances
   $('wl-narrative')?.addEventListener('click', (e)=>{
@@ -4896,9 +4993,30 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('mm-cancel')?.addEventListener('click', cancelMatchmaking);
 
   // Top bar
-  $('btn-home')?.addEventListener('click',goHome);
+  $('btn-home')?.addEventListener('click', ()=>{
+    // 戰局推演 / 戰鬥 階段不可返回大廳（會丟失進度）
+    const inLockedGame = _wlState || (G && (G.phase === 'battle' || G.phase === 'end'));
+    if(inLockedGame){
+      showToast('戰局已開始，不可返回大廳。可點 ⚡ 查看羈絆。', 3200);
+      return;
+    }
+    goHome();
+  });
   $('btn-help')?.addEventListener('click',()=>$('modal-help')?.classList.add('show'));
   $('btn-close-help')?.addEventListener('click',()=>$('modal-help')?.classList.remove('show'));
+
+  // BP undo
+  $('btn-bp-undo')?.addEventListener('click', undoLastBP);
+
+  // Bonds viewer
+  $('btn-bonds')?.addEventListener('click', ()=>{
+    renderBondsModal();
+    $('modal-bonds')?.classList.add('show');
+  });
+  $('btn-close-bonds')?.addEventListener('click', ()=>$('modal-bonds')?.classList.remove('show'));
+  $('modal-bonds')?.addEventListener('click', e=>{
+    if(e.target.id === 'modal-bonds') $('modal-bonds').classList.remove('show');
+  });
 
   // Tutorial assistant close
   $('tut-close')?.addEventListener('click',()=>$('tut-assistant')?.classList.remove('show'));
