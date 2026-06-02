@@ -1658,9 +1658,9 @@ const HEROES = [
   {id:'h_li_jing',   name:'李靖',   roles:['commandant','marshal','strategist','general'],elem:'水',faction:'唐',pow:88,desc:'唐衛國公行軍總管，可任行軍總管／大司馬／軍師／大將軍（《李衛公兵法》）'},
   {id:'h_xu_huang',  name:'徐晃',   roles:['commandant','general','marshal'],            elem:'土',faction:'魏', pow:78,desc:'魏右將軍，可任行軍總管／大將軍／大司馬（治軍嚴明）'},
   {id:'h_lu_meng',   name:'呂蒙',   roles:['commandant','general','strategist'],         elem:'水',faction:'吳', pow:78,desc:'吳偏將軍，可任行軍總管／大將軍／軍師（士別三日刮目相看）'},
-  {id:'h_sun_wu',    name:'孫武',   roles:['strategist','commandant','marshal','general'],elem:'水',faction:'吳',pow:92,desc:'兵聖孫子，可任軍師／行軍總管／大司馬／大將軍（《孫子兵法》）'},
+  {id:'h_sun_wu',    name:'孫武',   roles:['strategist','commandant','marshal','general'],elem:'水',faction:'吳',eras:['zhou'],pow:92,desc:'兵聖孫子，可任軍師／行軍總管／大司馬／大將軍（《孫子兵法》）'},
   {id:'h_di_qing',   name:'狄青',   roles:['commandant','general','vanguard'],           elem:'金',faction:'宋', pow:80,desc:'樞密副使西北邊將，可任行軍總管／大將軍／破陣先鋒'},
-  {id:'h_lvbu',      name:'呂布',   roles:['vanguard','general','marshal'],              elem:'火',faction:'漢', pow:98,desc:'人中呂布奉先，可任破陣先鋒／大將軍／大司馬'},
+  {id:'h_lvbu',      name:'呂布',   roles:['vanguard','general','marshal'],              elem:'火',faction:'漢', pow:98,desc:'人中呂布奉先，可任破陣先鋒／大將軍／大司馬',eras:['sanguo']},
   {id:'h_chang_yc',  name:'常遇春', roles:['vanguard','general','commandant'],           elem:'金',faction:'明', pow:88,desc:'明先鋒鄂國公，可任破陣先鋒／大將軍／行軍總管'},
   {id:'h_yang_zx',   name:'楊再興', roles:['vanguard','general'],                        elem:'木',faction:'宋', pow:82,desc:'岳家軍前鋒小商河，可任破陣先鋒／大將軍'},
   {id:'h_xue_rg',    name:'薛仁貴', roles:['vanguard','general','commandant'],           elem:'火',faction:'唐', pow:86,desc:'唐先鋒平陽郡公，可任破陣先鋒／大將軍／行軍總管'},
@@ -2585,7 +2585,7 @@ const LEVEL_DETAILS = {
     background: '商紂王暴虐，諸侯共怒。周武王與姜尚率八百諸侯誓師牧野，與紂王七十萬商軍對峙。',
     winTarget: 2,
     loseTarget: 3,
-    recommendedHeroes: ['h_liubang','h_jiang_sh','h_han_xin','h_wei_qing','h_huo_qb'],
+    recommendedHeroes: ['h_zhou_wu','h_jiang_sh','h_sun_wu','h_gou_jian','h_lian_po'],
     reward: '解鎖陣法「太公六韜」+ 姜尚信物',
     isTutorial: true,
     // 開場過場
@@ -2687,6 +2687,7 @@ const LEVEL_DETAILS = {
     era: '前 684 年 · 春秋',
     background: '齊桓公伐魯。曹劌進見魯莊公，論「夫戰，勇氣也。一鼓作氣，再而衰，三而竭」。',
     winTarget: 2, loseTarget: 3,
+    recommendedHeroes:['h_qi_hg','h_guan_z','h_sun_wu'],
     scenarios: [
       {situation:'齊軍鳴鼓進攻。是否反擊？',
        options:[
@@ -2926,7 +2927,7 @@ const LEVEL_DETAILS = {
     title:'淝水之戰', icon:'⚔️', era:'383 年 · 東晉 vs 前秦',
     background:'苻堅百萬大軍南下滅晉。謝玄率北府兵八萬於淝水迎戰，「投鞭斷流」對「草木皆兵」。',
     winTarget:2, loseTarget:3,
-    recommendedHeroes:['h_sun_wu','h_huo_qb','h_zhang_l'],
+    recommendedHeroes:['h_zhou_yu','h_zhao_yun','h_zhuge'],
     scenarios:[
       {prologue:{speaker:'探馬',lines:['報——苻堅百萬大軍逼近淝水！','對岸旌旗蔽日，鋪天蓋地......','謝玄將軍，我軍八萬如何應對？']},
        situation:'苻堅百萬之眾隔淝水對峙。如何破敵？',
@@ -2955,7 +2956,7 @@ const LEVEL_DETAILS = {
     title:'玉壁之戰', icon:'⚔️', era:'546 年 · 北朝',
     background:'高歡率二十萬大軍圍攻玉壁，韋孝寬以八千守軍守城六十日，高歡氣憤而亡。',
     winTarget:2, loseTarget:3,
-    recommendedHeroes:['h_sun_wu','h_zhao_yun','h_yue_fei'],
+    recommendedHeroes:['h_xu_huang','h_zhao_yun','h_sima'],
     scenarios:[
       {prologue:{speaker:'探馬',lines:['報——高歡二十萬大軍將至！','玉壁城內只有八千守軍......','韋將軍，如何守城？']},
        situation:'高歡二十萬攻玉壁，我軍八千。如何死守？',
@@ -3070,7 +3071,7 @@ const LEVEL_DETAILS = {
     title:'白袍將軍陳慶之', icon:'🏹', era:'529 年 · 南北朝',
     background:'陳慶之率七千白袍軍北伐，十四個月攻陷北魏三十二城，戰勝四十七陣，所向無前。',
     winTarget:2, loseTarget:3,
-    recommendedHeroes:['h_huo_qb','h_sun_wu','h_li_jing'],
+    recommendedHeroes:['h_zhou_yu','h_zhao_yun','h_lu_meng'],
     scenarios:[
       {prologue:{speaker:'探馬',lines:['將軍——前方梁國！','我軍七千，魏軍二十萬！','「名師大將莫自牢，千兵萬馬避白袍」——將軍，請令！']},
        situation:'七千對二十萬。如何破敵？',
@@ -3098,7 +3099,7 @@ const LEVEL_DETAILS = {
     title:'蘭陵王入陣曲', icon:'🎭', era:'564 年 · 北齊',
     background:'蘭陵王高長恭面美如婦，戴鬼面具入陣，於邙山之戰大破北周十萬大軍。',
     winTarget:2, loseTarget:3,
-    recommendedHeroes:['h_huo_qb','h_yu_chi','h_xue_rg'],
+    recommendedHeroes:['h_ma_chao','h_zhao_yun','h_zhang_liao'],
     scenarios:[
       {prologue:{speaker:'高長恭',portrait:null,lines:['北周十萬圍金墉城，城內危急！','吾欲率五百精騎，殺入敵陣！','將士見我面美如婦，恐難服眾......須戴此鬼面具！']},
        situation:'蘭陵王戴鬼面具殺入敵陣。如何配合？',
