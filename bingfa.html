@@ -869,6 +869,8 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 .bp-slot.filled .sl-info{flex:1;min-width:0;overflow:hidden}
 .sl-info .sl-name,.sl-info .sl-elem{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* 隱藏五行元素顯示 */
+.hc-elem,.sl-elem{display:none}
 .hc-role{font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:2px}
 .hc-name{font-size:14px;font-weight:900;color:#e8d0ff;margin-bottom:3px}
 .hc-elem{font-size:11px;margin-bottom:4px;display:flex;align-items:center;gap:4px}
@@ -1179,7 +1181,7 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
     <button class="tb-btn" id="btn-home">🏛️ 大廳</button>
     <div id="top-title">兵 法 推 演</div>
   </div>
-  <button class="tb-btn gold" id="btn-help">📖 規則</button>
+  <button class="tb-btn gold" id="btn-help">⚡ 羈絆圖鑑</button>
 </div>
 
 <!-- ══ LOBBY ═══════════════════════════════════════════ -->
@@ -1745,11 +1747,11 @@ function makePortraitPlaceholder(h){
   ctx.textBaseline = 'middle';
   ctx.fillText('「'+roleLabel+'」', 128, 38);
 
-  // Element symbol large
-  ctx.font = 'bold 22px "Noto Serif TC",serif';
+  // 朝代/陣營（取代五行）
+  ctx.font = 'bold 18px "Noto Serif TC",serif';
   ctx.fillStyle = accent;
-  ctx.globalAlpha = 0.65;
-  ctx.fillText('— '+h.elem+' —', 128, 64);
+  ctx.globalAlpha = 0.6;
+  ctx.fillText('— '+h.faction+' —', 128, 64);
   ctx.globalAlpha = 1;
 
   // Hero name — large calligraphy with glow
@@ -2167,6 +2169,13 @@ function poolFor(state, jf){
     ...state.picks.player, ...state.picks.enemy
   ]);
   let p = HEROES.filter(h => !used.has(h.id));
+  // 烽火千秋朝代限定：只能用該朝代武將
+  if(state.campaignChapterId){
+    const factions = CHAPTER_FACTIONS[state.campaignChapterId];
+    if(factions && factions.length){
+      p = p.filter(h => factions.includes(h.faction));
+    }
+  }
   if(jf === 'advisor') p = p.filter(h => heroFitsGroup(h,'advisor'));
   else if(jf === 'warrior') p = p.filter(h => heroFitsGroup(h,'warrior'));
   else if(jf === 'king') p = p.filter(h => heroFitsGroup(h,'king'));
@@ -2368,6 +2377,17 @@ function resolveBattle(state, ourT){
 /* ═══════════════════════════════════════════════════════════
    CAMPAIGN DATA — 七大朝代 · 82 關
 ═══════════════════════════════════════════════════════════ */
+// 各朝代僅可使用該時代的武將（依 faction 過濾）
+const CHAPTER_FACTIONS = {
+  zhou:     ['周','齊','越','楚'],          // 春秋戰國諸侯（楚含早期）
+  qinhan:   ['秦','楚','漢'],                // 秦末漢初
+  sanguo:   ['蜀','魏','吳','後趙','漢'],    // 三國至南北朝（含漢末/楚漢遺臣可借用）
+  suitang:  ['隋','唐'],
+  song:     ['宋','遼','金','夏'],
+  yuanming: ['元','明'],
+  qing:     ['清','明'],                    // 含明末清初過渡
+};
+
 const CAMPAIGN = [
   {id:'zhou', name:'周朝', era:'前1046 - 前256', icon:'🏛️', levels:[
     {id:'mu_ye',       name:'牧野之戰',     type:'main',   desc:'周武王伐紂'},
@@ -3150,6 +3170,7 @@ function openLevel(lv){
   if(G){
     G.campaignLevel = lv;
     G.campaignDetails = det;
+    G.campaignChapterId = curChapter?.id || null;
   }
   // Brief context toast
   showToast(`【${det.title}】${det.era}`, 3000);
@@ -4540,11 +4561,16 @@ function renderPool(){
   // Campaign recommended heroes (★ 推薦) — visible in campaign or tutorial
   const campRecs = (G && (G.campaignDetails?.recommendedHeroes || [])) || [];
 
+  // 烽火千秋：只顯示該朝代武將
+  const chapterFactions = G.campaignChapterId ? CHAPTER_FACTIONS[G.campaignChapterId] : null;
   HEROES.filter(h=>{
+    // 朝代限定
+    if(chapterFactions && !chapterFactions.includes(h.faction)) return false;
+    // 職位過濾
     if(!roleFilter) return true;
-    if(roleFilter==='king') return h.role==='king';
-    if(roleFilter==='advisor') return ADVISOR_ROLES.includes(h.role);
-    if(roleFilter==='warrior') return WARRIOR_ROLES.includes(h.role);
+    if(roleFilter==='king') return heroFitsGroup(h,'king');
+    if(roleFilter==='advisor') return heroFitsGroup(h,'advisor');
+    if(roleFilter==='warrior') return heroFitsGroup(h,'warrior');
     return true;
   }).forEach(h=>{
     const d = document.createElement('div');
@@ -5002,7 +5028,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
     goHome();
   });
-  $('btn-help')?.addEventListener('click',()=>$('modal-help')?.classList.add('show'));
+  $('btn-help')?.addEventListener('click',()=>{
+    renderBondsModal();
+    $('modal-bonds')?.classList.add('show');
+  });
   $('btn-close-help')?.addEventListener('click',()=>$('modal-help')?.classList.remove('show'));
 
   // BP undo
