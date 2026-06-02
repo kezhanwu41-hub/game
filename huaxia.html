@@ -67,9 +67,9 @@
 </div>
 
 <nav class="hx-topbar" id="hx-topbar">
-  <button class="hx-topbar-btn" onclick="window.location.href='index.html'">🏛️ 遊戲大廳</button>
+  <button class="hx-topbar-btn" id="hx-back-btn" title="返回華夏風雲錄主畫面" onclick="if(typeof Game!=='undefined'&&Game.returnLobby){Game.returnLobby();}else{location.reload();}">← 主畫面</button>
   <span class="hx-topbar-title">華夏風雲錄</span>
-  <span></span>
+  <button class="hx-topbar-btn" id="hx-cross-home" title="回遊戲選單" onclick="window.location.href='index.html'">🏠 遊戲選單</button>
 </nav>
 
 <!-- ══ LOBBY ════════════════════════════════════════════════════ -->

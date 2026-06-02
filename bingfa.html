@@ -1117,10 +1117,13 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 <!-- ══ TOPBAR ══════════════════════════════════════════ -->
 <div id="topbar">
   <div class="tb-left">
-    <button class="tb-btn" id="btn-home">🏛️ 大廳</button>
+    <button class="tb-btn" id="btn-back" title="返回兵法推演主畫面">←</button>
     <div id="top-title">兵 法 推 演</div>
   </div>
-  <button class="tb-btn gold" id="btn-help">⚡ 羈絆圖鑑</button>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="tb-btn gold" id="btn-help">⚡ 羈絆圖鑑</button>
+    <button class="tb-btn" id="btn-home" title="回遊戲選單">🏠 遊戲選單</button>
+  </div>
 </div>
 
 <!-- ══ LOBBY ═══════════════════════════════════════════ -->
@@ -5004,11 +5007,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('mm-cancel')?.addEventListener('click', cancelMatchmaking);
 
   // Top bar
-  $('btn-home')?.addEventListener('click', ()=>{
-    // 戰局推演 / 戰鬥 階段不可返回大廳（會丟失進度）
+  // ← 返回兵法推演主畫面（模式選擇）
+  $('btn-back')?.addEventListener('click', ()=>{
     const inLockedGame = _wlState || (G && (G.phase === 'battle' || G.phase === 'end'));
     if(inLockedGame){
-      showToast('戰局已開始，不可返回大廳。可點 ⚡ 查看羈絆。', 3200);
+      showToast('戰局已開始，不可返回主畫面。可點 ⚡ 查看羈絆。', 3200);
+      return;
+    }
+    toLobby();
+  });
+  // 🏠 回遊戲選單（跨遊戲首頁 index.html）
+  $('btn-home')?.addEventListener('click', ()=>{
+    const inLockedGame = _wlState || (G && (G.phase === 'battle' || G.phase === 'end'));
+    if(inLockedGame){
+      showToast('戰局已開始，請先完成或棄戰', 2400);
       return;
     }
     goHome();
