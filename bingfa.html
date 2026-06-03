@@ -337,12 +337,28 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
 }
 
 /* ═══ Visual-novel narrative overlay ═══ */
-.wl-narrative{
+/* 固定高度舞台容器 — 敘事與選擇卡疊放，切換時下方 log 不位移 */
+.wl-stage{
   position:relative;
+  max-width:960px;width:100%;
+  height:520px;             /* 預留足夠空間給 4 選項的 wl-scenario */
+  margin-bottom:14px;
+}
+.wl-stage > .wl-narrative,
+.wl-stage > .wl-scenario{
+  position:absolute;left:0;right:0;top:0;
+  margin-bottom:0;
+}
+/* 敘事框：固定 240px 在 stage 頂部，下方空間預留給切換 */
+.wl-stage > .wl-narrative{ height:240px; }
+/* 選擇卡：填滿整個 stage（4 選項+提示需要更多空間）*/
+.wl-stage > .wl-scenario{ bottom:0; }
+
+.wl-narrative{
   background:linear-gradient(180deg,rgba(13,8,32,.96),rgba(26,15,46,.85));
   border:2px solid rgba(201,168,76,.55);border-radius:12px;
-  padding:18px 22px 14px;margin-bottom:14px;
-  height:240px;display:flex;gap:18px;
+  padding:18px 22px 14px;
+  display:flex;gap:18px;
   box-shadow:0 4px 18px rgba(0,0,0,.5),inset 0 0 30px rgba(156,109,214,.1);
   overflow:hidden;
 }
@@ -1199,25 +1215,26 @@ body{font-family:'Noto Serif TC',serif;background:var(--dark);color:var(--text);
     <div class="wl-prog-stars" id="wl-prog-stars"></div>
     <div class="wl-prog-loss" id="wl-prog-loss"></div>
   </div>
-  <!-- Narrative panel (visual-novel) -->
-  <div class="wl-narrative" id="wl-narrative" style="display:none">
-    <div class="wl-scene-bg show" id="wl-scene-bg" data-ch="zhou"></div>
-    <div class="wl-narr-portrait" id="wl-narr-portrait" data-name="—"><img id="wl-narr-img" alt=""></div>
-    <div class="wl-narr-body">
-      <div class="wl-narr-speaker" id="wl-narr-speaker">旁白</div>
-      <div class="wl-narr-text" id="wl-narr-text">…</div>
-      <div class="wl-narr-foot">
-        <span class="wl-narr-progress" id="wl-narr-progress">1 / 1</span>
-        <button class="wl-narr-next" id="wl-narr-next">繼續 ▶</button>
+  <!-- 固定高度舞台：敘事 / 選擇 兩個面板同框疊放，切換時 log 位置不變動 -->
+  <div class="wl-stage">
+    <div class="wl-narrative" id="wl-narrative" style="display:none">
+      <div class="wl-scene-bg show" id="wl-scene-bg" data-ch="zhou"></div>
+      <div class="wl-narr-portrait" id="wl-narr-portrait" data-name="—"><img id="wl-narr-img" alt=""></div>
+      <div class="wl-narr-body">
+        <div class="wl-narr-speaker" id="wl-narr-speaker">旁白</div>
+        <div class="wl-narr-text" id="wl-narr-text">…</div>
+        <div class="wl-narr-foot">
+          <span class="wl-narr-progress" id="wl-narr-progress">1 / 1</span>
+          <button class="wl-narr-next" id="wl-narr-next">繼續 ▶</button>
+        </div>
       </div>
     </div>
-  </div>
-  <!-- Choice card -->
-  <div class="wl-scenario" id="wl-scenario-card" style="display:none">
-    <div class="wl-step-num" id="wl-step">局勢 1</div>
-    <div class="wl-situation" id="wl-situation">…</div>
-    <div id="wl-tut-hint-wrap"></div>
-    <div class="wl-opts" id="wl-opts"></div>
+    <div class="wl-scenario" id="wl-scenario-card" style="display:none">
+      <div class="wl-step-num" id="wl-step">局勢 1</div>
+      <div class="wl-situation" id="wl-situation">…</div>
+      <div id="wl-tut-hint-wrap"></div>
+      <div class="wl-opts" id="wl-opts"></div>
+    </div>
   </div>
   <div class="wl-log">
     <div class="wl-log-h">📜 戰報</div>
