@@ -2414,7 +2414,8 @@ function poolFor(state, jf){
     p = p.filter(h => getHeroEras(h).includes(state.campaignChapterId));
   }
   if(jf === 'advisor') p = p.filter(h => heroFitsGroup(h,'advisor'));
-  else if(jf === 'warrior') p = p.filter(h => heroFitsGroup(h,'warrior'));
+  // 武將階段（全部區域）：可選任何未使用之角色，不必有 warrior 職位
+  // → 不過濾，p 維持「所有 unused 武將」
   else if(jf === 'king') p = p.filter(h => heroFitsGroup(h,'king'));
   else if(jf === 'special') p = p.filter(h => !heroFitsGroup(h,'king') && !(h.roles||[h.role]).includes('strategist'));
   else if(jf && jf !== 'any') p = p.filter(h => (h.roles||[h.role]).includes(jf));
@@ -2433,8 +2434,7 @@ function doStep(state, side, heroId){
   if(used.has(heroId)) return {ok:false, err:'此武將已被使用'};
   if(step.jf === 'advisor' && !heroFitsGroup(hero,'advisor'))
     return {ok:false, err:'本步需選謀臣類（軍師/臣相/大司農）'};
-  if(step.jf === 'warrior' && !heroFitsGroup(hero,'warrior'))
-    return {ok:false, err:'本步需選武將類（大司馬/大將軍/行軍總管/破陣先鋒）'};
+  // 武將階段：可選任何角色（包含主公、軍師之未使用者），不檢查 warrior 職位
   if(step.jf === 'king' && !heroFitsGroup(hero,'king'))
     return {ok:false, err:'本步需選主公'};
   if(step.jf === 'special' && (heroFitsGroup(hero,'king') || (hero.roles||[hero.role]).includes('strategist')))
@@ -4785,7 +4785,8 @@ function renderPool(){
     if(!roleFilter) return true;
     if(roleFilter==='king') return heroFitsGroup(h,'king');
     if(roleFilter==='advisor') return heroFitsGroup(h,'advisor');
-    if(roleFilter==='warrior') return heroFitsGroup(h,'warrior');
+    // warrior 全部區域：顯示所有角色（包含主公與軍師），由 used 邏輯排除已選者
+    if(roleFilter==='warrior') return true;
     return true;
   }).forEach(h=>{
     const d = document.createElement('div');
