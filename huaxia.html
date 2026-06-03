@@ -67,7 +67,16 @@
 </div>
 
 <nav class="hx-topbar" id="hx-topbar">
-  <button class="hx-topbar-btn" id="hx-back-btn" title="返回華夏風雲錄主畫面" onclick="if(typeof Game!=='undefined'&&Game.returnLobby){Game.returnLobby();}else{location.reload();}">← 主畫面</button>
+  <button class="hx-topbar-btn" id="hx-back-btn" title="返回群雄列陣 / 華夏主畫面" onclick="(function(){
+    /* 智能返回：在華夏風雲錄主畫面 → 群雄列陣；在子畫面 → 華夏風雲錄主畫面 */
+    var lobby = document.getElementById('screen-lobby');
+    var atLobby = lobby && lobby.classList.contains('active');
+    if(!atLobby && typeof Game !== 'undefined' && Game.returnLobby){
+      Game.returnLobby();
+    } else {
+      window.location.href = 'index.html';
+    }
+  })();">←</button>
   <span class="hx-topbar-title">華夏風雲錄</span>
   <button class="hx-topbar-btn" id="hx-cross-home" title="回遊戲選單" onclick="window.location.href='index.html'">🏠 遊戲選單</button>
 </nav>
