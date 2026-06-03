@@ -2459,24 +2459,65 @@ function doStep(state, side, heroId){
 function aiPick(state){
   const step = curStep(state);
   if(!step || step.side !== 'enemy') return null;
-  const pool = poolFor(state, step.jf);
-  if(!pool.length) return null;
+  let pool = poolFor(state, step.jf);
+
+  // === Bug 1 fix：池子空時退而求其次（放寬朝代/職位限制）===
+  if(!pool.length){
+    const used = new Set([...state.bans.player, ...state.bans.enemy,
+                          ...state.picks.player, ...state.picks.enemy]);
+    pool = HEROES.filter(h => !used.has(h.id));
+    if(!pool.length) return null;
+  }
+
+  // === Bug 3 fix：武將階段優先 warrior-role 角色 ===
+  if(step.jf === 'warrior'){
+    const warriorPool = pool.filter(h => heroFitsGroup(h, 'warrior'));
+    if(warriorPool.length) pool = warriorPool;
+  }
+
+  // === Bug 4 fix：認識羈絆 — 若選此角色能湊近羈絆，加分 ===
+  function bondBonusFor(hero, side){
+    let bonus = 0;
+    BONDS.forEach(b => {
+      if(!b.ids.includes(hero.id)) return;
+      const have = b.ids.filter(id => state.picks[side].includes(id)).length;
+      if(have >= 1) bonus += 18 * have;                  // 已有同羈絆 → 強烈優先
+      else if(b.ids.length <= 3) bonus += 6;             // 小羈絆值得起手
+    });
+    return bonus;
+  }
+
+  // === Bug 4 fix：敵方 AI 認識玩家方的「推薦武將」(該關歷史最佳陣容) ===
+  const recs = state.campaignDetails?.recommendedHeroes || [];
+
+  // === Bug 5 fix：以朝代/陣營契合替代五行剋制 ===
+  const enemyFactions = state.picks.enemy.map(id => HEROES_IDX[id]?.faction).filter(Boolean);
+  function factionBonus(hero){
+    if(!hero.faction) return 0;
+    return enemyFactions.includes(hero.faction) ? 10 : 0;  // 同陣營+10（如蜀魏吳）
+  }
+
   if(step.phase === 'ban'){
-    const ourElems = state.picks.player.map(id => HEROES_IDX[id].elem);
-    return pool.slice().sort((a,b)=>{
-      let s = b.pow - a.pow;
-      if(ourElems.some(e => KE[a.elem] === e)) s += 20;
-      if(ourElems.some(e => KE[b.elem] === e)) s -= 20;
+    // 禁選：禁掉「對玩家最有威脅」的角色
+    function banScore(h){
+      let s = h.pow;
+      // 玩家方推薦角色 = 高威脅（必禁）
+      if(recs.includes(h.id)) s += 35;
+      // 玩家若已選某羈絆組合的一部分，禁該羈絆其他成員
+      BONDS.forEach(b => {
+        if(!b.ids.includes(h.id)) return;
+        const playerHas = b.ids.filter(id => state.picks.player.includes(id)).length;
+        if(playerHas >= 1) s += 22 * playerHas;
+      });
       return s;
-    })[0].id;
-  } else {
-    const myElems = state.picks.player.map(id => HEROES_IDX[id].elem);
-    if(myElems.length > 0){
-      const tgt = KE[myElems[myElems.length-1]];
-      const match = pool.filter(h => h.elem === tgt).sort((a,b)=>b.pow-a.pow);
-      if(match.length) return match[0].id;
     }
-    return pool.sort((a,b)=>b.pow-a.pow)[0].id;
+    return pool.slice().sort((a,b) => banScore(b) - banScore(a))[0].id;
+  } else {
+    // 選將：戰力 + 羈絆湊組 + 同陣營契合
+    function pickScore(h){
+      return h.pow + bondBonusFor(h, 'enemy') + factionBonus(h);
+    }
+    return pool.slice().sort((a,b) => pickScore(b) - pickScore(a))[0].id;
   }
 }
 
@@ -2486,23 +2527,35 @@ function aiAdvice(state){
   if(step.side !== 'player') return '敵方思考中…';
   const pool = poolFor(state, step.jf);
   if(!pool.length) return '可自由選擇。';
+  // === Bug 5 fix：用羈絆/朝代/推薦取代五行剋制 ===
+  const recs = state.campaignDetails?.recommendedHeroes || [];
+  const myFactions = state.picks.player.map(id => HEROES_IDX[id]?.faction).filter(Boolean);
   if(step.phase === 'ban'){
-    const enElems = state.picks.enemy.map(id => HEROES_IDX[id].elem);
+    // 禁：禁掉敵方羈絆/推薦中的高威脅角色
+    const enPicks = state.picks.enemy;
     const best = pool.slice().sort((a,b)=>{
-      let s = b.pow - a.pow;
-      if(enElems.some(e => KE[a.elem] === e)) s += 20;
-      return s;
+      let sa = a.pow, sb = b.pow;
+      BONDS.forEach(bn=>{
+        if(bn.ids.includes(a.id) && bn.ids.some(id=>enPicks.includes(id))) sa += 25;
+        if(bn.ids.includes(b.id) && bn.ids.some(id=>enPicks.includes(id))) sb += 25;
+      });
+      return sb - sa;
     })[0];
-    return `建議禁掉「${best.name}（${best.elem}）」— 此將對敵威脅最大。`;
+    return `建議禁掉「${best.name}」— 對敵威脅最大。`;
   } else {
-    const enElems = state.picks.enemy.map(id => HEROES_IDX[id].elem);
-    if(enElems.length > 0){
-      const tgt = KE[enElems[enElems.length-1]];
-      const match = pool.filter(h => h.elem === tgt).sort((a,b)=>b.pow-a.pow);
-      if(match.length) return `敵方多用「${enElems[enElems.length-1]}」，建議選「${match[0].name}（${tgt}）」壓制。`;
-    }
-    const top = pool.sort((a,b)=>b.pow-a.pow)[0];
-    return `建議選「${top.name}（${top.elem}）」穩固陣容。`;
+    // 選：自己已選的羈絆優先湊組，否則挑戰力最高
+    let best = null, bestScore = -Infinity;
+    pool.forEach(h => {
+      let s = h.pow;
+      BONDS.forEach(bn=>{
+        if(bn.ids.includes(h.id) && bn.ids.some(id=>state.picks.player.includes(id))) s += 30;
+      });
+      if(myFactions.includes(h.faction)) s += 10;
+      if(recs.includes(h.id)) s += 20;
+      if(s > bestScore){ bestScore = s; best = h; }
+    });
+    if(!best) best = pool[0];
+    return `建議選「${best.name}（${best.faction}）」— 史實或羈絆契合。`;
   }
 }
 
@@ -4939,20 +4992,42 @@ function bpLoop(){
     const delay = G.mode==='tutorial' ? 1400 + Math.random()*600 : 800 + Math.random()*800;
     aiTO = setTimeout(()=>{
       if(!G || G.phase !== 'bp') return;
-      let id;
-      if(G.mode === 'tutorial'){
-        id = tutTarget(G);
-        if(!id) id = aiPick(G); // fallback
-      } else {
-        id = aiPick(G);
+      // === Bug 1+2 fix：AI 必須下手，否則 BP 卡死 ===
+      const triedIds = new Set();
+      let success = false;
+      for(let attempt=0; attempt<8; attempt++){
+        let id = null;
+        if(G.mode === 'tutorial' && attempt===0){
+          id = tutTarget(G);
+        }
+        if(!id) id = aiPick(G);
+        // 最終保險：任何未用之 hero
+        if(!id || triedIds.has(id)){
+          const used = new Set([...G.bans.player, ...G.bans.enemy,
+                                ...G.picks.player, ...G.picks.enemy, ...triedIds]);
+          const any = HEROES.find(h => !used.has(h.id));
+          if(!any){ console.error('[BP] 完全無 hero 可用'); break; }
+          id = any.id;
+        }
+        triedIds.add(id);
+        const res = doStep(G, 'enemy', id);
+        if(res.ok){ success = true; break; }
+        console.warn('[AI] doStep 失敗:', res.err, '改試其他角色');
       }
-      if(id){
-        doStep(G, 'enemy', id);
-        if(G.mode==='tutorial') tutUpdate();
-        renderBP();
-        if(G.phase === 'battle') setTimeout(()=>enterPostBP(), 600);
-        else bpLoop();
+      if(!success){
+        console.error('[BP] AI 連 8 次都選不出有效角色，跳過此步');
+        // 強制把 stepProg 推進，避免無限循環
+        const cs = curStep(G);
+        if(cs){
+          G.stepProg[G.stepIdx] = cs.cnt;
+          G.stepIdx++;
+          if(G.stepIdx >= BP_STEPS.length) G.phase = 'battle';
+        }
       }
+      if(G.mode==='tutorial') tutUpdate();
+      renderBP();
+      if(G.phase === 'battle') setTimeout(()=>enterPostBP(), 600);
+      else bpLoop();
     }, delay);
   } else {
     // Player turn
