@@ -2943,6 +2943,17 @@ const LEVEL_DETAILS = {
     winTarget: 3, loseTarget: 3,
     recommendedHeroes: ['h_zhou_yu', 'h_zhuge', 'h_huang_zhong'],
     reward: '解鎖「火攻陣」完全體 + 黃蓋信物',
+    opening:{speaker:'周瑜',portrait:'h_zhou_yu',lines:[
+      '主上！曹操二十萬大軍南下，自詡「投鞭斷流」！',
+      '然北方士兵不擅水戰、水土不服。',
+      '曹軍以鐵索連環船陣——此正是火攻天賜良機！',
+      '臣請主上下令——孫劉聯軍迎戰！'
+    ]},
+    ending:{speaker:'諸葛亮',portrait:'h_zhuge',lines:[
+      '火燒赤壁，曹軍十去其九！',
+      '此戰之後——三分天下之勢已成！',
+      '主上可乘勢取荊南四郡，奠蜀漢之基！'
+    ]},
     scenarios: [
       {situation:'黃蓋來見，獻火攻計。但需先行詐降，風險極大。',
        options:[
@@ -3083,6 +3094,18 @@ const LEVEL_DETAILS = {
     background:'諸葛亮一出祁山，街亭乃漢中咽喉。馬謖自薦守街亭，違反軍令當道紮營而非當山據險。',
     winTarget:2, loseTarget:3,
     recommendedHeroes:['h_zhuge','h_zhao_yun','h_ma_chao'],
+    reward:'解鎖陣法「當道據險」+ 王平兵符',
+    opening:{speaker:'諸葛亮',portrait:'h_zhuge',lines:[
+      '主公，街亭乃漢中咽喉。',
+      '得之則祁山可圖，失之則北伐功虧一簣！',
+      '......然馬謖請令死守街亭，自言「熟讀兵書」。',
+      '臣心中已有不祥之感——請主公決斷此事！'
+    ]},
+    ending:{speaker:'諸葛亮',portrait:'h_zhuge',lines:[
+      '街亭失守，全線潰敗......',
+      '揮淚斬馬謖，自貶三級！',
+      '北伐功虧一簣——此皆亮用人不察之過！'
+    ]},
     scenarios:[
       {prologue:{speaker:'諸葛亮',portrait:'h_zhuge',lines:['街亭乃漢中咽喉，得之則祁山可圖。','馬謖自薦守街亭，但他從未獨領大軍......','此事關係北伐成敗，丞相必須慎重！']},
        situation:'誰守街亭？馬謖自薦但無實戰；魏延、王平皆是老將。',
@@ -3150,6 +3173,18 @@ const LEVEL_DETAILS = {
     background:'苻堅百萬大軍南下滅晉。謝玄率北府兵八萬於淝水迎戰，「投鞭斷流」對「草木皆兵」。',
     winTarget:2, loseTarget:3,
     recommendedHeroes:['h_zhou_yu','h_zhao_yun','h_zhuge'],
+    reward:'解鎖陣法「八公山陣」+ 北府兵令',
+    opening:{speaker:'謝玄',portrait:null,lines:[
+      '苻堅率百萬大軍南下，自詡「投鞭斷流」！',
+      '我北府兵僅八萬，朝廷震動。',
+      '然秦軍多為被迫之兵，氣勢雖盛卻民心不附。',
+      '......主上請令，臣有破敵之策！'
+    ]},
+    ending:{speaker:'謝玄',portrait:null,lines:[
+      '苻堅百萬大軍崩潰於淝水！',
+      '「風聲鶴唳，草木皆兵」——千古笑談。',
+      '此戰一勝，東晉得以延續百年！'
+    ]},
     scenarios:[
       {prologue:{speaker:'探馬',lines:['報——苻堅百萬大軍逼近淝水！','對岸旌旗蔽日，鋪天蓋地......','謝玄將軍，我軍八萬如何應對？']},
        situation:'苻堅百萬之眾隔淝水對峙。如何破敵？',
@@ -3179,6 +3214,18 @@ const LEVEL_DETAILS = {
     background:'高歡率二十萬大軍圍攻玉壁，韋孝寬以八千守軍守城六十日，高歡氣憤而亡。',
     winTarget:2, loseTarget:3,
     recommendedHeroes:['h_xu_huang','h_zhao_yun','h_sima'],
+    reward:'解鎖陣法「孤城死守」+ 韋孝寬虎符',
+    opening:{speaker:'韋孝寬',portrait:null,lines:[
+      '高歡率二十萬大軍將至玉壁！',
+      '我守軍僅八千，糧草尚足三月。',
+      '......然高歡必使盡圍城之計，土山、地道、火攻、反間。',
+      '玉壁存亡，繫於我一人之手！'
+    ]},
+    ending:{speaker:'韋孝寬',portrait:null,lines:[
+      '高歡圍城六十日，土山、地道、火攻、反間，無計不施！',
+      '臣兵來將擋，水來土掩——皆破其計！',
+      '高歡氣憤而亡，玉壁孤城堅守千古！'
+    ]},
     scenarios:[
       {prologue:{speaker:'探馬',lines:['報——高歡二十萬大軍將至！','玉壁城內只有八千守軍......','韋將軍，如何守城？']},
        situation:'高歡二十萬攻玉壁，我軍八千。如何死守？',
@@ -3208,6 +3255,18 @@ const LEVEL_DETAILS = {
     background:'爾朱榮藉口為孝明帝報仇，率軍入洛陽。在河陰大屠殺王公大臣兩千餘人，史稱河陰之變。',
     winTarget:2, loseTarget:3,
     recommendedHeroes:['h_caocao','h_sima','h_lvbu'],
+    reward:'解鎖事件「亂世投機」+ 爾朱榮虎符',
+    opening:{speaker:'幕僚',portrait:'staff',lines:[
+      '主公，洛陽王公大臣盡聚河陰祭天！',
+      '正是動手清君側、奪大權之時！',
+      '然兩千王公多為元魏宗室，殺則失人心，留則為後患。',
+      '主公請決——是清洗，是收編，還是兼施？'
+    ]},
+    ending:{speaker:'幕僚',portrait:'staff',lines:[
+      '河陰之變後，元魏宗室盡墨！',
+      '主公掌軍政大權，元魏名存實亡。',
+      '......然天下英雄亦看清主公之手段，東魏西魏之分裂自此而始！'
+    ]},
     scenarios:[
       {prologue:{speaker:'幕僚',lines:['主公，洛陽王公大臣盡聚河陰......','此乃千載難逢之機！','是否動手清洗朝堂？']},
        situation:'爾朱榮入河陰，是否大清洗？',
@@ -3342,6 +3401,303 @@ const LEVEL_DETAILS = {
          {text:'低調掌兵',value:+1,log:'軍威猶在',note:'良策',good:true,epilogue:null},
          {text:'隱退山林',value:0,log:'保命但失影響力',note:'中性',epilogue:null},
        ]},
+    ]
+  },
+
+  // ════════════════════════════════════════════
+  // 秦漢主線（6 關）— 含完整 opening/prologue/epilogue/ending
+  // ════════════════════════════════════════════
+  'qin_mie':{
+    title:'秦滅六國', icon:'⚔️', era:'前 230-221 年 · 秦',
+    background:'秦始皇繼位，欲一統天下。韓、趙、魏、楚、燕、齊六國各自為政、互不相讓。秦相李斯獻「遠交近攻」之策，王翦、蒙恬等名將率秦銳士東進。',
+    winTarget:3, loseTarget:3,
+    recommendedHeroes:['h_qin','h_li_si','h_wang_jian','h_meng_tian','h_zhang_l'],
+    reward:'解鎖陣法「秦弩鋒矢」+ 王翦虎符',
+    opening:{speaker:'李斯',portrait:'h_li_si',lines:[
+      '主上，韓、趙、魏、楚、燕、齊割據已久。',
+      '今我大秦兵強馬壯，名將如雲。',
+      '請主上下詔——一統天下！',
+      '......然滅六國非朝夕可成，須有先後次序。請主上決斷。'
+    ]},
+    ending:{speaker:'秦始皇',portrait:'h_qin',lines:[
+      '六國皆滅，天下歸朕！',
+      '從今往後——書同文、車同軌、行同倫！',
+      '朕為始皇帝，後世以二世三世計之，至於萬世！'
+    ]},
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——韓國最弱已滅！','但趙國名將李牧仍在，廉頗、龐煖威赫赫。','主上，下一步攻何國？']},
+       situation:'六國中誰先攻？',
+       options:[
+         {text:'依「遠交近攻」先攻趙國',value:+1,log:'兵鋒直指邯鄲',note:'★ 最佳 — 范雎遠交近攻',good:true,
+          epilogue:{speaker:'李斯',portrait:'h_li_si',lines:['主上採納遠交近攻！','王翦率兵直趨趙國邯鄲......','但李牧抗秦，戰況膠著。']}},
+         {text:'先攻最遠的齊國',value:-1,log:'孤軍千里慘敗',note:'✗ 失策 — 戰線過長',bad:true,
+          epilogue:{speaker:'李斯',portrait:'h_li_si',lines:['千里奔襲齊國？','我軍未抵已被五國夾擊！','糧道斷絕，孤軍覆滅。']}},
+         {text:'同時分兵滅三國',value:-1,log:'兵力分散',note:'✗ 兵分必敗',bad:true},
+         {text:'派使臣賄賂離間六國君臣',value:+1,log:'郭開受賄讒言李牧',note:'良策 — 反間之計',good:true,
+          epilogue:{speaker:'李斯',portrait:'h_li_si',lines:['臣派使臣賄賂趙相郭開！','郭開讒言李牧通秦......','趙王中計賜死李牧，趙國門戶大開！']}}
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——李牧已死！趙國再無柱石。','王翦攻邯鄲，趙王遷出降。','接下來——魏、楚、燕、齊四國尚存。']},
+       situation:'四國猶存，戰略如何？',
+       options:[
+         {text:'王翦坐鎮，集中兵力滅楚',value:+1,log:'王翦六十萬大軍南下',note:'★ 最佳 — 王翦慎重',good:true,
+          epilogue:{speaker:'王翦',portrait:'h_wang_jian',lines:['臣請六十萬兵滅楚！','楚地廣大，少則必敗。','......果如所料，項燕奮起反抗，激戰甚烈。']}},
+         {text:'採李信「二十萬足矣」之計',value:-1,log:'項燕大破李信',note:'✗ 失策 — 輕敵',bad:true,
+          epilogue:{speaker:'王翦',portrait:'h_wang_jian',lines:['李信小將不知兵......','二十萬兵入楚，被項燕設伏。','秦軍大敗，須重整旗鼓。']}},
+         {text:'先收服燕、齊以絕後援',value:0,log:'魏楚仍強',note:'中性',epilogue:null},
+         {text:'修生養息再戰',value:-1,log:'失先機',note:'✗ 失策',bad:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——王翦平楚，項燕戰死！','韓、趙、魏、楚已滅，僅餘燕、齊。','燕太子丹遣荊軻刺殺主上之事，您還記得吧。']},
+       situation:'最後燕、齊如何收尾？',
+       options:[
+         {text:'蒙恬北擊匈奴，王賁直取燕齊',value:+1,log:'燕王喜逃遼東後降',note:'★ 最佳 — 雙線收尾',good:true,
+          epilogue:{speaker:'蒙恬',portrait:'h_meng_tian',lines:['臣北擊匈奴，逐七百里！','王賁兵不血刃下燕、齊。','六國一統，主上萬歲！']}},
+         {text:'王翦親征齊國',value:+1,log:'齊王建不戰而降',note:'良策',good:true,
+          epilogue:{speaker:'王翦',portrait:'h_wang_jian',lines:['臣親征齊國......','齊王建不戰而降，齊國四十年安樂之兵不堪一擊。','天下平定！']}},
+         {text:'圍而不攻，逼降',value:0,log:'拖延但成功',note:'中性',epilogue:null},
+         {text:'屠城以絕反抗',value:-1,log:'失民心',note:'✗ 失策 — 暴政',bad:true,epilogue:null}
+       ]}
+    ]
+  },
+
+  'ju_lu':{
+    title:'鉅鹿之戰', icon:'⚔️', era:'前 207 年 · 秦末',
+    background:'秦末天下大亂，章邯率秦軍主力圍困趙王於鉅鹿。各諸侯救趙皆觀望不敢戰。項羽奉宋義為主帥北上救趙，宋義卻按兵不動。',
+    winTarget:3, loseTarget:3,
+    recommendedHeroes:['h_xiang_yu','h_fan_zeng','h_yingbu','h_pengyue','h_fan_kuai'],
+    reward:'解鎖陣法「破釜沉舟」+ 項羽霸王槍',
+    opening:{speaker:'范增',portrait:'h_fan_zeng',lines:[
+      '霸王，宋義按兵不動已四十六日，將士饑寒交迫！',
+      '章邯困趙於鉅鹿，城內已是人相食的慘狀。',
+      '諸侯皆觀望，無人敢戰。秦軍威勢正盛。',
+      '霸王......當行非常之事！'
+    ]},
+    ending:{speaker:'項羽',portrait:'h_xiang_yu',lines:[
+      '九戰九捷，章邯求降！',
+      '從此諸侯皆膝行而前，莫敢仰視。',
+      '此為西楚霸王之名！'
+    ]},
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——宋義仍按兵不動！','將士饑寒，馬無糧草。','霸王，再不動恐錯失救趙之機！']},
+       situation:'宋義不戰，如何破局？',
+       options:[
+         {text:'斬殺宋義，奪取兵權',value:+1,log:'項羽斬宋義，諸將懾服',note:'★ 最佳 — 兵權集中',good:true,
+          epilogue:{speaker:'范增',portrait:'h_fan_zeng',lines:['霸王果斷！','一劍斬下宋義之頭，舉示全軍。','將士震懾，皆呼霸王萬歲！']}},
+         {text:'上書楚懷王請令',value:-1,log:'拖延誤戰機',note:'✗ 失策 — 慢',bad:true,epilogue:null},
+         {text:'單獨領精銳救趙',value:0,log:'分裂主力',note:'中性',epilogue:null},
+         {text:'勸宋義出兵',value:-1,log:'宋義不從',note:'✗ 失策',bad:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'范增',portrait:'h_fan_zeng',lines:['霸王已執掌兵權。','秦軍在漳水南岸嚴陣以待。','章邯、王離兩部夾擊，氣勢如虹。']},
+       situation:'如何渡漳水迎戰秦軍？',
+       options:[
+         {text:'破釜沉舟，背水一戰',value:+1,log:'楚軍以一當十',note:'★ 最佳 — 千古絕響',good:true,
+          epilogue:{speaker:'項羽',portrait:'h_xiang_yu',lines:['吾命將士——','破釜！沉船！棄帳！每人三日糧！','示士卒必死，無一還心！']}},
+         {text:'築壘相持',value:-1,log:'被秦反撲',note:'✗ 失策 — 失士氣',bad:true,epilogue:null},
+         {text:'分兵兩路渡河',value:0,log:'兵力分散',note:'中性',epilogue:null},
+         {text:'撤退保存實力',value:-1,log:'錯失良機',note:'✗ 失策',bad:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——楚軍九戰九勝！','王離被擒，蘇角戰死，章邯敗退！','其餘諸侯皆膝行而前，莫敢仰視霸王！']},
+       situation:'章邯求和，如何處置？',
+       options:[
+         {text:'接受章邯歸降，封雍王',value:+1,log:'章邯歸楚，秦軍瓦解',note:'★ 最佳 — 收編精銳',good:true,
+          epilogue:{speaker:'范增',portrait:'h_fan_zeng',lines:['霸王受章邯之降！','二十萬秦軍歸楚！','此戰之後，諸侯莫敢攖霸王之鋒！']}},
+         {text:'坑殺秦降卒',value:-1,log:'失民心',note:'✗ 史實悲劇 — 二十萬降卒被坑',bad:true,
+          epilogue:{speaker:'范增',portrait:'h_fan_zeng',lines:['霸王......坑殺降卒？','秦地民心盡失，他日將是大禍！','此事千古之恥啊！']}},
+         {text:'放秦兵歸鄉',value:0,log:'秦軍重整',note:'中性',epilogue:null},
+         {text:'分秦軍給諸侯',value:-1,log:'失自身實力',note:'✗ 失策',bad:true,epilogue:null}
+       ]}
+    ]
+  },
+
+  'gai_xia':{
+    title:'垓下之戰', icon:'⚔️', era:'前 202 年 · 楚漢',
+    background:'楚漢相爭五年，劉邦聯韓信、彭越於垓下圍項羽。韓信設十面埋伏，項羽軍中糧盡，四面楚歌。',
+    winTarget:3, loseTarget:3,
+    recommendedHeroes:['h_liubang','h_zhang_l','h_han_xin','h_xiao_he','h_pengyue'],
+    reward:'解鎖陣法「十面埋伏」+ 韓信兵符',
+    opening:{speaker:'張良',portrait:'h_zhang_l',lines:[
+      '主上，項羽已率十萬殘部退至垓下。',
+      '韓信為主帥，彭越、英布、孔將軍、費將軍皆已會師。',
+      '七十萬聯軍對十萬楚軍——千載難逢！',
+      '然霸王勇武天下無雙，須以巧計取之。'
+    ]},
+    ending:{speaker:'劉邦',portrait:'h_liubang',lines:[
+      '霸王已自刎烏江！楚軍盡滅！',
+      '從此天下無敵手，朕為皇帝！',
+      '張子房、蕭何、韓信——此三傑乃朕之得天下也！'
+    ]},
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——項羽固守垓下！','楚軍雖少卻氣勢逼人，霸王神威不減當年。','韓信元帥已布十面埋伏陣。']},
+       situation:'如何破霸王之勇？',
+       options:[
+         {text:'韓信前陣佯敗，誘霸王深入',value:+1,log:'霸王中計衝陣',note:'★ 最佳 — 兵仙之謀',good:true,
+          epilogue:{speaker:'韓信',portrait:'h_han_xin',lines:['臣率前陣佯敗誘敵！','霸王見我退即衝陣......','十面埋伏盡發，楚軍重圍！']}},
+         {text:'正面迎戰霸王',value:-1,log:'楚軍以一當十',note:'✗ 失策 — 自取其敗',bad:true,epilogue:null},
+         {text:'圍而不攻，斷糧道',value:+1,log:'楚軍糧盡心散',note:'良策 — 持久戰',good:true,epilogue:null},
+         {text:'勸降霸王',value:-1,log:'霸王不降',note:'✗ 不識其人',bad:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'張良',portrait:'h_zhang_l',lines:['霸王已被困重圍。','夜深，當以攻心之計瓦解楚軍心志。','主上......請決斷。']},
+       situation:'夜半時分如何瓦解楚軍？',
+       options:[
+         {text:'四面唱楚歌，令楚軍思鄉',value:+1,log:'楚軍士氣崩潰',note:'★ 最佳 — 攻心之計',good:true,
+          epilogue:{speaker:'張良',portrait:'h_zhang_l',lines:['四面楚歌徹夜不絕！','楚軍以為楚地盡降，皆思鄉而泣。','虞姬自刎，霸王徹夜悲歌「力拔山兮氣蓋世」......']}},
+         {text:'夜襲楚營',value:0,log:'霸王戒備森嚴',note:'中性',epilogue:null},
+         {text:'放火燒楚營',value:-1,log:'霸王突圍而出',note:'✗ 反激其鬥志',bad:true,epilogue:null},
+         {text:'按兵不動待天明',value:-1,log:'霸王重整',note:'✗ 失策',bad:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——霸王突圍南逃！','八百騎僅剩二十八騎！','已至烏江畔，亭長已備船相迎！']},
+       situation:'霸王至烏江，如何結束此戰？',
+       options:[
+         {text:'王翳追擊，逼霸王自刎',value:+1,log:'霸王自刎烏江',note:'★ 史實 — 千古絕響',good:true,
+          epilogue:{speaker:'劉邦',portrait:'h_liubang',lines:['霸王自刎烏江！','「無顏見江東父老」——千古絕響。','楚漢五年之爭，今日終於結束。']}},
+         {text:'勸降霸王',value:0,log:'霸王仍自刎',note:'中性',epilogue:null},
+         {text:'生擒霸王',value:-1,log:'霸王突圍逃江東',note:'✗ 養虎為患',bad:true,epilogue:null},
+         {text:'放霸王過江',value:-1,log:'霸王捲土重來',note:'✗ 大失策',bad:true,epilogue:null}
+       ]}
+    ]
+  },
+
+  'mo_bei':{
+    title:'漠北之戰', icon:'⚔️', era:'前 119 年 · 漢',
+    background:'漢武帝決意根除匈奴。衛青、霍去病各率五萬騎兵，深入漠北千里追擊。匈奴單于以為漢軍必不敢遠涉，遂與漢軍主力遭遇。',
+    winTarget:3, loseTarget:3,
+    recommendedHeroes:['h_han_wud','h_wei_qing','h_huo_qb','h_zhang_l','h_li_si'],
+    reward:'解鎖陣法「鐵騎奔襲」+ 霍去病冠軍劍',
+    opening:{speaker:'漢武帝',portrait:'h_han_wud',lines:[
+      '匈奴侵漢百年，今朕誓除此患！',
+      '衛青、霍去病——分兩路出擊，直搗漠北！',
+      '不破匈奴，誓不還朝！',
+      '此戰將奠我大漢千秋之疆！'
+    ]},
+    ending:{speaker:'霍去病',portrait:'h_huo_qb',lines:[
+      '封狼居胥，禪於姑衍！',
+      '匈奴遠遁，漠南無王庭！',
+      '臣此生足矣，匈奴未滅何以家為？'
+    ]},
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——匈奴單于據險而守！','我軍深入漠北千里，糧道險惡。','衛青將軍——如何尋敵主力？']},
+       situation:'敵主力在何處？',
+       options:[
+         {text:'衛青率主力向北，霍去病東進',value:+1,log:'衛青尋得單于主力',note:'★ 史實 — 雙路會師',good:true,
+          epilogue:{speaker:'衛青',portrait:'h_wei_qing',lines:['臣率主力北上！','果遇單于本陣......','「武剛車」連環為壘，與匈奴決戰！']}},
+         {text:'全軍齊頭並進',value:-1,log:'兵力過於集中',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'退守邊塞',value:-1,log:'錯失千古良機',note:'✗ 大失策',bad:true,epilogue:null},
+         {text:'分兵三路掃蕩',value:0,log:'兵力分散',note:'中性',epilogue:null}
+       ]},
+      {prologue:{speaker:'衛青',portrait:'h_wei_qing',lines:['臣已遇單于主力於漠北！','大風刮起，沙塵蔽日。','將士看不清敵情......此乃天助匈奴抑或我？']},
+       situation:'狂風大作，如何用兵？',
+       options:[
+         {text:'乘風勢左右翼包抄',value:+1,log:'匈奴大亂',note:'★ 最佳 — 借勢攻敵',good:true,
+          epilogue:{speaker:'衛青',portrait:'h_wei_qing',lines:['臣令左右翼乘風夾擊！','沙塵蔽日，匈奴不辨方向。','左右翼包抄而至，單于慌亂遁逃！']}},
+         {text:'按兵不動避風',value:-1,log:'單于乘機突圍',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'武剛車環陣固守',value:0,log:'勉強撐住',note:'中性',epilogue:null},
+         {text:'撤回漢地',value:-1,log:'失之交臂',note:'✗ 大失策',bad:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'霍去病',portrait:'h_huo_qb',lines:['臣東路出擊，連戰皆捷！','已至狼居胥山，匈奴左賢王潰逃。','將軍——是否乘勝追擊至漠北極處？']},
+       situation:'霍去病兵勢正盛，如何擴大戰果？',
+       options:[
+         {text:'封狼居胥山，禪於姑衍',value:+1,log:'匈奴遠遁，漠南無王庭',note:'★ 千古絕響 — 軍人最高榮譽',good:true,
+          epilogue:{speaker:'霍去病',portrait:'h_huo_qb',lines:['封狼居胥！禪於姑衍！','此為將者最高榮譽！','匈奴遠遁，漠南無王庭！']}},
+         {text:'追至北海（貝加爾湖）',value:+1,log:'戰線過長但震懾深遠',note:'良策',good:true,epilogue:null},
+         {text:'就地紮營等補給',value:0,log:'錯失追擊時機',note:'中性',epilogue:null},
+         {text:'急行回漢',value:-1,log:'未竟全功',note:'✗ 失策',bad:true,epilogue:null}
+       ]}
+    ]
+  },
+
+  'kun_yang':{
+    title:'昆陽之戰', icon:'⚔️', era:'23 年 · 新莽',
+    background:'王莽末年，劉秀以九千守軍困守昆陽。王莽派王邑、王尋率四十二萬大軍圍城。劉秀親率十三騎突圍求援，後率三千精銳救昆陽。',
+    winTarget:3, loseTarget:3,
+    recommendedHeroes:['h_liu_xiu','h_ma_yuan','h_chen_ping','h_ban_chao','h_zhou_yfu'],
+    reward:'解鎖陣法「天降隕石」+ 劉秀龍紋甲',
+    opening:{speaker:'劉秀',portrait:'h_liu_xiu',lines:[
+      '王莽率四十二萬大軍圍我九千守軍......',
+      '城內糧盡兵疲，諸將皆欲棄城而逃。',
+      '若失昆陽，諸侯瓦解，漢室難復！',
+      '我必親率十三騎突圍——必為將士搬來救兵！'
+    ]},
+    ending:{speaker:'劉秀',portrait:'h_liu_xiu',lines:[
+      '四十二萬大軍敗於三千精銳！',
+      '天降隕石助我大漢——此乃天命所歸！',
+      '從此王莽末路，漢室將復興！'
+    ]},
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——王邑大軍已圍昆陽四十日！','城內糧盡，將士疲弊。','將軍歸來——可帶來救兵？']},
+       situation:'劉秀帶三千精銳歸來，如何破四十二萬？',
+       options:[
+         {text:'親率千餘精騎直衝中軍',value:+1,log:'王邑中軍混亂',note:'★ 最佳 — 擒賊先擒王',good:true,
+          epilogue:{speaker:'劉秀',portrait:'h_liu_xiu',lines:['我親率千騎衝陣！','直撲王邑中軍——將士見統帥親征，士氣如虹！','王邑慌亂，未及號令全軍......']}},
+         {text:'圍城打援',value:-1,log:'失主動權',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'死守等其疲',value:-1,log:'城破人亡',note:'✗ 大失策',bad:true,epilogue:null},
+         {text:'城內守軍出擊配合',value:+1,log:'內外夾擊',note:'良策 — 配合作戰',good:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——天空驟變！','烏雲密布，狂風大作！','似乎有星辰墜落王邑大營！']},
+       situation:'天降異象，如何用？',
+       options:[
+         {text:'以此鼓舞士氣，宣稱「天助劉氏」',value:+1,log:'我軍士氣大振',note:'★ 最佳 — 借天時',good:true,
+          epilogue:{speaker:'陳平',portrait:'h_chen_ping',lines:['主上聖明！','「隕石墜營，天助劉氏！」傳遍全軍。','將士皆以為天命所歸，奮勇殺敵！']}},
+         {text:'按兵不動觀察',value:-1,log:'錯失天時',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'乘風勢放火',value:+1,log:'王邑大營火起',note:'良策',good:true,epilogue:null},
+         {text:'撤退避禍',value:-1,log:'失天賜良機',note:'✗ 大失策',bad:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——王邑大軍崩潰！','四十二萬大軍互相踐踏，潰逃千里！','屍積如山，水為之不流！']},
+       situation:'敵軍崩潰，如何擴大戰果？',
+       options:[
+         {text:'乘勝追擊，盡滅王莽主力',value:+1,log:'新莽末日',note:'★ 最佳 — 趁勝',good:true,
+          epilogue:{speaker:'劉秀',portrait:'h_liu_xiu',lines:['乘勝追擊，盡滅新莽主力！','王莽從此一蹶不振。','漢室之復興——自今日始！']}},
+         {text:'清點戰利品',value:0,log:'錯失擴大戰果',note:'中性',epilogue:null},
+         {text:'招降王莽將領',value:+1,log:'納入諸多名將',note:'良策',good:true,epilogue:null},
+         {text:'就地慶功',value:-1,log:'失機',note:'✗ 失策',bad:true,epilogue:null}
+       ]}
+    ]
+  },
+
+  'huang_jin':{
+    title:'黃巾之亂', icon:'⚔️', era:'184 年 · 漢末',
+    background:'東漢末年，外戚宦官交替亂政，民不聊生。張角、張寶、張梁三兄弟以「太平道」起兵，頭戴黃巾，「蒼天已死，黃天當立」。各州刺史紛紛募兵自保。',
+    winTarget:3, loseTarget:3,
+    recommendedHeroes:['h_han_wud','h_liubang','h_zhang_l','h_han_xin','h_chen_ping'],
+    reward:'解鎖時代「漢末三國」+ 開啟三國章節',
+    opening:{speaker:'張良',portrait:'h_zhang_l',lines:[
+      '「蒼天已死，黃天當立」——',
+      '張角三兄弟率黃巾數十萬起事！',
+      '各州官軍節節敗退，朝廷已失天下之半。',
+      '朝廷下詔令各地豪傑募兵討伐。此戰將決漢室存亡。'
+    ]},
+    ending:{speaker:'劉邦',portrait:'h_liubang',lines:[
+      '黃巾之亂雖平，但漢室已名存實亡。',
+      '各地州牧、豪傑皆養兵自重。',
+      '——天下分崩離析，三國之亂世將至！'
+    ]},
+    scenarios:[
+      {prologue:{speaker:'探馬',lines:['報——黃巾數十萬攻冀州、潁川！','張角自稱「天公將軍」，氣勢洶洶。','官軍節節敗退，請朝廷速派援軍！']},
+       situation:'黃巾來勢洶洶，如何應對？',
+       options:[
+         {text:'分兵三路：盧植、皇甫嵩、朱儁各討一州',value:+1,log:'三路並進，黃巾分散',note:'★ 最佳 — 分進合擊',good:true,
+          epilogue:{speaker:'張良',portrait:'h_zhang_l',lines:['朝廷三路出兵！','盧植攻廣宗，皇甫嵩、朱儁攻潁川。','黃巾分散應對，難以集中。']}},
+         {text:'集中兵力攻冀州張角',value:0,log:'其餘黃巾坐大',note:'中性',epilogue:null},
+         {text:'徵召地方豪傑助戰',value:+1,log:'劉備、曹操等崛起',note:'良策 — 但為後患',good:true,
+          epilogue:{speaker:'張良',portrait:'h_zhang_l',lines:['朝廷下詔徵地方豪傑。','劉備、曹操、孫堅紛紛起兵。','黃巾雖滅，諸豪傑漸成氣候......']}},
+         {text:'懷柔招降',value:-1,log:'黃巾繼續坐大',note:'✗ 失策',bad:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'探馬',lines:['報——皇甫嵩用火攻破波才黃巾！','張寶、張梁亦兵敗身亡。','僅張角據廣宗負隅頑抗......']},
+       situation:'張角病死於廣宗，如何收尾？',
+       options:[
+         {text:'盡掘張角墓，戮其屍',value:0,log:'象徵性勝利',note:'中性',epilogue:null},
+         {text:'招降黃巾餘部',value:+1,log:'青州黃巾被曹操納入',note:'★ 史實 — 為後來伏筆',good:true,
+          epilogue:{speaker:'張良',portrait:'h_zhang_l',lines:['招降黃巾餘部！','後來曹操收青州黃巾三十萬，成「青州兵」。','此為後事之伏筆......']}},
+         {text:'徹底屠戮黃巾',value:-1,log:'失民心',note:'✗ 失策',bad:true,epilogue:null},
+         {text:'封功臣為列侯',value:+1,log:'劉備、曹操初露頭角',note:'良策',good:true,epilogue:null}
+       ]},
+      {prologue:{speaker:'張良',portrait:'h_zhang_l',lines:['黃巾雖平，但......','靈帝駕崩，何進與宦官鬥爭。','董卓入京，廢少帝立獻帝！漢室名存實亡。']},
+       situation:'天下將亂，如何自處？',
+       options:[
+         {text:'各地起兵討董卓',value:+1,log:'十八路諸侯討董',note:'★ 史實 — 群雄並起',good:true,
+          epilogue:{speaker:'張良',portrait:'h_zhang_l',lines:['十八路諸侯齊聚！','袁紹為盟主，會師討董。','但......諸侯各懷異心，天下亂局已成！']}},
+         {text:'歸隱山林',value:-1,log:'時代抛棄',note:'✗ 消極',bad:true,epilogue:null},
+         {text:'割據自保',value:0,log:'各據一方',note:'中性',epilogue:null},
+         {text:'侍奉董卓',value:-1,log:'被視為奸臣',note:'✗ 失策',bad:true,epilogue:null}
+       ]}
     ]
   },
 
