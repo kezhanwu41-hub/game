@@ -5007,7 +5007,7 @@ function startMatchmaking(mode){
   tx('mm-my-rank','段位：'+rank);
   tx('mm-my-pts','積分 '+pts);
   tx('mm-my-wr','勝率 '+wr+'%');
-  tx('mm-mode-label', mode==='rank' ? '排位天梯' : '全球匹配');
+  tx('mm-mode-label', mode==='rank' ? '排位天梯' : mode==='free' ? '自由對戰' : '全球匹配');
 
   // Reset opponent card
   const enCard = $('mm-enemy-card');
@@ -5021,7 +5021,7 @@ function startMatchmaking(mode){
   tx('mm-status','⚔️ 全球配對中… 等待對手就位');
 
   showScreen('scr-match');
-  tx('top-title', mode==='rank'?'排位匹配':'全球匹配');
+  tx('top-title', mode==='rank'?'排位匹配': mode==='free'?'自由對戰匹配':'全球匹配');
 
   // Radar dots animation
   ['mm-dot-1','mm-dot-2','mm-dot-3'].forEach((id,i)=>{
@@ -5057,10 +5057,31 @@ function startMatchmaking(mode){
 
   // Enter game at 10s
   setTimeout(()=>{
-    if(mmTargetMode){
-      const m = mmTargetMode;
-      stopMatchmaking();
-      // Both rank & match use AI engine under the hood
+    if(!mmTargetMode) return;
+    const m = mmTargetMode;
+    stopMatchmaking();
+    if(m === 'free'){
+      // 自由對戰：隨機選一關（含 scenarios 的）→ 走教學/烽火千秋玩法
+      const pool = [];
+      CAMPAIGN.forEach(ch=>{
+        ch.levels.forEach(lv=>{
+          const det = LEVEL_DETAILS[lv.id];
+          if(det && det.scenarios && det.scenarios.length){
+            pool.push({ch, lv});
+          }
+        });
+      });
+      if(pool.length){
+        const pick = pool[Math.floor(Math.random()*pool.length)];
+        curChapter = pick.ch;
+        curLevel = pick.lv;
+        showToast('⚔️ 本場戰局：'+pick.ch.name+' · '+pick.lv.name, 3000);
+        openLevel(pick.lv);
+      } else {
+        // fallback：沒有 scenarios 的話走普通 AI
+        startGame('ai');
+      }
+    } else {
       startGame(m === 'match' ? 'ai' : 'rank');
     }
   }, 10000);
@@ -5712,6 +5733,9 @@ document.addEventListener('DOMContentLoaded',()=>{
         }
       } else if(m === 'rank' || m === 'match'){
         startMatchmaking(m);
+      } else if(m === 'ai'){
+        // 自由對戰：走匹配 → 隨機關卡（烽火千秋式故事+四選一）
+        startMatchmaking('free');
       } else {
         startGame(m);
       }
