@@ -469,6 +469,94 @@ body.hx-screen-shake{
 .hx-float-num.heal::before{ content:'▲ '; font-size:28px; }
 .hx-float-num.gain{ color:#d4a04a !important; }
 .hx-float-num.gain::before{ content:'▲ '; font-size:28px; }
+
+/* ════════════════════════════════════════════════════
+   天時天候系統 — 戰場頂部橫額
+════════════════════════════════════════════════════ */
+#hx-weather{
+  position:fixed; top:56px; left:50%; transform:translateX(-50%);
+  z-index:600; pointer-events:none;
+  padding:8px 22px; border-radius:24px;
+  font-family:'Noto Serif TC',serif; font-weight:900;
+  font-size:14px; letter-spacing:4px;
+  display:flex; align-items:center; gap:10px;
+  box-shadow:0 4px 18px rgba(0,0,0,.6), 0 0 0 1px rgba(255,232,168,.3) inset;
+  backdrop-filter:blur(8px);
+  animation:hxWeatherIn .6s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes hxWeatherIn{
+  from{opacity:0; transform:translate(-50%,-30px)}
+  to{opacity:1; transform:translate(-50%,0)}
+}
+#hx-weather.sun{ background:linear-gradient(135deg,rgba(198,59,59,.85),rgba(122,30,30,.7)); color:#ffe8a8; border:2px solid #ff8a3a; }
+#hx-weather.fog{ background:linear-gradient(135deg,rgba(90,108,122,.85),rgba(40,60,80,.7)); color:#e8f0f5; border:2px solid #a5b8c8; }
+#hx-weather.autumn{ background:linear-gradient(135deg,rgba(212,160,74,.85),rgba(122,90,40,.7)); color:#1a1208; border:2px solid #ffe8a8; }
+.hx-weather-icon{ font-size:20px; }
+.hx-weather-text{ font-weight:900; }
+.hx-weather-effect{
+  font-size:11px; letter-spacing:2px; opacity:.85;
+  padding:2px 8px; background:rgba(0,0,0,.3); border-radius:10px;
+  border:1px solid rgba(255,255,255,.2);
+}
+
+/* ════════════════════════════════════════════════════
+   主帥絕技按鈕 — 古風圓形圖示
+════════════════════════════════════════════════════ */
+.hx-ult-btn{
+  position:fixed; z-index:550;
+  width:72px; height:72px; border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, #ffe8a8, #c9a84c 50%, #7a6030 100%);
+  border:3px solid #ffe8a8;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; user-select:none; pointer-events:auto;
+  box-shadow:
+    0 6px 20px rgba(0,0,0,.7),
+    0 0 0 2px rgba(0,0,0,.4) inset,
+    0 0 20px rgba(255,232,168,.5);
+  transition:transform .2s, box-shadow .25s;
+  font-family:'Noto Serif TC',serif;
+}
+.hx-ult-btn.player{ left:18px; bottom:90px; }
+.hx-ult-btn.enemy{ right:18px; top:90px; background:radial-gradient(circle at 30% 30%, #ff8a8a, #c63b3b 50%, #6a1818 100%); border-color:#ff8a8a; }
+.hx-ult-btn:hover{ transform:scale(1.08); box-shadow:0 8px 26px rgba(0,0,0,.8), 0 0 28px rgba(255,232,168,.8); }
+.hx-ult-btn.cd{ filter:grayscale(.8) brightness(.7); cursor:not-allowed; pointer-events:none; }
+.hx-ult-btn.ready{ animation:hxUltReady 1.4s ease infinite; }
+@keyframes hxUltReady{
+  0%,100%{box-shadow:0 6px 20px rgba(0,0,0,.7), 0 0 0 2px rgba(0,0,0,.4) inset, 0 0 18px rgba(255,232,168,.5)}
+  50%{box-shadow:0 6px 22px rgba(0,0,0,.7), 0 0 0 2px rgba(0,0,0,.4) inset, 0 0 36px rgba(255,232,168,1)}
+}
+.hx-ult-icon{ font-size:24px; line-height:1; }
+.hx-ult-name{ font-size:9px; letter-spacing:1px; color:#1a1208; font-weight:900; margin-top:2px; }
+.hx-ult-btn.enemy .hx-ult-name{ color:#fff5e0; }
+.hx-ult-cd{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.65); border-radius:50%;
+  font-size:24px; font-weight:900; color:#ffe8a8;
+  text-shadow:0 2px 4px rgba(0,0,0,.8);
+}
+.hx-ult-tooltip{
+  position:absolute; bottom:80px; left:0;
+  background:rgba(20,20,30,.95); color:#ffe8a8;
+  padding:6px 12px; border-radius:6px; font-size:11px;
+  letter-spacing:1px; white-space:nowrap; pointer-events:none;
+  border:1px solid rgba(255,232,168,.4); opacity:0; transform:translateY(8px);
+  transition:opacity .2s, transform .2s;
+}
+.hx-ult-btn:hover .hx-ult-tooltip{ opacity:1; transform:translateY(0); }
+.hx-ult-btn.enemy .hx-ult-tooltip{ left:auto; right:0; top:80px; bottom:auto; }
+
+/* 絕技發動全屏特效 */
+.hx-ult-burst{
+  position:fixed; inset:0; pointer-events:none; z-index:8900;
+  animation:hxUltBurst .8s ease-out forwards;
+}
+.hx-ult-burst.heal{ background:radial-gradient(circle at 50% 80%, rgba(127,220,122,.5), transparent 60%); }
+.hx-ult-burst.dmg{ background:radial-gradient(circle at 50% 20%, rgba(255,59,26,.5), transparent 60%); }
+@keyframes hxUltBurst{
+  0%{opacity:0; transform:scale(.6)}
+  30%{opacity:1; transform:scale(1)}
+  100%{opacity:0; transform:scale(1.4)}
+}
 </style>
 </head>
 <body>
@@ -1481,11 +1569,236 @@ body.hx-screen-shake{
     });
   }, 500);
 
+  /* ════════════════════════════════════════════════════
+     天時天候系統 — 純包裹層，不動原 Game.cards
+  ════════════════════════════════════════════════════ */
+  const WEATHERS = [
+    {id:'sun',    name:'烈日灼烈', icon:'☀️', effect:'傷害 +2'},
+    {id:'fog',    name:'大霧瀰漫', icon:'🌫️', effect:'治療/防守 +2'},
+    {id:'autumn', name:'秋高氣爽', icon:'🍂', effect:'每回合多抽 1 張'},
+  ];
+  let curWeather = null;
+  let lastWeatherTurn = 0;
+
+  function rollWeather(){
+    curWeather = WEATHERS[Math.floor(Math.random()*WEATHERS.length)];
+    renderWeather();
+    showWeatherToast();
+  }
+  function showWeatherToast(){
+    if(!curWeather) return;
+    // 用既有的 toast 或 fallback
+    if(window.showToast) window.showToast('天候變化：'+curWeather.name+'　'+curWeather.effect, 3500);
+  }
+  function renderWeather(){
+    if(!curWeather) return;
+    const battle = document.getElementById('screen-battle');
+    if(!battle || !battle.classList.contains('active')){
+      const el = document.getElementById('hx-weather');
+      if(el) el.remove();
+      return;
+    }
+    let el = document.getElementById('hx-weather');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'hx-weather';
+      document.body.appendChild(el);
+    }
+    el.className = curWeather.id;
+    el.innerHTML = `
+      <span class="hx-weather-icon">${curWeather.icon}</span>
+      <span class="hx-weather-text">${curWeather.name}</span>
+      <span class="hx-weather-effect">${curWeather.effect}</span>`;
+  }
+  window.HXWeather = {
+    get(){ return curWeather; },
+    /* 結算時呼叫：對任意數值套用天候加成 */
+    applyDamage(n){ return (curWeather && curWeather.id==='sun')    ? n+2 : n; },
+    applyHeal(n){   return (curWeather && curWeather.id==='fog')    ? n+2 : n; },
+    extraDraw(){    return (curWeather && curWeather.id==='autumn') ? 1   : 0; },
+    roll(){ rollWeather(); },
+  };
+
+  // 每 3 回合自動換天候（監聽回合數變化）
+  let weatherTurnCheck = setInterval(()=>{
+    const tEl = document.getElementById('battle-turn-num');
+    if(!tEl) return;
+    const t = parseInt(tEl.textContent, 10);
+    if(isNaN(t)) return;
+    // 進戰場初次抽天候
+    if(!curWeather){
+      rollWeather();
+      lastWeatherTurn = t;
+      return;
+    }
+    // 每 3 回合換一次
+    if(t - lastWeatherTurn >= 3){
+      rollWeather();
+      lastWeatherTurn = t;
+    }
+    renderWeather();
+  }, 800);
+
+  /* ════════════════════════════════════════════════════
+     主帥絕技系統 — 4 回合冷卻
+  ════════════════════════════════════════════════════ */
+  const ULT = {
+    player:{ cd:0, max:4, used:0, name:'背水一戰', icon:'🛡️', effect:'回復 8 兵力' },
+    enemy: { cd:0, max:4, used:0, name:'圍魏救趙', icon:'⚔️', effect:'造成 6 傷害' },
+  };
+  let lastTurnForUlt = 0;
+
+  function renderUltBtns(){
+    const battle = document.getElementById('screen-battle');
+    if(!battle || !battle.classList.contains('active')){
+      document.querySelectorAll('.hx-ult-btn').forEach(b=>b.remove());
+      return;
+    }
+    ['player','enemy'].forEach(side=>{
+      let btn = document.getElementById('hx-ult-'+side);
+      const u = ULT[side];
+      if(!btn){
+        btn = document.createElement('div');
+        btn.id = 'hx-ult-'+side;
+        btn.className = 'hx-ult-btn ' + side;
+        btn.innerHTML = `
+          <div class="hx-ult-icon">${u.icon}</div>
+          <div class="hx-ult-name">${u.name}</div>
+          <div class="hx-ult-cd" style="display:none"></div>
+          <div class="hx-ult-tooltip">${u.name}：${u.effect}（CD ${u.max} 回合）</div>`;
+        if(side === 'player'){
+          btn.addEventListener('click', ()=> tryUltimate('player'));
+        }
+        document.body.appendChild(btn);
+      }
+      const cdEl = btn.querySelector('.hx-ult-cd');
+      if(u.cd > 0){
+        btn.classList.add('cd');
+        btn.classList.remove('ready');
+        cdEl.style.display = '';
+        cdEl.textContent = u.cd;
+      } else {
+        btn.classList.remove('cd');
+        if(side === 'player') btn.classList.add('ready');
+        cdEl.style.display = 'none';
+      }
+    });
+  }
+
+  function fullScreenBurst(type){
+    const el = document.createElement('div');
+    el.className = 'hx-ult-burst ' + type;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 850);
+  }
+
+  /* 找 HP 元素 — 我方/敵方 */
+  function findHPEl(side){
+    // 試各種命名習慣
+    const sels = side==='player'
+      ? ['#player-hp-val','#player-hp','#playerHP','[data-side="player"] .hp','.player-hp-val']
+      : ['#enemy-hp-val','#enemy-hp','#enemyHP','[data-side="enemy"] .hp','.enemy-hp-val'];
+    for(const s of sels){
+      const el = document.querySelector(s);
+      if(el) return el;
+    }
+    // 退而求其次：找有 hp 字樣且包含 side 字樣的
+    return null;
+  }
+
+  function tryUltimate(side){
+    const u = ULT[side];
+    if(u.cd > 0) return;
+    HXAudio.click();
+    HXAudio.chain();
+    if(side === 'player'){
+      // 背水一戰：+8 HP（試圖呼叫 Game.heal 或直接修改 HP 顯示）
+      fullScreenBurst('heal');
+      const hpEl = findHPEl('player');
+      if(hpEl){
+        const v = parseInt(hpEl.textContent.replace(/\D+/g,''), 10);
+        if(!isNaN(v)){
+          // 嘗試經由 Game 物件介接
+          if(window.Game && typeof Game.healPlayer === 'function') Game.healPlayer(8);
+          else if(window.Game && typeof Game.heal === 'function') Game.heal('player', 8);
+          else { hpEl.textContent = (v + 8).toString(); }
+          // 浮動數字
+          const r = hpEl.getBoundingClientRect();
+          floatNum(r.left+r.width/2, r.top, '+8', 'heal');
+        }
+      }
+      if(window.showToast) showToast('⚡ '+u.name+' 發動 — 回復 8 兵力！', 2500);
+    } else {
+      // 圍魏救趙：-6 玩家 HP
+      fullScreenBurst('dmg');
+      shakeScreen();
+      const hpEl = findHPEl('player');
+      if(hpEl){
+        const v = parseInt(hpEl.textContent.replace(/\D+/g,''), 10);
+        if(!isNaN(v)){
+          if(window.Game && typeof Game.damagePlayer === 'function') Game.damagePlayer(6);
+          else if(window.Game && typeof Game.damage === 'function') Game.damage('player', 6);
+          else { hpEl.textContent = Math.max(0, v - 6).toString(); }
+          const r = hpEl.getBoundingClientRect();
+          floatNum(r.left+r.width/2, r.top, '-6', 'dmg');
+        }
+      }
+      if(window.showToast) showToast('🔥 敵方發動「'+u.name+'」— 造成 6 傷害！', 2500);
+    }
+    u.cd = u.max;
+    u.used++;
+    renderUltBtns();
+  }
+
+  /* 每回合遞減 CD */
+  setInterval(()=>{
+    const tEl = document.getElementById('battle-turn-num');
+    if(!tEl) return;
+    const t = parseInt(tEl.textContent, 10);
+    if(isNaN(t)) return;
+    if(t !== lastTurnForUlt){
+      lastTurnForUlt = t;
+      if(ULT.player.cd > 0) ULT.player.cd--;
+      if(ULT.enemy.cd > 0)  ULT.enemy.cd--;
+      // 敵方 AI 自動釋放：CD 好了且玩家 HP < 50% 時
+      if(ULT.enemy.cd === 0){
+        const hpEl = findHPEl('player');
+        if(hpEl){
+          const v = parseInt(hpEl.textContent.replace(/\D+/g,''), 10);
+          if(!isNaN(v) && v < 50){
+            setTimeout(()=> tryUltimate('enemy'), 1500);
+          }
+        }
+      }
+    }
+    renderUltBtns();
+  }, 800);
+
+  /* 進戰場時重置 CD */
+  function resetUltOnBattleEnter(){
+    const battle = document.getElementById('screen-battle');
+    const mo = new MutationObserver(()=>{
+      if(battle && battle.classList.contains('active')){
+        // 第一次進入時重置
+        if(!battle.dataset.hxUltInit){
+          battle.dataset.hxUltInit = '1';
+          ULT.player.cd = 0; ULT.enemy.cd = 0;
+          renderUltBtns();
+          if(!curWeather) rollWeather();
+        }
+      } else {
+        delete battle?.dataset.hxUltInit;
+      }
+    });
+    if(battle) mo.observe(battle, {attributes:true, attributeFilter:['class']});
+  }
+
   /* ════ 啟動 ════ */
   function init(){
     makeMuteBtn();
     watchLog();
     watchScreenChange();
+    resetUltOnBattleEnter();
     // 首次互動恢復 AudioContext（瀏覽器自動暫停限制）
     ['click','keydown','touchstart'].forEach(ev=>{
       document.addEventListener(ev, ()=>HXAudio.resume(), {once:true, capture:true});
