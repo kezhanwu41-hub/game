@@ -2386,27 +2386,32 @@ function elemRel(a,b){
 //   Phase 1 主公:   甲禁1 → 乙禁2 → 甲選 → 乙選
 //   Phase 2 軍師:   甲禁2 → 乙禁2 → 乙選 → 甲選（乙先選）
 //   Phase 3 武將:   甲禁3 → 乙禁3 → 三輪交替選將（P/E/P/E/P/E）
-// 禁選數量降低以配合朝代限定（每朝代需 4 主公 / 4 軍師 / 10 武將即可運作）
+// 新 BP：4 階段，雙方各禁 6 選 5，總共 16 步、20 動作
+// 階段 1 主公: 甲禁1 → 乙禁2 → 甲選 → 乙選
+// 階段 2 軍師: 乙禁1 → 甲禁2 → 乙選 → 甲選
+// 階段 3 副將: 乙禁3 → 甲禁1 → 甲選2 → 乙選1
+// 階段 4 副將: 甲禁2 → 乙選1 → 甲選1 → 乙選1
 const BP_STEPS = [
-  // 第一階段：主公（各禁1選1）
+  // 階段 1：主公
   {phase:'ban',  side:'player', cnt:1, jf:'king',    label:'主公禁選'},
-  {phase:'ban',  side:'enemy',  cnt:1, jf:'king',    label:'主公禁選'},
+  {phase:'ban',  side:'enemy',  cnt:2, jf:'king',    label:'主公禁選'},
   {phase:'pick', side:'player', cnt:1, jf:'king',    label:'選主公'},
   {phase:'pick', side:'enemy',  cnt:1, jf:'king',    label:'選主公'},
-  // 第二階段：軍師（各禁1，乙先選）
-  {phase:'ban',  side:'player', cnt:1, jf:'advisor', label:'軍師禁選'},
+  // 階段 2：軍師
   {phase:'ban',  side:'enemy',  cnt:1, jf:'advisor', label:'軍師禁選'},
+  {phase:'ban',  side:'player', cnt:2, jf:'advisor', label:'軍師禁選'},
   {phase:'pick', side:'enemy',  cnt:1, jf:'advisor', label:'選軍師'},
   {phase:'pick', side:'player', cnt:1, jf:'advisor', label:'選軍師'},
-  // 第三階段：武將 × 3（各禁1，三輪交替選）
-  {phase:'ban',  side:'player', cnt:1, jf:'warrior', label:'武將禁選'},
-  {phase:'ban',  side:'enemy',  cnt:1, jf:'warrior', label:'武將禁選'},
-  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將 1'},
-  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將 1'},
-  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將 2'},
-  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將 2'},
-  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選武將 3'},
-  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選武將 3'},
+  // 階段 3：副將（甲方多選 1）
+  {phase:'ban',  side:'enemy',  cnt:3, jf:'warrior', label:'副將禁選'},
+  {phase:'ban',  side:'player', cnt:1, jf:'warrior', label:'副將禁選'},
+  {phase:'pick', side:'player', cnt:2, jf:'warrior', label:'選副將 1+2'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選副將 1'},
+  // 階段 4：副將（補完雙方陣容）
+  {phase:'ban',  side:'player', cnt:2, jf:'warrior', label:'副將禁選'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選副將 2'},
+  {phase:'pick', side:'player', cnt:1, jf:'warrior', label:'選副將 3'},
+  {phase:'pick', side:'enemy',  cnt:1, jf:'warrior', label:'選副將 3'},
 ];
 
 function makeState(mode){
@@ -4080,16 +4085,28 @@ function renderChoice(){
     hintWrap.appendChild(hint);
   }
 
-  // Options
+  // Options — 每次進入隨機洗牌 A/B/C/D 位置（正確答案不固定）
+  // 同一場 scenario 內若已洗過則沿用，避免來回切換時順序改變
+  if(!sc._shuffled || sc._shuffledForIdx !== idx){
+    const arr = sc.options.slice();
+    for(let i=arr.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    sc._shuffled = arr;
+    sc._shuffledForIdx = idx;
+  }
+  const shuffledOpts = sc._shuffled;
+
   const optsEl = document.getElementById('wl-opts');
   optsEl.innerHTML = '';
   const letters = ['A','B','C','D'];
   let bestIdx = -1, bestVal = -Infinity;
   if(isTutorial){
-    sc.options.forEach((o,i)=>{ if((o.value||0) > bestVal){bestVal=o.value||0; bestIdx=i;} });
+    shuffledOpts.forEach((o,i)=>{ if((o.value||0) > bestVal){bestVal=o.value||0; bestIdx=i;} });
   }
 
-  sc.options.forEach((opt, i)=>{
+  shuffledOpts.forEach((opt, i)=>{
     const d = document.createElement('div');
     const isBest = isTutorial && i === bestIdx && (opt.value||0) > 0;
     d.className = 'wl-opt' + (isBest ? ' tut-best' : '');
