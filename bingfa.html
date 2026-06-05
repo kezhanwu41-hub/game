@@ -3865,7 +3865,7 @@ function openLevel(lv){
 let _wlState = null;
 /* After BP completes — route to war-loop for campaign or normal battle otherwise */
 function enterPostBP(){
-  if(G && (G.mode === 'campaign' || G.mode === 'tutorial') && G.campaignLevel){
+  if(G && (G.mode === 'campaign' || G.mode === 'tutorial' || G.mode === 'freebattle') && G.campaignLevel){
     enterWarLoop();
   } else {
     enterBattle();
@@ -5075,10 +5075,10 @@ function startMatchmaking(mode){
         const pick = pool[Math.floor(Math.random()*pool.length)];
         curChapter = pick.ch;
         curLevel = pick.lv;
-        showToast('⚔️ 本場戰局：'+pick.ch.name+' · '+pick.lv.name, 3000);
-        openLevel(pick.lv);
+        showToast('⚔️ 本場戰局：'+pick.ch.name+' · '+pick.lv.name+'（全武將可選）', 3500);
+        // freebattle 模式：跑該關故事，但不鎖朝代
+        startGame('freebattle');
       } else {
-        // fallback：沒有 scenarios 的話走普通 AI
         startGame('ai');
       }
     } else {
@@ -5109,8 +5109,14 @@ function startGame(mode){
     G.campaignLevel = curLevel;
     G.campaignDetails = getLevelDetails(curLevel);
     G.campaignChapterId = curChapter?.id || null;
+  } else if(mode === 'freebattle' && curLevel){
+    // 自由對戰：用該關故事，但不限朝代（全部 208 武將都可選）
+    G.campaignLevel = curLevel;
+    G.campaignDetails = getLevelDetails(curLevel);
+    G.campaignChapterId = null;
+    G.isFreeBattle = true;
   }
-  const titles={tutorial:'新手教學',ai:'自由對戰',rank:'排位天梯',campaign:curLevel?curLevel.name:'烽火千秋'};
+  const titles={tutorial:'新手教學',ai:'自由對戰',freebattle:curLevel?'自由對戰 · '+curLevel.name:'自由對戰',rank:'排位天梯',campaign:curLevel?curLevel.name:'烽火千秋'};
   tx('top-title', titles[mode]||'兵法推演');
   showScreen('scr-bp');
   if(mode==='tutorial'){
