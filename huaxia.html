@@ -557,6 +557,149 @@ body.hx-screen-shake{
   30%{opacity:1; transform:scale(1)}
   100%{opacity:0; transform:scale(1.4)}
 }
+
+/* ════════════════════════════════════════════════════
+   進階系統 — 陣法 / 羈絆 / 地利 / 行動條 / 暗選王牌
+════════════════════════════════════════════════════ */
+
+/* 1. 陣法選擇器（佈陣階段彈出）*/
+#hx-formation-picker{
+  position:fixed; top:130px; right:18px; z-index:560;
+  width:230px; background:linear-gradient(160deg,rgba(40,20,10,.95),rgba(15,8,4,.9));
+  border:2px solid #c9a84c; border-radius:10px; padding:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.7), 0 0 0 1px rgba(255,232,168,.2) inset;
+  font-family:'Noto Serif TC',serif;
+}
+.hx-form-title{ font-size:13px; letter-spacing:4px; color:#ffe8a8; font-weight:900; text-align:center; margin-bottom:8px; }
+.hx-form-opt{
+  display:flex; gap:8px; padding:8px; margin-bottom:5px;
+  background:rgba(0,0,0,.4); border:1px solid rgba(212,160,74,.3); border-radius:6px;
+  cursor:pointer; transition:all .2s;
+  align-items:flex-start;
+}
+.hx-form-opt:hover{ background:rgba(60,40,20,.6); border-color:#ffe8a8; transform:translateX(-2px); }
+.hx-form-opt.active{ background:linear-gradient(135deg,rgba(122,46,46,.5),rgba(60,30,15,.4)); border-color:#ffe8a8; box-shadow:0 0 12px rgba(212,160,74,.4); }
+.hx-form-icon{ font-size:22px; flex-shrink:0; }
+.hx-form-body{ flex:1; min-width:0; }
+.hx-form-name{ font-size:12px; font-weight:900; color:#ffe8a8; letter-spacing:2px; }
+.hx-form-desc{ font-size:10px; color:#d4c4a0; line-height:1.4; margin-top:2px; }
+
+/* 2. 羈絆觸發橫額 */
+#hx-bond-banner{
+  position:fixed; top:120px; left:50%; transform:translateX(-50%);
+  z-index:570; pointer-events:none;
+  padding:10px 24px; border-radius:24px;
+  background:linear-gradient(135deg,#7a2e2e,#c63b3b);
+  border:2px solid #ffe8a8; color:#fff5e0;
+  font-family:'Noto Serif TC',serif; font-weight:900;
+  font-size:15px; letter-spacing:6px;
+  text-shadow:0 2px 6px rgba(0,0,0,.8);
+  box-shadow:0 8px 24px rgba(0,0,0,.7), 0 0 24px rgba(255,90,90,.5);
+  display:none;
+  animation:hxBondIn .55s cubic-bezier(.34,1.56,.64,1);
+}
+#hx-bond-banner.show{ display:block; }
+@keyframes hxBondIn{
+  from{opacity:0; transform:translate(-50%,-20px) scale(.7)}
+  to{opacity:1; transform:translate(-50%,0) scale(1)}
+}
+.hx-bond-list{
+  position:fixed; left:18px; top:200px; z-index:540;
+  display:flex; flex-direction:column; gap:5px;
+  pointer-events:none;
+}
+.hx-bond-chip{
+  background:rgba(122,46,46,.85); color:#ffe8a8;
+  padding:4px 12px; border-radius:14px;
+  border:1.5px solid #ffe8a8; font-size:11px; letter-spacing:2px;
+  font-family:'Noto Serif TC',serif; font-weight:700;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+
+/* 3. 地利五行格子 */
+.hx-tile-overlay{
+  position:absolute; inset:0; pointer-events:none; z-index:3;
+  border:2px dashed; border-radius:8px;
+  animation:hxTileBreath 2.2s ease infinite;
+}
+.hx-tile-overlay.fire{ border-color:#ff5b3a; background:radial-gradient(circle,rgba(255,90,40,.18),transparent 70%); }
+.hx-tile-overlay.water{ border-color:#42a5f5; background:radial-gradient(circle,rgba(66,165,245,.18),transparent 70%); }
+.hx-tile-overlay.wood{ border-color:#7fdc7a; background:radial-gradient(circle,rgba(127,220,122,.18),transparent 70%); }
+.hx-tile-overlay.metal{ border-color:#cfd8dc; background:radial-gradient(circle,rgba(207,216,220,.18),transparent 70%); }
+.hx-tile-overlay.earth{ border-color:#ffca28; background:radial-gradient(circle,rgba(255,202,40,.18),transparent 70%); }
+@keyframes hxTileBreath{
+  0%,100%{opacity:.5}50%{opacity:1}
+}
+.hx-tile-label{
+  position:absolute; top:4px; left:50%; transform:translateX(-50%);
+  font-size:10px; letter-spacing:2px; color:#ffe8a8;
+  background:rgba(0,0,0,.7); padding:2px 8px; border-radius:8px;
+  font-weight:700; pointer-events:none;
+}
+
+/* 4. 卡牌先攻值徽章 */
+.hx-init-badge{
+  position:absolute; top:-6px; left:-6px; z-index:5;
+  width:24px; height:24px; border-radius:50%;
+  background:linear-gradient(135deg,#1c4b82,#0a2447);
+  border:2px solid #4fb3ff; color:#e0f4ff;
+  font-size:11px; font-weight:900; line-height:20px; text-align:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.6);
+  font-family:'Noto Serif TC',serif;
+}
+
+/* 5. 暗選王牌（迷霧卡）*/
+.hx-hidden-ace{
+  position:relative;
+  filter:hue-rotate(180deg) blur(.5px) brightness(.6);
+}
+.hx-hidden-ace::after{
+  content:'❓'; position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:48px; color:#9c6dd6;
+  background:linear-gradient(135deg,rgba(20,15,40,.85),rgba(40,25,60,.95));
+  text-shadow:0 2px 12px rgba(156,109,214,.8);
+  z-index:5; border-radius:8px;
+  animation:hxAceMist 3s ease infinite;
+}
+@keyframes hxAceMist{
+  0%,100%{filter:blur(0)}50%{filter:blur(2px)}
+}
+/* 暗選按鈕（pick 階段）*/
+.hx-ace-btn{
+  position:absolute; bottom:4px; right:4px; z-index:10;
+  background:linear-gradient(135deg,#5b3a8a,#2e1d50);
+  color:#ffe8a8; border:1.5px solid #9c6dd6; border-radius:12px;
+  padding:3px 9px; font-size:10px; letter-spacing:1px;
+  cursor:pointer; font-weight:700;
+  box-shadow:0 2px 6px rgba(0,0,0,.6);
+  transition:transform .2s, box-shadow .2s;
+}
+.hx-ace-btn:hover{ transform:scale(1.06); box-shadow:0 4px 12px rgba(156,109,214,.6); }
+.hx-ace-btn.active{ background:linear-gradient(135deg,#9c6dd6,#5b3a8a); }
+
+/* 6. 行動條（先攻順序顯示）*/
+#hx-initiative-bar{
+  position:fixed; top:90px; left:50%; transform:translateX(-50%);
+  z-index:540; display:flex; gap:4px;
+  padding:6px 12px; background:rgba(20,20,30,.85);
+  border:1px solid rgba(212,160,74,.4); border-radius:24px;
+  backdrop-filter:blur(6px);
+}
+.hx-init-slot{
+  width:32px; height:32px; border-radius:50%;
+  background:rgba(0,0,0,.6); border:2px solid rgba(212,160,74,.5);
+  font-size:11px; line-height:28px; text-align:center;
+  color:#ffe8a8; font-weight:900;
+  position:relative;
+}
+.hx-init-slot.active{
+  border-color:#ffe8a8;
+  box-shadow:0 0 14px rgba(255,232,168,.8);
+  transform:scale(1.15);
+}
+.hx-init-slot.player{ background:linear-gradient(135deg,#1c4b82,#0a2447); }
+.hx-init-slot.enemy{ background:linear-gradient(135deg,#7a2e2e,#3a0d0d); }
 </style>
 </head>
 <body>
@@ -1792,6 +1935,220 @@ body.hx-screen-shake{
     });
     if(battle) mo.observe(battle, {attributes:true, attributeFilter:['class']});
   }
+
+  /* ════════════════════════════════════════════════════
+     系統 1：陣法選擇器（佈陣階段）
+  ════════════════════════════════════════════════════ */
+  const FORMATIONS = [
+    {id:'spike',  icon:'🏹', name:'鋒矢陣',  desc:'前排中央物攻 +20%，防禦 -10%（強攻）',
+     buffs:{atk_front_center:.2, def_front:-.1}},
+    {id:'wings',  icon:'🦅', name:'鶴翼陣',  desc:'後排對前排側翼保護 +25%，後排被刺殺機率 -50%',
+     buffs:{def_back:.25, ambush_resist:.5}},
+    {id:'bagua',  icon:'☯️', name:'九宮八卦', desc:'全隊五行抗性 +15%',
+     buffs:{element_resist:.15}},
+  ];
+  let curFormation = null;
+  function renderFormationPicker(){
+    const deploy = document.getElementById('screen-deploy');
+    if(!deploy || !deploy.classList.contains('active')){
+      const el = document.getElementById('hx-formation-picker'); if(el) el.remove();
+      return;
+    }
+    let el = document.getElementById('hx-formation-picker');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'hx-formation-picker';
+      el.innerHTML = '<div class="hx-form-title">⚜️ 陣法傳承</div>' +
+        FORMATIONS.map(f=>`
+          <div class="hx-form-opt" data-fid="${f.id}">
+            <span class="hx-form-icon">${f.icon}</span>
+            <div class="hx-form-body">
+              <div class="hx-form-name">${f.name}</div>
+              <div class="hx-form-desc">${f.desc}</div>
+            </div>
+          </div>`).join('');
+      document.body.appendChild(el);
+      el.addEventListener('click', e=>{
+        const opt = e.target.closest('.hx-form-opt');
+        if(!opt) return;
+        const fid = opt.dataset.fid;
+        curFormation = FORMATIONS.find(f=>f.id===fid);
+        el.querySelectorAll('.hx-form-opt').forEach(o=>o.classList.toggle('active', o.dataset.fid===fid));
+        HXAudio.click();
+        if(window.showToast) showToast('⚜️ 啟用『'+curFormation.name+'』', 2200);
+      });
+    }
+  }
+  window.HXFormation = {
+    get(){ return curFormation; },
+    buff(key){ return curFormation && curFormation.buffs[key] || 0; },
+  };
+
+  /* ════════════════════════════════════════════════════
+     系統 1B：歷史羈絆偵測
+  ════════════════════════════════════════════════════ */
+  const BONDS = [
+    {ids:['劉備','關羽','張飛'], name:'桃園結義', effect:'致命傷均攤 + 全隊士氣 +50'},
+    {ids:['諸葛亮','周瑜'],       name:'既生瑜何生亮', effect:'策略傷害 +25%，每輪微量回血'},
+    {ids:['呂布','貂蟬'],         name:'美人關', effect:'呂布每回合 +10 攻擊'},
+    {ids:['關羽','張飛','趙雲','馬超','黃忠'], name:'五虎上將', effect:'全隊攻+25 防+15 HP+20'},
+  ];
+  let activeBondsList = [];
+  function scanBonds(){
+    const battle = document.getElementById('screen-battle');
+    if(!battle || !battle.classList.contains('active')) return;
+    // 從戰場格找所有我方武將名字
+    const names = [];
+    document.querySelectorAll('.player-field .battle-cell').forEach(cell=>{
+      const t = cell.textContent || '';
+      names.push(t);
+    });
+    const allText = names.join(' ');
+    const found = BONDS.filter(b=> b.ids.every(id=> allText.includes(id)));
+    if(found.length === activeBondsList.length &&
+       found.every((b,i)=>b.name===activeBondsList[i]?.name)) return;
+    activeBondsList = found;
+    renderBondList();
+    if(found.length){
+      const banner = ensureBondBanner();
+      banner.textContent = '⚡ '+found[found.length-1].name+' 觸發！';
+      banner.classList.add('show');
+      HXAudio.chain();
+      setTimeout(()=>banner.classList.remove('show'), 2800);
+    }
+  }
+  function ensureBondBanner(){
+    let el = document.getElementById('hx-bond-banner');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'hx-bond-banner';
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+  function renderBondList(){
+    let list = document.querySelector('.hx-bond-list');
+    if(!list){
+      list = document.createElement('div');
+      list.className = 'hx-bond-list';
+      document.body.appendChild(list);
+    }
+    list.innerHTML = activeBondsList.map(b=>
+      `<div class="hx-bond-chip">⚡ ${b.name}</div>`).join('');
+  }
+  window.HXBonds = { active(){ return activeBondsList; } };
+
+  /* ════════════════════════════════════════════════════
+     系統 2B：地利五行格子（戰場上隨機 1-2 格）
+  ════════════════════════════════════════════════════ */
+  const TILE_TYPES = [
+    {id:'fire',  el:'火', name:'烈焰格', clr:'fire'},
+    {id:'water', el:'水', name:'清泉格', clr:'water'},
+    {id:'wood',  el:'木', name:'生機格', clr:'wood'},
+    {id:'metal', el:'金', name:'鋼鋒格', clr:'metal'},
+    {id:'earth', el:'土', name:'磐石格', clr:'earth'},
+  ];
+  function spreadTiles(){
+    const battle = document.getElementById('screen-battle');
+    if(!battle || !battle.classList.contains('active')) return;
+    // 已有就不重複
+    if(battle.dataset.hxTilesPlaced === '1') return;
+    const cells = battle.querySelectorAll('.battle-cell');
+    if(cells.length < 4) return;
+    battle.dataset.hxTilesPlaced = '1';
+    const count = 1 + Math.floor(Math.random()*2);   // 1~2 格
+    const used = new Set();
+    for(let i=0; i<count; i++){
+      let idx; do { idx = Math.floor(Math.random()*cells.length); } while(used.has(idx));
+      used.add(idx);
+      const tile = TILE_TYPES[Math.floor(Math.random()*TILE_TYPES.length)];
+      const cell = cells[idx];
+      cell.style.position = 'relative';
+      const overlay = document.createElement('div');
+      overlay.className = 'hx-tile-overlay ' + tile.clr;
+      cell.appendChild(overlay);
+      const lbl = document.createElement('div');
+      lbl.className = 'hx-tile-label';
+      lbl.textContent = tile.el+' '+tile.name;
+      cell.appendChild(lbl);
+    }
+  }
+
+  /* ════════════════════════════════════════════════════
+     系統 3：先攻值徽章 + 行動條
+  ════════════════════════════════════════════════════ */
+  function renderInitBadges(){
+    const battle = document.getElementById('screen-battle');
+    if(!battle || !battle.classList.contains('active')) return;
+    battle.querySelectorAll('.battle-cell').forEach(cell=>{
+      if(cell.querySelector('.hx-init-badge')) return;
+      // 依文字內含「騎/弓/盾/策」推測先攻
+      const t = cell.textContent || '';
+      let init = 50 + Math.floor(Math.random()*30);
+      if(/騎兵|騎/.test(t)) init = 85 + Math.floor(Math.random()*10);
+      else if(/弓|箭/.test(t)) init = 70 + Math.floor(Math.random()*10);
+      else if(/盾|步/.test(t)) init = 40 + Math.floor(Math.random()*10);
+      else if(/策|軍師|謀/.test(t)) init = 30 + Math.floor(Math.random()*10);
+      // 角落避開等級徽章
+      if(!cell.querySelector('img, .card')) return;
+      const badge = document.createElement('div');
+      badge.className = 'hx-init-badge';
+      badge.title = '先攻值';
+      badge.textContent = init;
+      cell.appendChild(badge);
+    });
+  }
+
+  /* ════════════════════════════════════════════════════
+     系統 4：暗選王牌（pick 階段卡片右下按鈕）
+  ════════════════════════════════════════════════════ */
+  const hiddenAces = new Set();  // 玩家標記的暗選 hero id
+  function attachAceButtons(){
+    const pickArea = document.querySelector('#screen-draft, .pick-area, .pick-grid');
+    if(!pickArea) return;
+    pickArea.querySelectorAll('.card, .hero-card, [class*="pick"] > div').forEach(card=>{
+      if(card.querySelector('.hx-ace-btn')) return;
+      // 跳過顯然非英雄卡的元素
+      if(card.offsetHeight < 80) return;
+      const btn = document.createElement('button');
+      btn.className = 'hx-ace-btn';
+      btn.textContent = '🎭 暗選';
+      btn.title = '設為暗選王牌（對手看不到身份）';
+      btn.onclick = function(ev){
+        ev.stopPropagation();
+        const id = card.dataset.heroId || card.getAttribute('data-id') || card.textContent.slice(0,10);
+        if(hiddenAces.has(id)){
+          hiddenAces.delete(id);
+          btn.classList.remove('active');
+          btn.textContent = '🎭 暗選';
+        } else {
+          // 限制只能選 1 張
+          if(hiddenAces.size >= 1){
+            if(window.showToast) showToast('每方只能暗選 1 張王牌！', 2000);
+            return;
+          }
+          hiddenAces.add(id);
+          btn.classList.add('active');
+          btn.textContent = '✓ 王牌';
+          HXAudio.chain();
+        }
+      };
+      card.style.position = 'relative';
+      card.appendChild(btn);
+    });
+  }
+  window.HXHiddenAce = { has(id){ return hiddenAces.has(id); } };
+
+  /* ════════════════════════════════════════════════════
+     輪詢驅動：偵測畫面變化套用各系統
+  ════════════════════════════════════════════════════ */
+  setInterval(()=>{
+    renderFormationPicker();
+    spreadTiles();
+    scanBonds();
+    renderInitBadges();
+    attachAceButtons();
+  }, 1200);
 
   /* ════ 啟動 ════ */
   function init(){
