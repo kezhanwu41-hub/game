@@ -5712,6 +5712,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   refreshLobby();
   showScreen('scr-lobby');
 
+  // 從 huaxia 跳轉過來：URL hash=#tutorial 自動點教學
+  if(window.location.hash === '#tutorial'){
+    setTimeout(()=>{
+      const tutorialCard = document.querySelector('.mode-card[data-mode="tutorial"]');
+      if(tutorialCard) tutorialCard.click();
+      // 清掉 hash 避免重整時再次觸發
+      history.replaceState(null,'',window.location.pathname);
+    }, 300);
+  }
+
   // Mode cards
   document.querySelectorAll('.mode-card').forEach(card=>{
     card.addEventListener('click',()=>{
