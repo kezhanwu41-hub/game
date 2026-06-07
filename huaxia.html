@@ -2104,11 +2104,13 @@ body.hx-screen-shake{
   ════════════════════════════════════════════════════ */
   const hiddenAces = new Set();  // 玩家標記的暗選 hero id
   function attachAceButtons(){
-    const pickArea = document.querySelector('#screen-draft, .pick-area, .pick-grid');
-    if(!pickArea) return;
-    pickArea.querySelectorAll('.card, .hero-card, [class*="pick"] > div').forEach(card=>{
+    const pickArea = document.getElementById('screen-draft');
+    if(!pickArea || !pickArea.classList.contains('active')) return;
+    // 只針對明確的英雄卡（排除捲動容器與列表），避免污染 overflow 區域造成滾動抖動
+    pickArea.querySelectorAll('.card, .hero-card').forEach(card=>{
       if(card.querySelector('.hx-ace-btn')) return;
-      // 跳過顯然非英雄卡的元素
+      // 跳過捲動容器與小元素
+      if(card.scrollHeight > card.clientHeight + 4) return; // 本身是捲動容器 → 跳過
       if(card.offsetHeight < 80) return;
       const btn = document.createElement('button');
       btn.className = 'hx-ace-btn';
@@ -2140,14 +2142,24 @@ body.hx-screen-shake{
   window.HXHiddenAce = { has(id){ return hiddenAces.has(id); } };
 
   /* ════════════════════════════════════════════════════
-     輪詢驅動：偵測畫面變化套用各系統
+     輪詢驅動：各系統只在對應畫面 active 時才跑
+     （避免在大廳/抽卡等捲動畫面誤操作 DOM 造成滾輪抖動）
   ════════════════════════════════════════════════════ */
+  function isActive(id){
+    const el = document.getElementById(id);
+    return el && el.classList.contains('active');
+  }
   setInterval(()=>{
-    renderFormationPicker();
-    spreadTiles();
-    scanBonds();
-    renderInitBadges();
-    attachAceButtons();
+    const onDeploy = isActive('screen-deploy');
+    const onBattle = isActive('screen-battle');
+    const onDraft  = isActive('screen-draft');
+    // 佈陣畫面：只跑陣法選擇器
+    if(onDeploy) renderFormationPicker();
+    else { const fp=document.getElementById('hx-formation-picker'); if(fp) fp.remove(); }
+    // 戰鬥畫面：地利/羈絆/先攻
+    if(onBattle){ spreadTiles(); scanBonds(); renderInitBadges(); }
+    // 選將畫面：暗選王牌
+    if(onDraft) attachAceButtons();
   }, 1200);
 
   /* ════ 啟動 ════ */
