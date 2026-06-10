@@ -155,7 +155,23 @@ body::before{
   scroll-behavior:smooth;
   font-family:'Noto Serif TC',serif;
   padding:14px 18px;
+  /* ★ flexbox 捲動修正：flex:1 子元素必須 min-height:0 才會內部捲動而非撐爆 */
+  min-height:0 !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
 }
+/* command-panel 是 grid item，也需 min-height:0 避免被內容撐爆 */
+.command-panel{
+  min-height:0 !important;
+  overflow-y:auto !important;
+}
+.command-panel > *{ flex-shrink:0; }   /* 上方控制區不壓縮，留空間給 log */
+.command-panel > .battle-log{ flex:1 1 auto; }
+/* 戰報捲軸古風樣式 */
+.battle-log::-webkit-scrollbar{ width:8px; }
+.battle-log::-webkit-scrollbar-track{ background:rgba(0,0,0,.3); border-radius:4px; }
+.battle-log::-webkit-scrollbar-thumb{ background:linear-gradient(180deg,#c9a84c,#7a6030); border-radius:4px; border:1px solid rgba(255,232,168,.3); }
+.battle-log::-webkit-scrollbar-thumb:hover{ background:linear-gradient(180deg,#ffe8a8,#c9a84c); }
 .battle-log > div, .battle-log p{
   padding:4px 0; line-height:1.7; letter-spacing:1px;
   border-bottom:1px dashed rgba(212,160,74,.1);
@@ -1430,12 +1446,13 @@ body.hx-screen-shake{
     const log = document.getElementById('battle-log') || document.querySelector('.battle-log');
     if(!log) return;
     const mo = new MutationObserver(muts=>{
+      // 記錄使用者是否原本就在底部（容差 40px）
+      const wasAtBottom = (log.scrollHeight - log.scrollTop - log.clientHeight) < 40;
       muts.forEach(m=>{
         m.addedNodes.forEach(n=>{
           if(n.nodeType === 1){
             colorLog(n);
           } else if(n.nodeType === 3 && n.textContent.trim()){
-            // text node → wrap in span
             const sp = document.createElement('div');
             sp.textContent = n.textContent;
             colorLog(sp);
@@ -1443,8 +1460,10 @@ body.hx-screen-shake{
           }
         });
       });
-      // 自動滾到底
-      requestAnimationFrame(()=>{ log.scrollTop = log.scrollHeight; });
+      // 只有原本在底部才自動捲到底；使用者往上滾看歷史時不打斷
+      if(wasAtBottom){
+        requestAnimationFrame(()=>{ log.scrollTop = log.scrollHeight; });
+      }
     });
     mo.observe(log, {childList:true, subtree:false, characterData:false});
     // 初始已有的也染色
