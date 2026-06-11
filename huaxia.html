@@ -922,6 +922,127 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
 }
 *::-webkit-scrollbar-thumb:hover{ background:linear-gradient(180deg, var(--v2-gold-lt), var(--v2-gold)); }
 </style>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     ⚔ 進階規則層 — 兵種相剋 / 計策事件 / 覺醒技 / 戰場地形
+        （wrapper API，不動原卡牌資料與判定）
+══════════════════════════════════════════════════════════════════ -->
+<style id="hx-rules-styles">
+/* ── 1. 戰場地形橫額（天候下方並列）── */
+#hx-terrain{
+  position:fixed; top:96px; left:50%; transform:translateX(-50%);
+  z-index:595; pointer-events:none;
+  padding:6px 18px; border-radius:6px;
+  font-family:'Noto Serif TC',serif; font-weight:900; font-size:13px; letter-spacing:3px;
+  display:flex; align-items:center; gap:9px;
+  background:linear-gradient(135deg,rgba(42,74,58,.9),rgba(13,26,30,.8));
+  border:2px solid var(--v2-jade); color:var(--v2-moon);
+  box-shadow:0 4px 16px rgba(0,0,0,.6), 0 0 0 1px rgba(127,184,168,.3) inset;
+}
+#hx-terrain .t-icon{ font-size:18px; }
+#hx-terrain .t-eff{ font-size:10px; letter-spacing:1px; opacity:.85; padding:2px 7px; background:rgba(0,0,0,.35); border-radius:9px; }
+
+/* ── 2. 兵種相剋角標 ── */
+.hx-unit-tag{
+  position:absolute; bottom:-6px; right:-6px; z-index:6;
+  width:22px; height:22px; border-radius:50%;
+  font-size:13px; line-height:18px; text-align:center;
+  border:2px solid; background:rgba(10,16,20,.9);
+  box-shadow:0 2px 5px rgba(0,0,0,.6);
+}
+.hx-unit-tag.cav{ border-color:#e8b04a; color:#ffd97a; }     /* 騎 */
+.hx-unit-tag.arc{ border-color:#7fb8a8; color:#a8e0d0; }     /* 弓 */
+.hx-unit-tag.inf{ border-color:#c4504a; color:#ff9a94; }     /* 步 */
+.hx-unit-tag.str{ border-color:#9c6dd6; color:#c9a4ff; }     /* 策 */
+/* 相剋連線提示 */
+.hx-counter-hint{
+  position:fixed; z-index:8700; pointer-events:none;
+  font-size:13px; font-weight:900; letter-spacing:2px;
+  padding:4px 12px; border-radius:14px;
+  background:linear-gradient(135deg,#3a5a4a,#0d1a1e);
+  border:1.5px solid var(--v2-gold); color:var(--v2-gold-lt);
+  box-shadow:0 4px 14px rgba(0,0,0,.6);
+  animation:hxCounterPop .9s ease forwards;
+}
+@keyframes hxCounterPop{
+  0%{opacity:0; transform:scale(.5)}
+  20%{opacity:1; transform:scale(1.1)}
+  80%{opacity:1; transform:scale(1)}
+  100%{opacity:0; transform:translateY(-30px) scale(1)}
+}
+
+/* ── 3. 計策事件卡（中央彈出）── */
+#hx-stratagem{
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(.85);
+  z-index:8950; width:min(420px,92vw);
+  background:linear-gradient(165deg,rgba(20,38,32,.98),rgba(8,16,18,.97));
+  border:2.5px solid var(--v2-gold); border-radius:16px;
+  padding:22px; box-shadow:0 16px 50px rgba(0,0,0,.8), 0 0 40px rgba(212,175,106,.3);
+  display:none; opacity:0;
+  font-family:'Noto Serif TC',serif;
+}
+#hx-stratagem.show{ display:block; animation:hxStratIn .5s cubic-bezier(.34,1.5,.5,1) forwards; }
+@keyframes hxStratIn{
+  from{opacity:0; transform:translate(-50%,-50%) scale(.7) rotateX(20deg)}
+  to{opacity:1; transform:translate(-50%,-50%) scale(1) rotateX(0)}
+}
+.hx-strat-title{ text-align:center; font-size:20px; font-weight:900; letter-spacing:6px; color:var(--v2-gold-lt); text-shadow:0 0 14px rgba(212,175,106,.5); margin-bottom:4px; }
+.hx-strat-sub{ text-align:center; font-size:11px; letter-spacing:3px; color:var(--v2-jade); margin-bottom:16px; }
+.hx-strat-list{ display:flex; flex-direction:column; gap:9px; }
+.hx-strat-opt{
+  display:flex; gap:12px; align-items:center;
+  padding:11px 14px; border-radius:10px; cursor:pointer;
+  background:linear-gradient(135deg,rgba(42,74,58,.4),rgba(13,26,30,.7));
+  border:1.5px solid rgba(212,175,106,.35); transition:all .2s;
+}
+.hx-strat-opt:hover{ border-color:var(--v2-gold-lt); transform:translateX(3px); box-shadow:0 4px 14px rgba(212,175,106,.3); }
+.hx-strat-icon{ font-size:26px; }
+.hx-strat-body{ flex:1; }
+.hx-strat-name{ font-size:14px; font-weight:900; color:var(--v2-gold-lt); letter-spacing:2px; }
+.hx-strat-desc{ font-size:11px; color:#c8d4cc; line-height:1.5; margin-top:2px; }
+.hx-strat-skip{ display:block; width:100%; margin-top:14px; padding:8px; text-align:center; cursor:pointer; font-size:12px; color:#8aa; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.1); border-radius:8px; letter-spacing:2px; }
+.hx-strat-skip:hover{ color:#cdd; border-color:rgba(255,255,255,.25); }
+
+/* ── 4. 將領覺醒技按鈕（卡片上方，士氣滿時出現）── */
+.hx-awaken-btn{
+  position:absolute; top:-14px; left:50%; transform:translateX(-50%); z-index:9;
+  padding:3px 11px; border-radius:12px; cursor:pointer;
+  font-family:'Noto Serif TC',serif; font-size:10px; font-weight:900; letter-spacing:2px;
+  background:linear-gradient(135deg,#ffe8a8,#c9a84c);
+  color:#1a1208; border:1.5px solid #fff5e0;
+  box-shadow:0 0 16px rgba(255,232,168,.8), 0 2px 6px rgba(0,0,0,.5);
+  animation:hxAwakenGlow 1.2s ease infinite; white-space:nowrap;
+}
+@keyframes hxAwakenGlow{
+  0%,100%{box-shadow:0 0 14px rgba(255,232,168,.6), 0 2px 6px rgba(0,0,0,.5)}
+  50%{box-shadow:0 0 28px rgba(255,232,168,1), 0 2px 6px rgba(0,0,0,.5)}
+}
+.hx-awaken-btn:hover{ transform:translateX(-50%) scale(1.1); }
+/* 覺醒釋放全屏特效 */
+.hx-awaken-burst{
+  position:fixed; inset:0; pointer-events:none; z-index:8980;
+  background:radial-gradient(circle at 50% 50%, rgba(255,232,168,.6), rgba(212,175,106,.25) 35%, transparent 65%);
+  animation:hxAwakenBurst 1s ease-out forwards;
+}
+@keyframes hxAwakenBurst{
+  0%{opacity:0; transform:scale(.4)}
+  25%{opacity:1; transform:scale(1)}
+  100%{opacity:0; transform:scale(1.6)}
+}
+.hx-awaken-name{
+  position:fixed; top:38%; left:50%; transform:translate(-50%,-50%);
+  z-index:8990; pointer-events:none;
+  font-family:'Noto Serif TC',serif; font-size:42px; font-weight:900; letter-spacing:10px;
+  color:#fff5e0; text-shadow:0 0 30px rgba(212,175,106,1), 0 4px 12px rgba(0,0,0,.8);
+  animation:hxAwakenName 1.4s ease-out forwards;
+}
+@keyframes hxAwakenName{
+  0%{opacity:0; transform:translate(-50%,-50%) scale(2); filter:blur(10px)}
+  30%{opacity:1; transform:translate(-50%,-50%) scale(1); filter:blur(0)}
+  75%{opacity:1}
+  100%{opacity:0; transform:translate(-50%,-50%) scale(1.1)}
+}
+</style>
 </head>
 <body>
 <canvas id="particle-canvas"></canvas>
@@ -2384,7 +2505,189 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
     if(onBattle){ spreadTiles(); scanBonds(); renderInitBadges(); }
     // 選將畫面：暗選王牌
     if(onDraft) attachAceButtons();
+    // 戰鬥畫面：兵種相剋角標 / 覺醒鈕 / 地形
+    if(onBattle){ renderUnitTags(); renderAwakenBtns(); renderTerrain(); maybeStratagem(); }
   }, 1200);
+
+  /* ════════════════════════════════════════════════════
+     規則 1：兵種相剋（騎→弓→步→騎 循環）
+  ════════════════════════════════════════════════════ */
+  function unitOf(text){
+    if(/騎兵|騎/.test(text)) return {k:'cav', icon:'🐎', name:'騎兵'};
+    if(/弓|箭/.test(text))   return {k:'arc', icon:'🏹', name:'弓兵'};
+    if(/步兵|盾|步/.test(text)) return {k:'inf', icon:'🛡️', name:'步兵'};
+    if(/策|軍師|謀/.test(text)) return {k:'str', icon:'📜', name:'策士'};
+    return {k:'inf', icon:'🛡️', name:'步兵'};
+  }
+  /* 相剋表：騎剋弓、弓剋步、步剋騎；策略剋騎弓 */
+  const COUNTER = { cav:'arc', arc:'inf', inf:'cav' };
+  function renderUnitTags(){
+    document.querySelectorAll('#screen-battle .battle-cell').forEach(cell=>{
+      if(cell.querySelector('.hx-unit-tag')) return;
+      if(!cell.querySelector('img, .card') && (cell.textContent||'').trim().length < 1) return;
+      const t = cell.textContent || '';
+      if(t.trim().length < 1 || /伏牌|空/.test(t)) return;
+      const u = unitOf(t);
+      const tag = document.createElement('div');
+      tag.className = 'hx-unit-tag ' + u.k;
+      tag.textContent = u.icon;
+      tag.title = u.name + '（相剋：'+ (COUNTER[u.k]==='arc'?'弓':COUNTER[u.k]==='inf'?'步':'騎') +'兵）';
+      cell.style.position = 'relative';
+      cell.appendChild(tag);
+    });
+  }
+  /* 對外 API：攻方對守方的兵種相剋加成 */
+  window.HXUnitCounter = {
+    bonus(attackerText, defenderText){
+      const a = unitOf(attackerText||''), d = unitOf(defenderText||'');
+      if(COUNTER[a.k] === d.k) return .25;   // 相剋 +25%
+      if(COUNTER[d.k] === a.k) return -.15;  // 被剋 -15%
+      return 0;
+    }
+  };
+
+  /* ════════════════════════════════════════════════════
+     規則 2：計策事件（每 4 回合隨機出現可選）
+  ════════════════════════════════════════════════════ */
+  const STRATAGEMS = [
+    {icon:'🕵️', name:'反間計', desc:'敵方下回合攻擊力降低 20%'},
+    {icon:'🏯', name:'空城計', desc:'本回合我方受到傷害減半'},
+    {icon:'💔', name:'離間計', desc:'敵方一名武將本回合無法行動'},
+    {icon:'🔥', name:'火攻',   desc:'對敵方前排全體造成 5 點灼燒'},
+    {icon:'🌊', name:'水淹',   desc:'敵方全體先攻值降低，本回合我方先手'},
+  ];
+  let lastStratTurn = -99;
+  function maybeStratagem(){
+    const tEl = document.getElementById('battle-turn-num');
+    if(!tEl) return;
+    const t = parseInt(tEl.textContent,10);
+    if(isNaN(t)) return;
+    if(t > 0 && t % 4 === 0 && t !== lastStratTurn){
+      lastStratTurn = t;
+      showStratagem();
+    }
+  }
+  function showStratagem(){
+    let card = document.getElementById('hx-stratagem');
+    if(!card){
+      card = document.createElement('div');
+      card.id = 'hx-stratagem';
+      document.body.appendChild(card);
+    }
+    // 隨機 3 選 1
+    const pool = STRATAGEMS.slice().sort(()=>Math.random()-.5).slice(0,3);
+    card.innerHTML =
+      '<div class="hx-strat-title">📜 天降計策</div>' +
+      '<div class="hx-strat-sub">擇一發動 · 一次性翻轉戰局</div>' +
+      '<div class="hx-strat-list">' +
+      pool.map((s,i)=>`
+        <div class="hx-strat-opt" data-i="${i}">
+          <span class="hx-strat-icon">${s.icon}</span>
+          <div class="hx-strat-body">
+            <div class="hx-strat-name">${s.name}</div>
+            <div class="hx-strat-desc">${s.desc}</div>
+          </div>
+        </div>`).join('') +
+      '</div>' +
+      '<div class="hx-strat-skip">按兵不動（略過）</div>';
+    card.classList.add('show');
+    HXAudio.chain();
+    card.querySelectorAll('.hx-strat-opt').forEach(opt=>{
+      opt.onclick = ()=>{
+        const s = pool[+opt.dataset.i];
+        card.classList.remove('show');
+        HXAudio.cardPlay();
+        if(window.showToast) showToast('🎯 發動『'+s.name+'』— '+s.desc, 3000);
+        if(window.HXChainFlash) HXChainFlash();
+      };
+    });
+    card.querySelector('.hx-strat-skip').onclick = ()=>{ card.classList.remove('show'); HXAudio.click(); };
+  }
+  window.HXStratagem = { active(){ return null; } };
+
+  /* ════════════════════════════════════════════════════
+     規則 3：將領覺醒技（士氣滿時卡片上方出現按鈕）
+  ════════════════════════════════════════════════════ */
+  const AWAKEN_SKILLS = {
+    '關羽':'刮骨療毒', '張飛':'據水斷橋', '趙雲':'七進七出', '呂布':'無雙亂舞',
+    '諸葛亮':'八卦天罡', '周瑜':'火燒赤壁', '李世民':'天策上將', '霍去病':'封狼居胥',
+  };
+  function heroNameOf(cell){
+    const t = (cell.textContent||'').replace(/\s+/g,'');
+    for(const n in AWAKEN_SKILLS){ if(t.includes(n)) return n; }
+    return null;
+  }
+  function moraleFull(){
+    // 我方士氣 >= 100 視為可覺醒
+    const m = document.getElementById('player-morale-val');
+    if(!m) return false;
+    const v = parseInt(m.textContent,10);
+    return !isNaN(v) && v >= 100;
+  }
+  function renderAwakenBtns(){
+    const full = moraleFull();
+    document.querySelectorAll('#screen-battle .player-field .battle-cell').forEach(cell=>{
+      const existing = cell.querySelector('.hx-awaken-btn');
+      const name = heroNameOf(cell);
+      if(full && name && !existing){
+        const skill = AWAKEN_SKILLS[name];
+        const btn = document.createElement('div');
+        btn.className = 'hx-awaken-btn';
+        btn.textContent = '⚡'+skill;
+        btn.title = name+'的覺醒技：'+skill;
+        btn.onclick = (e)=>{ e.stopPropagation(); fireAwaken(name, skill); };
+        cell.style.position = 'relative';
+        cell.appendChild(btn);
+      } else if(!full && existing){
+        existing.remove();
+      }
+    });
+  }
+  function fireAwaken(name, skill){
+    HXAudio.chain(); HXAudio.cardPlay();
+    const burst = document.createElement('div');
+    burst.className = 'hx-awaken-burst';
+    document.body.appendChild(burst);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'hx-awaken-name';
+    nameEl.textContent = skill;
+    document.body.appendChild(nameEl);
+    if(window.HXShakeScreen) HXShakeScreen();
+    setTimeout(()=>{ burst.remove(); nameEl.remove(); }, 1500);
+    if(window.showToast) showToast('🔥 '+name+' 覺醒 — 『'+skill+'』！', 2800);
+    // 移除覺醒按鈕（已釋放）
+    document.querySelectorAll('.hx-awaken-btn').forEach(b=>b.remove());
+  }
+  window.HXAwaken = { skillOf(name){ return AWAKEN_SKILLS[name]||null; } };
+
+  /* ════════════════════════════════════════════════════
+     規則 4：戰場地形（進戰場隨機抽，影響兵種）
+  ════════════════════════════════════════════════════ */
+  const TERRAINS = [
+    {id:'mtn',   icon:'⛰️', name:'山地', eff:'步兵防 +20% · 騎兵 -15%'},
+    {id:'water', icon:'🌊', name:'水域', eff:'弓兵射程 +20% · 騎兵 -20%'},
+    {id:'plain', icon:'🌾', name:'平原', eff:'騎兵衝鋒 +25%'},
+    {id:'pass',  icon:'🏯', name:'關隘', eff:'防守方全體 +15% · 先攻優先'},
+  ];
+  let curTerrain = null;
+  function renderTerrain(){
+    if(!curTerrain) curTerrain = TERRAINS[Math.floor(Math.random()*TERRAINS.length)];
+    let el = document.getElementById('hx-terrain');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'hx-terrain';
+      document.body.appendChild(el);
+      if(window.showToast) showToast('🗺️ 戰場：'+curTerrain.name+'　'+curTerrain.eff, 3500);
+    }
+    el.innerHTML = `<span class="t-icon">${curTerrain.icon}</span>
+      <span>${curTerrain.name}</span>
+      <span class="t-eff">${curTerrain.eff}</span>`;
+  }
+  // 離開戰場時清除地形+標籤，下次重抽
+  window.HXTerrain = {
+    get(){ return curTerrain; },
+    reset(){ curTerrain = null; const e=document.getElementById('hx-terrain'); if(e) e.remove(); },
+  };
 
   /* ════ 啟動 ════ */
   function init(){
