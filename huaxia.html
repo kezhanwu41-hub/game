@@ -1042,6 +1042,89 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
   75%{opacity:1}
   100%{opacity:0; transform:translate(-50%,-50%) scale(1.1)}
 }
+
+/* ── 5. 君主令（左下指令面板，每場限用）── */
+#hx-edict{
+  position:fixed; left:18px; bottom:18px; z-index:545;
+  display:flex; flex-direction:column; gap:6px;
+}
+.hx-edict-title{
+  font-family:'Noto Serif TC',serif; font-size:11px; letter-spacing:3px;
+  color:var(--v2-gold-lt); text-align:center; font-weight:900;
+  text-shadow:0 1px 3px rgba(0,0,0,.7);
+}
+.hx-edict-btn{
+  display:flex; align-items:center; gap:8px;
+  padding:7px 12px; border-radius:10px; cursor:pointer;
+  background:linear-gradient(135deg,rgba(42,74,58,.85),rgba(13,26,30,.92));
+  border:1.5px solid var(--v2-gold); color:var(--v2-gold-lt);
+  font-family:'Noto Serif TC',serif; font-size:12px; letter-spacing:2px; font-weight:700;
+  box-shadow:0 3px 10px rgba(0,0,0,.5);
+  transition:all .2s; white-space:nowrap;
+}
+.hx-edict-btn:hover{ border-color:var(--v2-gold-lt); transform:translateX(3px); box-shadow:0 4px 14px rgba(212,175,106,.4); }
+.hx-edict-btn.used{ opacity:.4; filter:grayscale(.7); cursor:not-allowed; pointer-events:none; }
+.hx-edict-icon{ font-size:16px; }
+
+/* ── 6. 勢力同盟標（卡片左上）+ 同盟橫額 ── */
+.hx-faction-tag{
+  position:absolute; top:-6px; left:-6px; z-index:6;
+  padding:1px 6px; border-radius:8px; font-size:10px; font-weight:900;
+  font-family:'Noto Serif TC',serif; letter-spacing:1px;
+  border:1.5px solid; background:rgba(10,16,20,.9);
+}
+.hx-faction-tag.shu{ border-color:#7fdc7a; color:#a8f0a2; }
+.hx-faction-tag.wei{ border-color:#7fa8e8; color:#a8c8ff; }
+.hx-faction-tag.wu{ border-color:#e8a87f; color:#ffc8a2; }
+.hx-faction-tag.qun{ border-color:#cdd9d3; color:#eef4f0; }
+#hx-alliance{
+  position:fixed; right:18px; bottom:160px; z-index:545;
+  display:flex; flex-direction:column; gap:4px; align-items:flex-end;
+  pointer-events:none;
+}
+.hx-alliance-chip{
+  padding:3px 11px; border-radius:12px; font-size:11px; font-weight:700;
+  font-family:'Noto Serif TC',serif; letter-spacing:2px;
+  background:rgba(42,74,58,.85); border:1.5px solid var(--v2-gold);
+  color:var(--v2-gold-lt); box-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+
+/* ── 7. 逆境背水（低血爆發狀態）── */
+.hx-desperate{
+  position:relative;
+  animation:hxDesperate 1s ease infinite !important;
+}
+@keyframes hxDesperate{
+  0%,100%{box-shadow:0 0 14px rgba(196,80,74,.5)}
+  50%{box-shadow:0 0 30px rgba(255,90,80,1), inset 0 0 18px rgba(196,80,74,.3)}
+}
+#hx-desperate-banner{
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  z-index:8920; pointer-events:none;
+  font-family:'Noto Serif TC',serif; font-size:48px; font-weight:900; letter-spacing:14px;
+  color:#ff6b5a; text-shadow:0 0 36px rgba(255,90,80,1), 0 4px 14px rgba(0,0,0,.9);
+  display:none;
+}
+#hx-desperate-banner.show{ display:block; animation:hxDespBanner 1.6s ease-out forwards; }
+@keyframes hxDespBanner{
+  0%{opacity:0; transform:translate(-50%,-50%) scale(2.4); filter:blur(12px)}
+  25%{opacity:1; transform:translate(-50%,-50%) scale(1); filter:blur(0)}
+  75%{opacity:1}
+  100%{opacity:0; transform:translate(-50%,-50%) scale(1.15)}
+}
+
+/* ── 8. 連鎖斬殺計數 ── */
+#hx-combo{
+  position:fixed; top:130px; right:18px; z-index:560;
+  padding:8px 16px; border-radius:14px; display:none;
+  background:linear-gradient(135deg,#7a2e2e,#c63b3b);
+  border:2px solid var(--v2-gold-lt); color:#fff5e0;
+  font-family:'Noto Serif TC',serif; font-weight:900; letter-spacing:2px;
+  box-shadow:0 4px 18px rgba(0,0,0,.6), 0 0 24px rgba(255,90,80,.5);
+}
+#hx-combo.show{ display:block; animation:hxComboPop .4s cubic-bezier(.34,1.6,.5,1); }
+@keyframes hxComboPop{ 0%{transform:scale(.5)}60%{transform:scale(1.2)}100%{transform:scale(1)} }
+.hx-combo-num{ font-size:22px; color:var(--v2-gold-lt); }
 </style>
 </head>
 <body>
@@ -2507,7 +2590,156 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
     if(onDraft) attachAceButtons();
     // 戰鬥畫面：兵種相剋角標 / 覺醒鈕 / 地形
     if(onBattle){ renderUnitTags(); renderAwakenBtns(); renderTerrain(); maybeStratagem(); }
+    // 戰鬥畫面：君主令 / 勢力同盟 / 逆境 / 連鎖
+    if(onBattle){ renderEdict(); renderFactionTags(); checkDesperate(); checkCombo(); }
+    else { ['hx-edict','hx-alliance','hx-combo'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();}); }
   }, 1200);
+
+  /* ════════════════════════════════════════════════════
+     規則 5：君主令（每場限用一次的全局指令）
+  ════════════════════════════════════════════════════ */
+  const EDICTS = [
+    {id:'charge', icon:'🚩', name:'全軍突擊', desc:'本回合我方全體攻擊 +30%'},
+    {id:'hold',   icon:'🛡️', name:'堅守不出', desc:'本回合我方全體防禦 +40%'},
+    {id:'retreat',icon:'🥁', name:'鳴金收兵', desc:'我方全體回復 5 兵力'},
+  ];
+  const edictUsed = {};
+  function renderEdict(){
+    let el = document.getElementById('hx-edict');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'hx-edict';
+      el.innerHTML = '<div class="hx-edict-title">📜 君主令（各限一次）</div>' +
+        EDICTS.map(e=>`<div class="hx-edict-btn" data-eid="${e.id}" title="${e.desc}">
+          <span class="hx-edict-icon">${e.icon}</span>${e.name}</div>`).join('');
+      document.body.appendChild(el);
+      el.addEventListener('click', ev=>{
+        const btn = ev.target.closest('.hx-edict-btn');
+        if(!btn || btn.classList.contains('used')) return;
+        const eid = btn.dataset.eid;
+        const ed = EDICTS.find(x=>x.id===eid);
+        edictUsed[eid] = true;
+        btn.classList.add('used');
+        HXAudio.chain();
+        if(window.HXChainFlash) HXChainFlash();
+        if(window.showToast) showToast('🏛️ 君主令：『'+ed.name+'』— '+ed.desc, 3000);
+      });
+    }
+  }
+  window.HXEdict = { used(id){ return !!edictUsed[id]; } };
+
+  /* ════════════════════════════════════════════════════
+     規則 6：勢力同盟（同勢力越多全隊加成）
+  ════════════════════════════════════════════════════ */
+  const FACTION_MAP = {
+    shu:{names:['劉備','關羽','張飛','趙雲','馬超','黃忠','諸葛亮','姜維','龐統'], label:'蜀', cls:'shu'},
+    wei:{names:['曹操','司馬懿','張遼','夏侯惇','許褚','郭嘉','典韋','徐晃','賈詡'], label:'魏', cls:'wei'},
+    wu: {names:['孫權','周瑜','陸遜','甘寧','太史慈','孫策','黃蓋','呂蒙'], label:'吳', cls:'wu'},
+  };
+  function factionOf(text){
+    const t = (text||'').replace(/\s+/g,'');
+    for(const k in FACTION_MAP){
+      if(FACTION_MAP[k].names.some(n=>t.includes(n))) return FACTION_MAP[k];
+    }
+    return {label:'群', cls:'qun'};
+  }
+  function renderFactionTags(){
+    const count = {};
+    document.querySelectorAll('#screen-battle .player-field .battle-cell').forEach(cell=>{
+      const t = cell.textContent||'';
+      if(t.trim().length<1 || /伏牌|空/.test(t)) return;
+      const f = factionOf(t);
+      if(!cell.querySelector('.hx-faction-tag')){
+        const tag = document.createElement('div');
+        tag.className = 'hx-faction-tag ' + f.cls;
+        tag.textContent = f.label;
+        cell.style.position='relative';
+        cell.appendChild(tag);
+      }
+      count[f.label] = (count[f.label]||0)+1;
+    });
+    // 同盟橫額：同勢力 ≥ 2 才顯示
+    let el = document.getElementById('hx-alliance');
+    if(!el){ el = document.createElement('div'); el.id='hx-alliance'; document.body.appendChild(el); }
+    const chips = [];
+    for(const lbl in count){
+      if(lbl !== '群' && count[lbl] >= 2){
+        const bonus = count[lbl]>=3 ? 20 : 10;
+        chips.push(`<div class="hx-alliance-chip">⚜️ ${lbl}軍同盟 ×${count[lbl]}　全隊 +${bonus}%</div>`);
+      }
+    }
+    el.innerHTML = chips.join('');
+  }
+  window.HXAlliance = {
+    bonus(text){
+      // 由外部傳整隊文字判斷該勢力數量加成
+      return 0; // 介接點，預設 0
+    }
+  };
+
+  /* ════════════════════════════════════════════════════
+     規則 7：逆境背水（我方主公兵力 < 30% 觸發爆發）
+  ════════════════════════════════════════════════════ */
+  let desperateActive = false;
+  function checkDesperate(){
+    const hpEl = findHPEl('player');
+    if(!hpEl) return;
+    const txt = hpEl.textContent || '';
+    const m = txt.match(/(\d+)\s*\/\s*(\d+)/);
+    let ratio = null;
+    if(m){ ratio = parseInt(m[1],10)/parseInt(m[2],10); }
+    else {
+      const v = parseInt(txt.replace(/\D+/g,''),10);
+      if(!isNaN(v)) ratio = v/100;   // 退而求其次以 100 為基準
+    }
+    if(ratio === null) return;
+    if(ratio < 0.3 && !desperateActive){
+      desperateActive = true;
+      // 背水橫額
+      let banner = document.getElementById('hx-desperate-banner');
+      if(!banner){ banner = document.createElement('div'); banner.id='hx-desperate-banner'; document.body.appendChild(banner); }
+      banner.textContent = '背 水 一 戰';
+      banner.classList.remove('show'); void banner.offsetWidth; banner.classList.add('show');
+      HXAudio.chain(); if(window.HXShakeScreen) HXShakeScreen();
+      // 我方卡片紅光
+      document.querySelectorAll('#screen-battle .player-field .battle-cell').forEach(c=>c.classList.add('hx-desperate'));
+      if(window.showToast) showToast('🔥 逆境背水！兵力危急，我方全體攻擊 +35%！', 3500);
+    } else if(ratio >= 0.3 && desperateActive){
+      desperateActive = false;
+      document.querySelectorAll('.hx-desperate').forEach(c=>c.classList.remove('hx-desperate'));
+    }
+  }
+  window.HXDesperate = { active(){ return desperateActive; }, bonus(){ return desperateActive ? .35 : 0; } };
+
+  /* ════════════════════════════════════════════════════
+     規則 8：連鎖斬殺（敵方墓地短時間內增加 → 連擊）
+  ════════════════════════════════════════════════════ */
+  let lastEnemyGrave = 0, comboCount = 0, comboTimer = null;
+  function checkCombo(){
+    const gEl = document.getElementById('cem-count-enemy');
+    if(!gEl) return;
+    const g = parseInt(gEl.textContent,10);
+    if(isNaN(g)) return;
+    if(g > lastEnemyGrave){
+      const killed = g - lastEnemyGrave;
+      comboCount += killed;
+      lastEnemyGrave = g;
+      showCombo();
+    }
+  }
+  function showCombo(){
+    let el = document.getElementById('hx-combo');
+    if(!el){ el = document.createElement('div'); el.id='hx-combo'; document.body.appendChild(el); }
+    el.innerHTML = `⚔️ 連斬 <span class="hx-combo-num">${comboCount}</span> 將！`;
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    HXAudio.chain();
+    if(comboCount >= 2 && window.showToast){
+      showToast('🔥 '+comboCount+' 連斬！士氣連鎖 +'+(comboCount*15), 2500);
+    }
+    clearTimeout(comboTimer);
+    comboTimer = setTimeout(()=>{ comboCount = 0; el.classList.remove('show'); }, 4000);
+  }
+  window.HXCombo = { count(){ return comboCount; } };
 
   /* ════════════════════════════════════════════════════
      規則 1：兵種相剋（騎→弓→步→騎 循環）
