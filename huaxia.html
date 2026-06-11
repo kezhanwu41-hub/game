@@ -1125,9 +1125,110 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
 #hx-combo.show{ display:block; animation:hxComboPop .4s cubic-bezier(.34,1.6,.5,1); }
 @keyframes hxComboPop{ 0%{transform:scale(.5)}60%{transform:scale(1.2)}100%{transform:scale(1)} }
 .hx-combo-num{ font-size:22px; color:var(--v2-gold-lt); }
+
+/* ── 戰術手冊彈窗 ── */
+#hx-manual-backdrop{
+  position:fixed; inset:0; z-index:9990; display:none;
+  background:rgba(4,8,10,.86); backdrop-filter:blur(6px);
+}
+#hx-manual-backdrop.show{ display:block; animation:v2InkReveal .4s ease; }
+#hx-manual{
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  z-index:9991; width:min(760px,94vw); max-height:88vh; overflow-y:auto;
+  display:none;
+  background:linear-gradient(165deg,rgba(18,34,30,.99),rgba(8,16,18,.98));
+  border:2.5px solid var(--v2-gold); border-radius:16px;
+  padding:0; box-shadow:0 20px 60px rgba(0,0,0,.85), 0 0 50px rgba(212,175,106,.25);
+  font-family:'Noto Serif TC',serif;
+}
+#hx-manual.show{ display:block; animation:hxStratIn .5s cubic-bezier(.34,1.5,.5,1); }
+.hx-man-head{
+  position:sticky; top:0; z-index:2;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 24px;
+  background:linear-gradient(180deg,rgba(42,74,58,.95),rgba(18,34,30,.95));
+  border-bottom:1.5px solid rgba(212,175,106,.4);
+}
+.hx-man-title{ font-size:22px; font-weight:900; letter-spacing:8px; color:var(--v2-gold-lt); text-shadow:0 0 16px rgba(212,175,106,.5); }
+.hx-man-close{ background:none; border:none; color:var(--v2-jade); font-size:26px; cursor:pointer; line-height:1; }
+.hx-man-close:hover{ color:#fff; }
+.hx-man-body{ padding:18px 24px 26px; }
+.hx-man-flow{
+  background:rgba(0,0,0,.35); border:1px solid rgba(127,184,168,.25); border-radius:10px;
+  padding:12px 16px; margin-bottom:18px;
+  font-size:13px; line-height:2; color:#cdd9d3; letter-spacing:1px; text-align:center;
+}
+.hx-man-flow b{ color:var(--v2-gold-lt); }
+.hx-man-sec{ margin-bottom:18px; }
+.hx-man-sec-title{
+  font-size:14px; font-weight:900; letter-spacing:4px; color:var(--v2-jade);
+  padding:6px 0; margin-bottom:8px; border-bottom:1px solid rgba(127,184,168,.25);
+}
+.hx-man-rule{
+  display:flex; gap:12px; padding:10px 12px; margin-bottom:7px;
+  background:linear-gradient(135deg,rgba(42,74,58,.3),rgba(13,26,30,.55));
+  border:1px solid rgba(212,175,106,.25); border-radius:9px;
+  transition:transform .15s, border-color .2s;
+}
+.hx-man-rule:hover{ transform:translateX(3px); border-color:var(--v2-gold); }
+.hx-man-rule-icon{ font-size:24px; flex-shrink:0; width:30px; text-align:center; }
+.hx-man-rule-body{ flex:1; }
+.hx-man-rule-name{ font-size:14px; font-weight:900; color:var(--v2-gold-lt); letter-spacing:2px; }
+.hx-man-rule-desc{ font-size:12px; color:#c8d4cc; line-height:1.6; margin-top:2px; }
+.hx-man-rule-tag{ display:inline-block; font-size:10px; padding:1px 8px; border-radius:8px; margin-left:6px; background:rgba(196,80,74,.3); color:#ff9a94; border:1px solid rgba(196,80,74,.5); letter-spacing:1px; vertical-align:1px; }
 </style>
 </head>
-<body>
+<body data-hx-v2>
+
+<!-- ══ 戰術手冊彈窗 ══ -->
+<div id="hx-manual-backdrop" onclick="HXManual&&HXManual.close()"></div>
+<div id="hx-manual">
+  <div class="hx-man-head">
+    <span class="hx-man-title">⚔️ 戰術手冊</span>
+    <button class="hx-man-close" onclick="HXManual&&HXManual.close()">×</button>
+  </div>
+  <div class="hx-man-body">
+    <div class="hx-man-flow">
+      <b>禁選</b> ▸ <b>佈陣</b> ▸ <b>戰鬥</b>（抽牌 ▸ 準備 ▸ 主要 ▸ 戰鬥 ▸ 結束）▸ <b>結算</b><br>
+      五行：木→火→土→金→水→木（相生回血 · 相剋扣血 · 相同各損）
+    </div>
+
+    <div class="hx-man-sec">
+      <div class="hx-man-sec-title">🎲 環境系統</div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">☀️</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">天時天候</div><div class="hx-man-rule-desc">每 3 回合換：烈日（傷害+2）/ 大霧（治療防守+2）/ 秋高（多抽 1 張）</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🗺️</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">戰場地形</div><div class="hx-man-rule-desc">進場隨機：⛰️山地（步兵+/騎兵-）· 🌊水域（弓兵+/騎兵-）· 🌾平原（騎兵+）· 🏯關隘（防守+/先攻優先）</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🌍</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">地利泉眼</div><div class="hx-man-rule-desc">戰場隨機 1-2 格五行格，對應屬性武將站上去獲得雙倍士氣</div></div></div>
+    </div>
+
+    <div class="hx-man-sec">
+      <div class="hx-man-sec-title">⚔️ 戰術系統</div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🐎</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">兵種相剋 <span class="hx-man-rule-tag">已連動結算</span></div><div class="hx-man-rule-desc">騎兵剋弓兵 → 弓兵剋步兵 → 步兵剋騎兵。相剋 +25% 傷害，被剋 -15%</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">⚜️</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">陣法傳承</div><div class="hx-man-rule-desc">佈陣選一：鋒矢陣（前排攻+20%防-10%）/ 鶴翼陣（後排保護+刺殺抗性）/ 九宮八卦（五行抗性+15%）</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">⚡</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">先攻值</div><div class="hx-man-rule-desc">騎兵 85 ＞ 弓兵 70 ＞ 步兵 40 ＞ 策士 30，決定出手順序</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🎭</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">暗選王牌</div><div class="hx-man-rule-desc">選將時可指定 1 張為迷霧卡，對手看不到身份，作為反制秘密武器</div></div></div>
+    </div>
+
+    <div class="hx-man-sec">
+      <div class="hx-man-sec-title">🔥 爆發系統</div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🏵️</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">主帥絕技</div><div class="hx-man-rule-desc">玩家「背水一戰」+8 兵力 / 敵方「圍魏救趙」-6，冷卻 4 回合，左下角圓鈕釋放</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🌟</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">將領覺醒技</div><div class="hx-man-rule-desc">士氣滿 100，武將卡上方亮起覺醒鈕：關羽刮骨療毒 / 諸葛八卦天罡 / 呂布無雙亂舞 / 趙雲七進七出…</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🔥</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">逆境背水 <span class="hx-man-rule-tag">已連動結算</span></div><div class="hx-man-rule-desc">主公兵力 &lt; 30% 觸發，全體攻擊 +35%，回血後自動解除</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">⚔️</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">連鎖斬殺</div><div class="hx-man-rule-desc">短時間連續擊殺累計連斬，2 連以上士氣連鎖 +15×N</div></div></div>
+    </div>
+
+    <div class="hx-man-sec">
+      <div class="hx-man-sec-title">🏛️ 指揮系統</div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🚩</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">君主令 <span class="hx-man-rule-tag">已連動結算</span></div><div class="hx-man-rule-desc">各限一次：全軍突擊（+30%攻）/ 堅守不出（+40%防）/ 鳴金收兵（回 5 血）。左下指令面板</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">🔗</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">歷史羈絆</div><div class="hx-man-rule-desc">桃園結義 / 既生瑜何生亮 / 五虎上將 / 美人關 — 名將同場自動觸發</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">⚜️</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">勢力同盟</div><div class="hx-man-rule-desc">蜀 / 魏 / 吳 同勢力 ≥2 → 全隊 +10%，≥3 → +20%</div></div></div>
+      <div class="hx-man-rule"><div class="hx-man-rule-icon">📜</div><div class="hx-man-rule-body"><div class="hx-man-rule-name">計策事件</div><div class="hx-man-rule-desc">每 4 回合 3 選 1：反間 / 空城 / 離間 / 火攻 / 水淹，一次性翻轉戰局</div></div></div>
+    </div>
+
+    <div class="hx-man-flow" style="margin-top:8px;margin-bottom:0;border-color:rgba(212,175,106,.35)">
+      ✨ <b>戰術連動</b>：標「已連動結算」的規則會在戰鬥結算時<b>真正追加傷害</b>，<br>多個規則可疊加形成組合技（如：烈日 + 背水 + 突擊 + 相剋）
+    </div>
+  </div>
+</div>
 <canvas id="particle-canvas"></canvas>
 
 <!-- ══ SPLASH / OPENING ANIMATION ═══════════════════════════════ -->
@@ -1224,6 +1325,7 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
         <button class="btn-challenge" style="flex:1; background: linear-gradient(135deg, #6b3d20, #2d1a0c); color:#fff;" onclick="Game.showSmithy()">🔨 鐵匠鋪</button>
       </div>
       <button class="btn-challenge" style="margin-top: 10px; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2);" onclick="Game.showTutorial()">📖 遊戲玩法指南</button>
+      <button class="btn-challenge" style="margin-top: 10px;" onclick="HXManual&&HXManual.open()">⚔️ 戰術手冊（進階規則）</button>
       <button class="btn-challenge" style="margin-top: 10px; background: linear-gradient(135deg,#37474f,#1a2226); border-color:#546e7a; color:#cfd8dc;" onclick="window.location.href='index.html'">🏛️ 返回遊戲大廳</button>
     </div>
   </div>
@@ -2740,6 +2842,23 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
     comboTimer = setTimeout(()=>{ comboCount = 0; el.classList.remove('show'); }, 4000);
   }
   window.HXCombo = { count(){ return comboCount; } };
+
+  /* ════ 戰術手冊開關 ════ */
+  window.HXManual = {
+    open(){
+      const bd = document.getElementById('hx-manual-backdrop');
+      const m  = document.getElementById('hx-manual');
+      if(bd) bd.classList.add('show');
+      if(m){ m.classList.add('show'); m.scrollTop = 0; }
+      if(window.HXAudio) HXAudio.click();
+    },
+    close(){
+      const bd = document.getElementById('hx-manual-backdrop');
+      const m  = document.getElementById('hx-manual');
+      if(bd) bd.classList.remove('show');
+      if(m) m.classList.remove('show');
+    }
+  };
 
   /* ════════════════════════════════════════════════════
      規則 1：兵種相剋（騎→弓→步→騎 循環）
