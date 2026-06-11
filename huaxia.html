@@ -2921,6 +2921,60 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
     reset(){ curTerrain = null; const e=document.getElementById('hx-terrain'); if(e) e.remove(); },
   };
 
+  /* ════════════════════════════════════════════════════
+     ★ 規則整合層：包裹 CombatEngine.resolveTurn
+        在原結算「之後」追加規則加成 — 原 combat.js 一字不改
+        讓規則系統真正連動進傷害結算（升級核心）
+  ════════════════════════════════════════════════════ */
+  let combatWrapped = false;
+  function wrapCombatEngine(){
+    if(combatWrapped) return;
+    if(!window.CombatEngine || typeof CombatEngine.resolveTurn !== 'function') return;
+    combatWrapped = true;
+    const _orig = CombatEngine.resolveTurn;
+    CombatEngine.resolveTurn = function(state, pCmds, eCmds, pAtk, pTgt, eAtk, eTgt){
+      const result = _orig.apply(this, arguments);
+      try{ applyHXBonusAfterClash(state, pAtk, eAtk); }
+      catch(e){ console.warn('[HX規則整合]', e); }
+      return result;
+    };
+    console.log('[華夏規則整合] CombatEngine.resolveTurn 已包裹 — 規則加成生效');
+  }
+  /* 結算後：依當前規則狀態，對玩家方傷害追加加成（真扣敵 HP）*/
+  function applyHXBonusAfterClash(state, pAtk, eAtk){
+    if(!pAtk || !eAtk) return;
+    const addLog = (window.GameState && GameState.addLog) ? GameState.addLog : (()=>{});
+    let bonus = 0; const reasons = [];
+    const base = Math.round((pAtk.atk||60) * 0.5);   // 對齊原引擎 50% 基礎
+
+    const w = window.HXWeather && HXWeather.get && HXWeather.get();
+    if(w && w.id === 'sun'){ bonus += 2; reasons.push('☀️烈日+2'); }
+
+    if(window.HXDesperate && HXDesperate.active()){
+      const e = Math.round(base * 0.35); bonus += e; reasons.push('🔥背水+'+e);
+    }
+    if(window.HXEdict && HXEdict.used && HXEdict.used('charge')){
+      const e = Math.round(base * 0.30); bonus += e; reasons.push('🚩突擊+'+e);
+    }
+    if(window.HXUnitCounter){
+      const r = HXUnitCounter.bonus(pAtk.name||'', eAtk.name||'');
+      if(r > 0){ const e = Math.round(base*r); bonus += e; reasons.push('⚔️相剋+'+e); }
+    }
+    const terr = window.HXTerrain && HXTerrain.get && HXTerrain.get();
+    if(terr && terr.id === 'plain'){ const e = Math.round(base*0.1); bonus += e; reasons.push('🌾平原+'+e); }
+
+    if(bonus > 0 && eAtk.currentHp > 0){
+      eAtk.currentHp = Math.max(0, eAtk.currentHp - bonus);
+      addLog({ text:`✨ 戰術連動！${reasons.join('、')} → ${eAtk.name} 額外損 ${bonus} HP`, type:'element-ke' });
+      if(window.HXChainFlash) HXChainFlash();
+      if(eAtk.currentHp <= 0 && window.GameState && GameState.cleanupField){
+        try{ GameState.cleanupField(); }catch(e){}
+      }
+    }
+  }
+  // CombatEngine 可能稍後載入，輪詢直到包裹成功
+  const _wrapTry = setInterval(()=>{ wrapCombatEngine(); if(combatWrapped) clearInterval(_wrapTry); }, 500);
+
   /* ════ 啟動 ════ */
   function init(){
     makeMuteBtn();
