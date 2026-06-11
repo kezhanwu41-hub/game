@@ -717,6 +717,211 @@ body.hx-screen-shake{
 .hx-init-slot.player{ background:linear-gradient(135deg,#1c4b82,#0a2447); }
 .hx-init-slot.enemy{ background:linear-gradient(135deg,#7a2e2e,#3a0d0d); }
 </style>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     ✦ 風格 v2：青銅夜宴 · 鎏金流光 — 全新介面 / 動畫 / 按鈕
+        （最高優先級覆蓋層，與舊版暖橙古銅完全不同；不動遊戲邏輯）
+══════════════════════════════════════════════════════════════════ -->
+<style id="hx-restyle-v2">
+:root{
+  --v2-ink:#0a1014;          /* 黛墨黑 */
+  --v2-deep:#0d1a1e;         /* 深青黑 */
+  --v2-bronze:#3a5a4a;       /* 青銅綠 */
+  --v2-azure:#2a4a6a;        /* 石青 */
+  --v2-gold:#d4af6a;         /* 鎏金 */
+  --v2-gold-lt:#f0d99a;      /* 亮金 */
+  --v2-jade:#7fb8a8;         /* 玉青 */
+  --v2-moon:#eef4f0;         /* 月白 */
+  --v2-rouge:#c4504a;        /* 胭脂朱 */
+}
+
+/* ═══ 全站背景：深青夜 + 流動青煙 ═══ */
+body{
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 10%, rgba(58,90,74,.35) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 85% 90%, rgba(42,74,106,.3) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, #0d1a1e 0%, #060c0e 85%) !important;
+  background-attachment:fixed !important;
+  color:var(--v2-moon);
+}
+body::before{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    repeating-linear-gradient(60deg, transparent 0 60px, rgba(212,175,106,.018) 60px 61px),
+    repeating-linear-gradient(-60deg, transparent 0 60px, rgba(127,184,168,.015) 60px 61px);
+  /* 緩慢漂移青煙 */
+  animation:v2Drift 40s linear infinite;
+}
+@keyframes v2Drift{ 0%{transform:translate(0,0)} 100%{transform:translate(-60px,-60px)} }
+
+/* ═══ 頂部導覽：青銅鼎紋橫樑 ═══ */
+.hx-topbar{
+  background:linear-gradient(180deg, rgba(13,26,30,.97), rgba(6,12,14,.88)) !important;
+  border-bottom:1px solid rgba(212,175,106,.35) !important;
+  box-shadow:0 2px 0 rgba(127,184,168,.1), 0 8px 24px rgba(0,0,0,.5) !important;
+}
+.hx-topbar-title{
+  color:var(--v2-gold-lt) !important;
+  text-shadow:0 0 18px rgba(212,175,106,.5), 0 2px 4px rgba(0,0,0,.6) !important;
+}
+.hx-topbar-btn{
+  background:linear-gradient(160deg, rgba(58,90,74,.5), rgba(13,26,30,.7)) !important;
+  border:1.5px solid var(--v2-gold) !important;
+  color:var(--v2-gold-lt) !important;
+  position:relative; overflow:hidden;
+}
+.hx-topbar-btn:hover{
+  border-color:var(--v2-gold-lt) !important;
+  box-shadow:0 0 18px rgba(212,175,106,.45) !important;
+  transform:none !important;
+}
+
+/* ═══ 全新按鈕：青銅玉璧 + 流光掃過（取代古銅金漸層方塊）═══ */
+.btn-primary, .btn-challenge, .btn-secondary, .diff-btn, .btn-gacha{
+  position:relative; overflow:hidden;
+  background:linear-gradient(160deg, rgba(42,74,58,.85), rgba(13,26,30,.95)) !important;
+  border:1.5px solid var(--v2-gold) !important;
+  color:var(--v2-gold-lt) !important;
+  border-radius:14px !important;
+  font-family:'Noto Serif TC',serif !important;
+  letter-spacing:4px !important; font-weight:700 !important;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.5),
+    inset 0 0 0 1px rgba(212,175,106,.2),
+    inset 0 0 22px rgba(127,184,168,.06) !important;
+  transition:transform .22s cubic-bezier(.4,1.4,.5,1), box-shadow .3s, border-color .25s, color .25s !important;
+}
+/* 內描金細框 */
+.btn-primary::before, .btn-challenge::before, .btn-secondary::before, .diff-btn::before{
+  content:''; position:absolute; inset:4px; pointer-events:none;
+  border:1px solid rgba(212,175,106,.25); border-radius:10px;
+}
+/* 流光掃過 */
+.btn-primary::after, .btn-challenge::after, .btn-secondary::after, .btn-gacha::after{
+  content:''; position:absolute; top:0; left:-120%; width:80%; height:100%;
+  background:linear-gradient(105deg, transparent, rgba(240,217,154,.35) 50%, transparent);
+  transform:skewX(-18deg); transition:left .55s ease; pointer-events:none;
+}
+.btn-primary:hover, .btn-challenge:hover, .btn-secondary:hover, .diff-btn:hover, .btn-gacha:hover{
+  transform:translateY(-3px) !important;
+  border-color:var(--v2-gold-lt) !important;
+  color:#fff !important;
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.6),
+    0 0 26px rgba(212,175,106,.4),
+    inset 0 0 22px rgba(127,184,168,.12) !important;
+}
+.btn-primary:hover::after, .btn-challenge:hover::after, .btn-secondary:hover::after, .btn-gacha:hover::after{ left:140%; }
+.btn-primary:active, .btn-challenge:active, .btn-gacha:active{
+  transform:translateY(-1px) scale(.98) !important;
+  box-shadow:0 3px 10px rgba(0,0,0,.6), inset 0 2px 8px rgba(0,0,0,.5) !important;
+}
+.diff-btn.active{
+  background:linear-gradient(160deg, var(--v2-gold), #8a6a30) !important;
+  color:var(--v2-ink) !important;
+  border-color:var(--v2-gold-lt) !important;
+  box-shadow:0 0 20px rgba(212,175,106,.55) !important;
+}
+
+/* ═══ 大廳卡牌類型：展卷玉版（hover 翻起）═══ */
+.lobby-card-type{
+  background:
+    linear-gradient(155deg, rgba(58,90,74,.3), rgba(13,26,30,.85)),
+    radial-gradient(ellipse at 50% 0%, rgba(212,175,106,.1), transparent 65%) !important;
+  border:1.5px solid rgba(212,175,106,.4) !important;
+  border-radius:14px !important;
+  box-shadow:0 6px 20px rgba(0,0,0,.5), inset 0 0 30px rgba(127,184,168,.05) !important;
+  transition:transform .35s cubic-bezier(.34,1.4,.5,1), box-shadow .35s, border-color .3s !important;
+  perspective:600px;
+}
+.lobby-card-type:hover{
+  transform:translateY(-8px) rotateX(6deg) !important;
+  border-color:var(--v2-gold-lt) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.6), 0 0 34px rgba(212,175,106,.4), inset 0 0 40px rgba(127,184,168,.12) !important;
+}
+.lobby-card-type::before{
+  content:''; position:absolute; inset:7px; pointer-events:none;
+  border:1px solid rgba(212,175,106,.22); border-radius:9px;
+}
+
+/* ═══ 螢幕切換：墨韻暈開（取代上移淡入）═══ */
+.screen.active{ animation:v2InkReveal .55s cubic-bezier(.22,.8,.3,1) !important; }
+@keyframes v2InkReveal{
+  0%{opacity:0; filter:blur(8px); transform:scale(1.015)}
+  60%{opacity:1; filter:blur(0)}
+  100%{opacity:1; filter:blur(0); transform:scale(1)}
+}
+
+/* ═══ 標題類文字：鎏金描邊 ═══ */
+h1,h2,.campaign-title,.gacha-title,.c-detail-title{
+  color:var(--v2-gold-lt) !important;
+  text-shadow:0 0 14px rgba(212,175,106,.35), 0 2px 5px rgba(0,0,0,.6) !important;
+}
+
+/* ═══ 音效鈕 v2：青銅圓璽 + 呼吸光環 ═══ */
+#hx-sound-toggle{
+  background:radial-gradient(circle at 32% 30%, var(--v2-gold-lt), var(--v2-bronze) 55%, #1a2a22 100%) !important;
+  border:2px solid var(--v2-gold) !important;
+  color:var(--v2-ink) !important;
+  animation:v2Breath 3s ease infinite !important;
+}
+@keyframes v2Breath{
+  0%,100%{box-shadow:0 4px 16px rgba(0,0,0,.6), 0 0 14px rgba(212,175,106,.35)}
+  50%{box-shadow:0 4px 18px rgba(0,0,0,.6), 0 0 28px rgba(212,175,106,.7)}
+}
+#hx-sound-toggle.muted{ background:radial-gradient(circle at 32% 30%,#556,#223) !important; animation:none !important; }
+
+/* ═══ 天候橫額 v2：玉牌懸浮 ═══ */
+#hx-weather{
+  border-radius:6px !important;
+  box-shadow:0 6px 22px rgba(0,0,0,.6), 0 0 0 1px rgba(212,175,106,.4) inset !important;
+}
+#hx-weather::after{
+  content:''; position:absolute; inset:0; border-radius:6px; pointer-events:none;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+/* ═══ 主帥絕技鈕 v2：青銅虎符 ═══ */
+.hx-ult-btn{
+  background:radial-gradient(circle at 30% 28%, var(--v2-gold-lt), var(--v2-bronze) 52%, #14241c 100%) !important;
+  border:3px solid var(--v2-gold) !important;
+}
+.hx-ult-btn.enemy{
+  background:radial-gradient(circle at 30% 28%, #e8a0a0, var(--v2-rouge) 52%, #3a1414 100%) !important;
+  border-color:#e8a0a0 !important;
+}
+
+/* ═══ 戰報區 v2：竹簡捲軸感 ═══ */
+.battle-log{
+  background:
+    linear-gradient(180deg, rgba(13,26,30,.96), rgba(6,12,14,.9)),
+    repeating-linear-gradient(0deg, transparent 0 22px, rgba(212,175,106,.03) 22px 23px) !important;
+  border:1.5px solid rgba(212,175,106,.3) !important;
+}
+
+/* ═══ 戰場戰線 v2：青冷/朱暖分明 ═══ */
+.battle-field.enemy-field{
+  background:linear-gradient(180deg, rgba(58,24,24,.4), rgba(6,12,14,.7)) !important;
+  border-top:2px solid rgba(196,80,74,.5) !important;
+}
+.battle-field.player-field{
+  background:linear-gradient(0deg, rgba(24,48,48,.4), rgba(6,12,14,.7)) !important;
+  border-bottom:2px solid rgba(127,184,168,.5) !important;
+}
+
+/* ═══ 浮動數字 v2 ═══ */
+.hx-float-num.heal, .hx-float-num.gain{ color:var(--v2-gold-lt) !important; }
+
+/* ═══ 卷軸捲動條全站統一鎏金 ═══ */
+*::-webkit-scrollbar{ width:9px; height:9px; }
+*::-webkit-scrollbar-track{ background:rgba(13,26,30,.5); }
+*::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, var(--v2-gold), #7a5e2e);
+  border-radius:5px; border:1px solid rgba(240,217,154,.25);
+}
+*::-webkit-scrollbar-thumb:hover{ background:linear-gradient(180deg, var(--v2-gold-lt), var(--v2-gold)); }
+</style>
 </head>
 <body>
 <canvas id="particle-canvas"></canvas>
