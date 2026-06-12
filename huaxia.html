@@ -1176,9 +1176,94 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
 .hx-man-rule-name{ font-size:14px; font-weight:900; color:var(--v2-gold-lt); letter-spacing:2px; }
 .hx-man-rule-desc{ font-size:12px; color:#c8d4cc; line-height:1.6; margin-top:2px; }
 .hx-man-rule-tag{ display:inline-block; font-size:10px; padding:1px 8px; border-radius:8px; margin-left:6px; background:rgba(196,80,74,.3); color:#ff9a94; border:1px solid rgba(196,80,74,.5); letter-spacing:1px; vertical-align:1px; }
+
+/* ── 天命選擇彈窗（第 1 回合結束）── */
+#hx-fate{
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(.9);
+  z-index:8960; width:min(560px,94vw); display:none;
+  background:linear-gradient(165deg,rgba(20,38,32,.99),rgba(8,16,18,.98));
+  border:2.5px solid var(--v2-gold); border-radius:18px; padding:24px;
+  box-shadow:0 18px 56px rgba(0,0,0,.85), 0 0 46px rgba(212,175,106,.3);
+  font-family:'Noto Serif TC',serif;
+}
+#hx-fate.show{ display:block; animation:hxStratIn .55s cubic-bezier(.34,1.5,.5,1); }
+.hx-fate-title{ text-align:center; font-size:22px; font-weight:900; letter-spacing:8px; color:var(--v2-gold-lt); text-shadow:0 0 16px rgba(212,175,106,.5); }
+.hx-fate-sub{ text-align:center; font-size:11px; letter-spacing:3px; color:var(--v2-jade); margin:4px 0 18px; }
+.hx-fate-list{ display:flex; flex-direction:column; gap:11px; }
+.hx-fate-opt{
+  display:flex; gap:14px; align-items:center; padding:14px 16px; cursor:pointer;
+  background:linear-gradient(135deg,rgba(42,74,58,.4),rgba(13,26,30,.7));
+  border:1.5px solid rgba(212,175,106,.35); border-radius:12px; transition:all .2s;
+}
+.hx-fate-opt:hover{ border-color:var(--v2-gold-lt); transform:translateX(4px) scale(1.01); box-shadow:0 6px 20px rgba(212,175,106,.35); }
+.hx-fate-icon{ font-size:34px; }
+.hx-fate-name{ font-size:16px; font-weight:900; color:var(--v2-gold-lt); letter-spacing:3px; }
+.hx-fate-desc{ font-size:12px; color:#c8d4cc; line-height:1.6; margin-top:3px; }
+
+/* ── 天命徽記（戰鬥中常駐，敵方可見）── */
+#hx-fate-badges{
+  position:fixed; top:130px; left:50%; transform:translateX(-50%);
+  z-index:540; display:flex; gap:8px; pointer-events:none;
+}
+.hx-fate-chip{
+  padding:4px 12px; border-radius:14px; font-size:11px; font-weight:900;
+  font-family:'Noto Serif TC',serif; letter-spacing:2px;
+  background:linear-gradient(135deg,#3a5a4a,#0d1a1e);
+  border:1.5px solid var(--v2-gold-lt); color:var(--v2-gold-lt);
+  box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 14px rgba(212,175,106,.35);
+}
+.hx-fate-chip.enemy{ background:linear-gradient(135deg,#5a2424,#1a0d0d); border-color:#e8a0a0; color:#ffc8c8; }
+
+/* ── 指揮點資源條（右下）── */
+#hx-cmdpoints{
+  position:fixed; right:18px; bottom:230px; z-index:545;
+  display:flex; flex-direction:column; align-items:flex-end; gap:5px;
+  font-family:'Noto Serif TC',serif;
+}
+.hx-cp-label{ font-size:11px; letter-spacing:2px; color:var(--v2-gold-lt); font-weight:900; text-shadow:0 1px 3px rgba(0,0,0,.7); }
+.hx-cp-dots{ display:flex; gap:5px; }
+.hx-cp-dot{
+  width:18px; height:18px; border-radius:50%;
+  background:rgba(0,0,0,.5); border:2px solid var(--v2-jade);
+  transition:all .3s;
+}
+.hx-cp-dot.filled{
+  background:radial-gradient(circle at 32% 30%, var(--v2-gold-lt), var(--v2-gold) 60%, #7a5e2e);
+  border-color:var(--v2-gold-lt); box-shadow:0 0 12px rgba(212,175,106,.7);
+}
+.hx-cp-spend{
+  margin-top:4px; padding:5px 12px; border-radius:10px; cursor:pointer;
+  background:linear-gradient(135deg,rgba(42,74,58,.85),rgba(13,26,30,.92));
+  border:1.5px solid var(--v2-gold); color:var(--v2-gold-lt);
+  font-size:11px; letter-spacing:1px; font-weight:700; white-space:nowrap;
+  transition:all .2s;
+}
+.hx-cp-spend:hover{ border-color:var(--v2-gold-lt); transform:translateX(-2px); box-shadow:0 3px 12px rgba(212,175,106,.4); }
+.hx-cp-spend.disabled{ opacity:.4; filter:grayscale(.7); cursor:not-allowed; pointer-events:none; }
+
+/* ── 士氣浮動提示 ── */
+.hx-morale-float{
+  position:fixed; z-index:9000; pointer-events:none;
+  font-family:'Noto Serif TC',serif; font-weight:900; font-size:18px;
+  color:var(--v2-jade); text-shadow:0 2px 6px rgba(0,0,0,.8);
+  animation:hxMoraleFloat 1.3s ease forwards;
+}
+.hx-morale-float.minus{ color:#ff8a84; }
+@keyframes hxMoraleFloat{
+  0%{opacity:0; transform:translateY(0) scale(.6)}
+  20%{opacity:1; transform:translateY(-8px) scale(1.1)}
+  100%{opacity:0; transform:translateY(-50px) scale(1)}
+}
 </style>
 </head>
 <body data-hx-v2>
+
+<!-- ══ 天命選擇彈窗 ══ -->
+<div id="hx-fate">
+  <div class="hx-fate-title">✦ 天命抉擇 ✦</div>
+  <div class="hx-fate-sub">第一回合終 · 擇一天命（敵我皆可見）</div>
+  <div class="hx-fate-list" id="hx-fate-list"></div>
+</div>
 
 <!-- ══ 戰術手冊彈窗 ══ -->
 <div id="hx-manual-backdrop" onclick="HXManual&&HXManual.close()"></div>
@@ -2458,6 +2543,10 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
           ULT.player.cd = 0; ULT.enemy.cd = 0;
           renderUltBtns();
           if(!curWeather) rollWeather();
+          // 新戰局重置：天命/指揮點/狀態旗標
+          playerFate = null; enemyFate = null; fateShown = false;
+          cmdPoints = 0;
+          window._hxBawangUsed = false; window._hxImmuneNeg = false;
         }
       } else {
         delete battle?.dataset.hxUltInit;
@@ -2694,7 +2783,14 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
     if(onBattle){ renderUnitTags(); renderAwakenBtns(); renderTerrain(); maybeStratagem(); }
     // 戰鬥畫面：君主令 / 勢力同盟 / 逆境 / 連鎖
     if(onBattle){ renderEdict(); renderFactionTags(); checkDesperate(); checkCombo(); }
-    else { ['hx-edict','hx-alliance','hx-combo'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();}); }
+    // 天命 / 指揮點
+    if(onBattle){ maybeFate(); renderCmdPoints(); }
+    // 離開戰場：清除所有戰鬥用 overlay
+    if(!onBattle){
+      ['hx-edict','hx-alliance','hx-combo','hx-fate-badges','hx-cmdpoints'].forEach(id=>{
+        const e=document.getElementById(id); if(e) e.remove();
+      });
+    }
   }, 1200);
 
   /* ════════════════════════════════════════════════════
@@ -2725,6 +2821,7 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
         HXAudio.chain();
         if(window.HXChainFlash) HXChainFlash();
         if(window.showToast) showToast('🏛️ 君主令：『'+ed.name+'』— '+ed.desc, 3000);
+        gainCmdPoint();   // 完成君主令 +1 指揮點
       });
     }
   }
@@ -2861,6 +2958,134 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
   };
 
   /* ════════════════════════════════════════════════════
+     規則 9：天命抉擇（第 1 回合結束三選一，敵方可見）
+  ════════════════════════════════════════════════════ */
+  const FATES = [
+    {id:'fenghou', icon:'🌀', name:'風后八陣', desc:'全隊五行相生時額外 +5 HP'},
+    {id:'bawang',  icon:'🔥', name:'霸王之怒', desc:'首次逆境背水額外 +20% 爆擊'},
+    {id:'wolong',  icon:'🐲', name:'臥龍之智', desc:'計策事件額外多一個選項'},
+  ];
+  let playerFate = null, enemyFate = null, fateShown = false;
+  function maybeFate(){
+    if(fateShown) return;
+    const tEl = document.getElementById('battle-turn-num');
+    if(!tEl) return;
+    const t = parseInt(tEl.textContent,10);
+    if(isNaN(t)) return;
+    // 第 1 回合結束 → 進入第 2 回合時觸發
+    if(t >= 2){
+      fateShown = true;
+      showFateChoice();
+    }
+  }
+  function showFateChoice(){
+    const card = document.getElementById('hx-fate');
+    const list = document.getElementById('hx-fate-list');
+    if(!card || !list) return;
+    list.innerHTML = FATES.map(f=>`
+      <div class="hx-fate-opt" data-fid="${f.id}">
+        <span class="hx-fate-icon">${f.icon}</span>
+        <div><div class="hx-fate-name">${f.name}</div><div class="hx-fate-desc">${f.desc}</div></div>
+      </div>`).join('');
+    card.classList.add('show');
+    HXAudio.chain();
+    list.querySelectorAll('.hx-fate-opt').forEach(opt=>{
+      opt.onclick = ()=>{
+        playerFate = FATES.find(f=>f.id===opt.dataset.fid);
+        // 敵方隨機選一（可與玩家相同）
+        enemyFate = FATES[Math.floor(Math.random()*FATES.length)];
+        card.classList.remove('show');
+        HXAudio.cardPlay();
+        renderFateBadges();
+        if(window.showToast) showToast('✦ 天命：你『'+playerFate.name+'』 vs 敵『'+enemyFate.name+'』', 3500);
+      };
+    });
+  }
+  function renderFateBadges(){
+    if(!playerFate && !enemyFate) return;
+    let el = document.getElementById('hx-fate-badges');
+    if(!el){ el=document.createElement('div'); el.id='hx-fate-badges'; document.body.appendChild(el); }
+    el.innerHTML =
+      (playerFate?`<div class="hx-fate-chip">✦ 我 ${playerFate.icon}${playerFate.name}</div>`:'') +
+      (enemyFate?`<div class="hx-fate-chip enemy">✦ 敵 ${enemyFate.icon}${enemyFate.name}</div>`:'');
+  }
+  window.HXFate = {
+    player(){ return playerFate; }, enemy(){ return enemyFate; },
+    has(id){ return playerFate && playerFate.id===id; },
+  };
+
+  /* ════════════════════════════════════════════════════
+     規則 10：士氣連動表（行為 → 士氣變化）
+  ════════════════════════════════════════════════════ */
+  const MORALE_RULES = {
+    ke_counter: 5,    // 觸發五行相剋
+    kill:       15,   // 擊殺敵軍
+    ally_death: -10,  // 友軍陣亡
+    bond:       10,   // 觸發歷史羈絆
+    ultimate:   5,    // 施展主帥絕技（全隊）
+  };
+  function moraleFloat(reason, delta){
+    const m = document.getElementById('player-morale-val');
+    const r = m ? m.getBoundingClientRect() : {left:innerWidth/2, top:120, width:0};
+    const el = document.createElement('div');
+    el.className = 'hx-morale-float' + (delta<0?' minus':'');
+    el.style.left = (r.left + r.width/2) + 'px';
+    el.style.top = r.top + 'px';
+    el.textContent = (delta>0?'+':'') + delta + ' 士氣';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 1400);
+  }
+  window.HXMorale = {
+    rule(name){ return MORALE_RULES[name] || 0; },
+    /* 由戰報偵測自動觸發浮字（純呈現）*/
+    notify(reason, delta){ moraleFloat(reason, delta); },
+  };
+
+  /* ════════════════════════════════════════════════════
+     規則 11：指揮點（隱藏資源，計策/君主令完成 +1，上限 3）
+  ════════════════════════════════════════════════════ */
+  let cmdPoints = 0;
+  function gainCmdPoint(){
+    cmdPoints = Math.min(3, cmdPoints + 1);
+    renderCmdPoints();
+    if(window.showToast) showToast('📌 獲得 1 指揮點（'+cmdPoints+'/3）', 2000);
+  }
+  function renderCmdPoints(){
+    const battle = document.getElementById('screen-battle');
+    if(!battle || !battle.classList.contains('active')){
+      const e=document.getElementById('hx-cmdpoints'); if(e) e.remove(); return;
+    }
+    let el = document.getElementById('hx-cmdpoints');
+    if(!el){
+      el = document.createElement('div'); el.id='hx-cmdpoints';
+      document.body.appendChild(el);
+    }
+    el.innerHTML =
+      '<div class="hx-cp-label">📌 指揮點 '+cmdPoints+'/3</div>' +
+      '<div class="hx-cp-dots">' +
+        [0,1,2].map(i=>`<div class="hx-cp-dot${i<cmdPoints?' filled':''}"></div>`).join('') +
+      '</div>' +
+      `<div class="hx-cp-spend${cmdPoints<2?' disabled':''}">耗 2 點 · 免疫負面 1 回合</div>`;
+    const spend = el.querySelector('.hx-cp-spend');
+    if(spend){
+      spend.onclick = ()=>{
+        if(cmdPoints < 2) return;
+        cmdPoints -= 2;
+        renderCmdPoints();
+        HXAudio.chain();
+        if(window.HXChainFlash) HXChainFlash();
+        window._hxImmuneNeg = true;   // 供結算層讀取：本回合免疫負面
+        if(window.showToast) showToast('🛡️ 指揮：本回合免疫天候/地形負面效果！', 3000);
+      };
+    }
+  }
+  window.HXCmdPoints = {
+    get(){ return cmdPoints; },
+    gain(){ gainCmdPoint(); },
+    immune(){ return !!window._hxImmuneNeg; },
+  };
+
+  /* ════════════════════════════════════════════════════
      規則 1：兵種相剋（騎→弓→步→騎 循環）
   ════════════════════════════════════════════════════ */
   function unitOf(text){
@@ -2926,7 +3151,9 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
       document.body.appendChild(card);
     }
     // 隨機 3 選 1
-    const pool = STRATAGEMS.slice().sort(()=>Math.random()-.5).slice(0,3);
+    // 臥龍之智天命：計策多一選項（4 選 1）
+    const n = (window.HXFate && HXFate.has && HXFate.has('wolong')) ? 4 : 3;
+    const pool = STRATAGEMS.slice().sort(()=>Math.random()-.5).slice(0, n);
     card.innerHTML =
       '<div class="hx-strat-title">📜 天降計策</div>' +
       '<div class="hx-strat-sub">擇一發動 · 一次性翻轉戰局</div>' +
@@ -2949,6 +3176,7 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
         card.classList.remove('show');
         HXAudio.cardPlay();
         if(window.showToast) showToast('🎯 發動『'+s.name+'』— '+s.desc, 3000);
+        gainCmdPoint();   // 完成計策事件 +1 指揮點
         if(window.HXChainFlash) HXChainFlash();
       };
     });
@@ -3070,7 +3298,14 @@ h1,h2,.campaign-title,.gacha-title,.c-detail-title{
     if(w && w.id === 'sun'){ bonus += 2; reasons.push('☀️烈日+2'); }
 
     if(window.HXDesperate && HXDesperate.active()){
-      const e = Math.round(base * 0.35); bonus += e; reasons.push('🔥背水+'+e);
+      let e = Math.round(base * 0.35);
+      // 霸王之怒天命：首次背水額外 +20% 爆擊
+      if(window.HXFate && HXFate.has('bawang') && !window._hxBawangUsed){
+        window._hxBawangUsed = true;
+        e = Math.round(e * 1.2);
+        reasons.push('🔥背水爆擊+'+e);
+      } else { reasons.push('🔥背水+'+e); }
+      bonus += e;
     }
     if(window.HXEdict && HXEdict.used && HXEdict.used('charge')){
       const e = Math.round(base * 0.30); bonus += e; reasons.push('🚩突擊+'+e);
